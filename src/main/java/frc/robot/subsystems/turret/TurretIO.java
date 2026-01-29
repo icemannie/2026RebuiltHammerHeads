@@ -58,5 +58,5 @@ public interface TurretIO {
 
     public default void stopShoot() {}
 
-    public default void resetTurnCRT() {}
+    public default void resetTurnEncoder() {}
 }
