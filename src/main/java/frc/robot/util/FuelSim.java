@@ -232,11 +232,48 @@ public class FuelSim {
         b.addImpulse(normal.times(-impulse));
     }
 
-    private static void handleFuelCollisions(ArrayList<Fuel> fuels) {
-        for (int i = 0; i < fuels.size() - 1; i++) {
-            for (int j = i + 1; j < fuels.size(); j++) {
-                if (fuels.get(i).pos.getDistance(fuels.get(j).pos) < FUEL_RADIUS * 2) {
-                    handleFuelCollision(fuels.get(i), fuels.get(j));
+    private static final double CELL_SIZE = 0.25;
+    private static final int GRID_COLS = (int) Math.ceil(FIELD_LENGTH / CELL_SIZE);
+    private static final int GRID_ROWS = (int) Math.ceil(FIELD_WIDTH / CELL_SIZE);
+
+    @SuppressWarnings("unchecked")
+    private final ArrayList<Fuel>[][] grid = new ArrayList[GRID_COLS][GRID_ROWS];
+
+    private void handleFuelCollisions(ArrayList<Fuel> fuels) {
+        // Clear grid
+        for (int i = 0; i < GRID_COLS; i++) {
+            for (int j = 0; j < GRID_ROWS; j++) {
+                grid[i][j].clear();
+            }
+        }
+
+        // Populate grid
+        for (Fuel fuel : fuels) {
+            int col = (int) (fuel.pos.getX() / CELL_SIZE);
+            int row = (int) (fuel.pos.getY() / CELL_SIZE);
+
+            if (col >= 0 && col < GRID_COLS && row >= 0 && row < GRID_ROWS) {
+                grid[col][row].add(fuel);
+            }
+        }
+
+        // Check collisions
+        for (Fuel fuel : fuels) {
+            int col = (int) (fuel.pos.getX() / CELL_SIZE);
+            int row = (int) (fuel.pos.getY() / CELL_SIZE);
+
+            // Check 3x3 neighbor cells
+            for (int i = col - 1; i <= col + 1; i++) {
+                for (int j = row - 1; j <= row + 1; j++) {
+                    if (i >= 0 && i < GRID_COLS && j >= 0 && j < GRID_ROWS) {
+                        for (Fuel other : grid[i][j]) {
+                            if (fuel != other && fuel.pos.getDistance(other.pos) < FUEL_RADIUS * 2) {
+                                if (fuel.hashCode() < other.hashCode()) {
+                                    handleFuelCollision(fuel, other);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -297,13 +334,13 @@ public class FuelSim {
         }
 
         // DEBUG: Log XZ lines
-        Translation3d[][] lines = new Translation3d[FIELD_XZ_LINE_STARTS.length][2];
-        for (int i = 0; i < FIELD_XZ_LINE_STARTS.length; i++) {
-            lines[i][0] = FIELD_XZ_LINE_STARTS[i];
-            lines[i][1] = FIELD_XZ_LINE_ENDS[i];
-        }
+        // Translation3d[][] lines = new Translation3d[FIELD_XZ_LINE_STARTS.length][2];
+        // for (int i = 0; i < FIELD_XZ_LINE_STARTS.length; i++) {
+        //     lines[i][0] = FIELD_XZ_LINE_STARTS[i];
+        //     lines[i][1] = FIELD_XZ_LINE_ENDS[i];
+        // }
 
-        Logger.recordOutput("Fuel Simulation/Lines (debug)", lines);
+        // Logger.recordOutput("Fuel Simulation/Lines (debug)", lines);
     }
 
     /**
@@ -698,5 +735,12 @@ public class FuelSim {
         }
     }
 
-    private FuelSim() {}
+    private FuelSim() {
+        // Initialize grid
+        for (int i = 0; i < GRID_COLS; i++) {
+            for (int j = 0; j < GRID_ROWS; j++) {
+                grid[i][j] = new ArrayList<Fuel>();
+            }
+        }
+    }
 }
