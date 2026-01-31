@@ -24,10 +24,12 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -106,6 +108,15 @@ public class IntakeIOTalonFX implements IntakeIO {
                 spinAppliedVolts);
         rackMotor.optimizeBusUtilization();
         spinMotor.optimizeBusUtilization();
+    }
+
+    public IntakeIOTalonFX(int rackID, int rackFollowID, int spinID) {
+        this(rackID, spinID);
+        try (TalonFX follower = new TalonFX(rackFollowID, Constants.CAN_FD_BUS)) {
+            follower.getConfigurator().apply(RACK_CURRENT_LIMITS);
+            follower.getConfigurator().apply(RACK_OUTPUT_CONFIGS);
+            follower.setControl(new Follower(rackID, MotorAlignmentValue.Opposed));
+        }
     }
 
     public static Distance rotorAngleToDistance(Angle rotorAngle) {
