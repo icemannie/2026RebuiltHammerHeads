@@ -16,6 +16,9 @@ import static frc.robot.Constants.IntakeConstants.RACK_GAINS;
 import static frc.robot.Constants.IntakeConstants.RACK_MOTION_MAGIC;
 import static frc.robot.Constants.IntakeConstants.RACK_OUTPUT_CONFIGS;
 import static frc.robot.Constants.IntakeConstants.ROTOR_TO_PINION_RATIO;
+import static frc.robot.Constants.IntakeConstants.SPIN_CURRENT_LIMITS;
+import static frc.robot.Constants.IntakeConstants.SPIN_OUTPUT_CONFIGS;
+import static frc.robot.Constants.IntakeConstants.STOW_POS;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -31,6 +34,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.PhoenixUtil;
 
 /** Add your docs here. */
 public class IntakeIOTalonFX implements IntakeIO {
@@ -38,6 +42,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final TalonFX spinMotor;
 
     private final TalonFXConfiguration rackConfig;
+    private final TalonFXConfiguration spinConfig;
 
     private final StatusSignal<Angle> rackPosition;
     private final StatusSignal<AngularVelocity> rackVelocity;
@@ -68,7 +73,14 @@ public class IntakeIOTalonFX implements IntakeIO {
                         .withForwardSoftLimitEnable(true)
                         .withForwardSoftLimitThreshold(distanceToRotorAngle(DEPLOY_POS))
                         .withReverseSoftLimitEnable(true)
-                        .withReverseSoftLimitThreshold(0));
+                        .withReverseSoftLimitThreshold(distanceToRotorAngle(STOW_POS)));
+
+        spinConfig = new TalonFXConfiguration()
+                .withCurrentLimits(SPIN_CURRENT_LIMITS)
+                .withMotorOutput(SPIN_OUTPUT_CONFIGS);
+
+        PhoenixUtil.tryUntilOk(5, () -> rackMotor.getConfigurator().apply(rackConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> spinMotor.getConfigurator().apply(spinConfig, 0.25));
 
         this.rackPosition = rackMotor.getPosition();
         this.rackVelocity = rackMotor.getVelocity();
@@ -143,5 +155,16 @@ public class IntakeIOTalonFX implements IntakeIO {
     @Override
     public void stopSpin() {
         spinMotor.setControl(neutralOut);
+    }
+
+    @Override
+    public void setRackPID(double kP, double kD, double kV, double kA, double kS, double maxVel, double maxAcc) {
+        rackConfig.Slot0.kP = kP;
+        rackConfig.Slot0.kD = kD;
+        rackConfig.Slot0.kV = kV;
+        rackConfig.Slot0.kA = kA;
+        rackConfig.Slot0.kS = kS;
+        rackConfig.MotionMagic.MotionMagicCruiseVelocity = maxVel;
+        rackConfig.MotionMagic.MotionMagicAcceleration = maxAcc;
     }
 }

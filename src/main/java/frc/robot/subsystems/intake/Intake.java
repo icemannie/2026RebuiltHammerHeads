@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.LoggedTunableNumber;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -33,6 +34,16 @@ public class Intake extends SubsystemBase {
             new Trigger(this::travelingRight).and(() -> isDeployed).debounce(0.2);
 
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
+
+    private final LoggedTunableNumber rackKP = new LoggedTunableNumber("Intake/kP", RACK_GAINS.kP);
+    private final LoggedTunableNumber rackKD = new LoggedTunableNumber("Intake/kD", RACK_GAINS.kD);
+    private final LoggedTunableNumber rackKV = new LoggedTunableNumber("Intake/kV", RACK_GAINS.kV);
+    private final LoggedTunableNumber rackKA = new LoggedTunableNumber("Intake/kA", RACK_GAINS.kA);
+    private final LoggedTunableNumber rackKS = new LoggedTunableNumber("Intake/kS", RACK_GAINS.kS);
+    private final LoggedTunableNumber rackMaxVel =
+            new LoggedTunableNumber("Intake/maxVelRotPerSec", RACK_MOTION_MAGIC.MotionMagicCruiseVelocity);
+    private final LoggedTunableNumber rackMaxAcc =
+            new LoggedTunableNumber("Intake/maxAccRotPerSecPerSec", RACK_MOTION_MAGIC.MotionMagicAcceleration);
 
     /** Creates a new Intake. */
     public Intake(IntakeIO leftIO, IntakeIO rightIO, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
@@ -108,6 +119,33 @@ public class Intake extends SubsystemBase {
                 .withName("Stow intakes");
     }
 
+    private void updateTunables() {
+        if (rackKP.hasChanged(hashCode())
+                || rackKD.hasChanged(hashCode())
+                || rackKV.hasChanged(hashCode())
+                || rackKA.hasChanged(hashCode())
+                || rackKS.hasChanged(hashCode())
+                || rackMaxVel.hasChanged(hashCode())
+                || rackMaxAcc.hasChanged(hashCode())) {
+            leftIO.setRackPID(
+                    rackKP.get(),
+                    rackKD.get(),
+                    rackKV.get(),
+                    rackKA.get(),
+                    rackKS.get(),
+                    rackMaxVel.get(),
+                    rackMaxAcc.get());
+            rightIO.setRackPID(
+                    rackKP.get(),
+                    rackKD.get(),
+                    rackKV.get(),
+                    rackKA.get(),
+                    rackKS.get(),
+                    rackMaxVel.get(),
+                    rackMaxAcc.get());
+        }
+    }
+
     @Override
     public void periodic() {
         leftIO.updateInputs(leftInputs);
@@ -118,5 +156,7 @@ public class Intake extends SubsystemBase {
 
         measuredVisualizer.setLeftPosition(leftInputs.rackPosition);
         measuredVisualizer.setRightPosition(rightInputs.rackPosition);
+
+        updateTunables();
     }
 }

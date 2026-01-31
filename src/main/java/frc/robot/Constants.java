@@ -400,9 +400,15 @@ public final class Constants {
                 .withNeutralMode(NeutralModeValue.Brake)
                 .withInverted(InvertedValue.CounterClockwise_Positive);
 
-        public static final CurrentLimitsConfigs RACK_CURRENT_LIMITS = new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(50)
-                .withSupplyCurrentLowerLimit(30);
+        public static final MotorOutputConfigs SPIN_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Coast)
+                .withInverted(InvertedValue.CounterClockwise_Positive);
+
+        public static final CurrentLimitsConfigs RACK_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(50).withSupplyCurrentLowerLimit(30);
+
+        public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(30).withSupplyCurrentLowerLimit(30);
 
         public static final MotionMagicConfigs RACK_MOTION_MAGIC = new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(
