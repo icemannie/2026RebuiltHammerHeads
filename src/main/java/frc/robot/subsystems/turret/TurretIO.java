@@ -59,4 +59,10 @@ public interface TurretIO {
     public default void stopShoot() {}
 
     public default void resetTurnEncoder() {}
+
+    public default void setTurnPID(double kP, double kD, double kV, double kS) {}
+
+    public default void setHoodPID(double kP, double kD, double kS) {}
+
+    public default void setFlywheelPID(double kP, double kD) {}
 }

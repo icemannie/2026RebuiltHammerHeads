@@ -4,14 +4,25 @@
 
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Value;
+import static frc.robot.Constants.IntakeConstants.DEPLOY_POS;
+import static frc.robot.Constants.IntakeConstants.PINION_PITCH_RADIUS;
+import static frc.robot.Constants.IntakeConstants.RACK_CURRENT_LIMITS;
+import static frc.robot.Constants.IntakeConstants.RACK_GAINS;
+import static frc.robot.Constants.IntakeConstants.RACK_MOTION_MAGIC;
+import static frc.robot.Constants.IntakeConstants.RACK_OUTPUT_CONFIGS;
+import static frc.robot.Constants.IntakeConstants.ROTOR_TO_PINION_RATIO;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.units.measure.Angle;
@@ -26,6 +37,8 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final TalonFX rackMotor;
     private final TalonFX spinMotor;
 
+    private final TalonFXConfiguration rackConfig;
+
     private final StatusSignal<Angle> rackPosition;
     private final StatusSignal<AngularVelocity> rackVelocity;
     private final StatusSignal<Double> rackSetpoint;
@@ -37,7 +50,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Current> spinCurrent;
     private final StatusSignal<Voltage> spinAppliedVolts;
 
-    private final PositionTorqueCurrentFOC rackVoltageRequest = new PositionTorqueCurrentFOC(0);
+    private final MotionMagicTorqueCurrentFOC rackVoltageRequest = new MotionMagicTorqueCurrentFOC(0);
     private final VoltageOut spinVoltageRequest = new VoltageOut(0);
 
     private final NeutralOut neutralOut = new NeutralOut();
@@ -45,6 +58,17 @@ public class IntakeIOTalonFX implements IntakeIO {
     public IntakeIOTalonFX(int rackID, int spinID) {
         this.rackMotor = new TalonFX(rackID, Constants.CAN_FD_BUS);
         this.spinMotor = new TalonFX(spinID, Constants.CAN_FD_BUS);
+
+        rackConfig = new TalonFXConfiguration()
+                .withSlot0(RACK_GAINS)
+                .withMotorOutput(RACK_OUTPUT_CONFIGS)
+                .withCurrentLimits(RACK_CURRENT_LIMITS)
+                .withMotionMagic(RACK_MOTION_MAGIC)
+                .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
+                        .withForwardSoftLimitEnable(true)
+                        .withForwardSoftLimitThreshold(distanceToRotorAngle(DEPLOY_POS))
+                        .withReverseSoftLimitEnable(true)
+                        .withReverseSoftLimitThreshold(0));
 
         this.rackPosition = rackMotor.getPosition();
         this.rackVelocity = rackMotor.getVelocity();
@@ -72,15 +96,26 @@ public class IntakeIOTalonFX implements IntakeIO {
         spinMotor.optimizeBusUtilization();
     }
 
+    public static Distance rotorAngleToDistance(Angle rotorAngle) {
+        return PINION_PITCH_RADIUS.times(rotorAngle.in(Radians) / ROTOR_TO_PINION_RATIO);
+    }
+
+    public static Angle distanceToRotorAngle(Distance distance) {
+        return Radians.of(distance.div(PINION_PITCH_RADIUS).in(Value) * ROTOR_TO_PINION_RATIO);
+    }
+
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
         inputs.rackMotorConnected = BaseStatusSignal.refreshAll(
                         rackPosition, rackVelocity, rackSetpoint, rackSetpointVelocity, rackCurrent, rackAppliedVolts)
                 .isOK();
-        inputs.rackPosition = Meters.of(rackPosition.getValueAsDouble());
-        inputs.rackVelocity = MetersPerSecond.of(rackVelocity.getValueAsDouble());
-        inputs.rackSetpoint = Meters.of(rackSetpoint.getValue());
-        inputs.rackSetpointVelocity = MetersPerSecond.of(rackSetpointVelocity.getValueAsDouble());
+        inputs.rackPosition = rotorAngleToDistance(rackPosition.getValue());
+        inputs.rackVelocity = rotorAngleToDistance(
+                        Radians.of(rackVelocity.getValue().in(RadiansPerSecond)))
+                .per(Second);
+        inputs.rackSetpoint = rotorAngleToDistance(Rotations.of(rackSetpoint.getValueAsDouble()));
+        inputs.rackSetpointVelocity = rotorAngleToDistance(Rotations.of(rackSetpointVelocity.getValue()))
+                .per(Second);
         inputs.rackCurrent = rackCurrent.getValue();
 
         inputs.spinMotorConnected = BaseStatusSignal.refreshAll(spinVelocity, spinCurrent, spinAppliedVolts)
@@ -92,7 +127,7 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     @Override
     public void setRackPosition(Distance position) {
-        rackMotor.setControl(rackVoltageRequest.withPosition(Rotations.of(position.in(Meters))));
+        rackMotor.setControl(rackVoltageRequest.withPosition(distanceToRotorAngle(position)));
     }
 
     @Override

@@ -12,22 +12,34 @@ import static frc.robot.Constants.TurretConstants.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.util.PhoenixUtil;
 
 /** Add your docs here. */
 public class TurretIOTalonFX implements TurretIO {
     private final TalonFX turnMotor;
     private final TalonFX hoodMotor;
     private final TalonFX flywheelMotor;
-    private final TalonFX shootMotor;
+    private final TalonFX flywheelFollowerMotor;
+
+    private final TalonFXConfiguration turnConfig;
+    private final TalonFXConfiguration hoodConfig;
+    private final TalonFXConfiguration flywheelConfig;
+    private final TalonFXConfiguration flywheelFollowerConfig;
 
     private final StatusSignal<Angle> turnPosition;
     private final StatusSignal<AngularVelocity> turnVelocity;
@@ -50,13 +62,57 @@ public class TurretIOTalonFX implements TurretIO {
     private final PositionVoltage hoodPositionRequest = new PositionVoltage(0);
     private final VelocityTorqueCurrentFOC flywheelVelocityRequest = new VelocityTorqueCurrentFOC(0);
 
+    private final Follower followRequest = new Follower(
+            FLYWHEEL_ID,
+            FLYWHEEL_OUTPUT_CONFIGS.Inverted == FLYWHEEL_FOLLOWER_OUTPUT_CONFIGS.Inverted
+                    ? MotorAlignmentValue.Aligned
+                    : MotorAlignmentValue.Opposed);
     private final NeutralOut neutralOut = new NeutralOut();
 
     public TurretIOTalonFX() {
         turnMotor = new TalonFX(TURN_ID, CAN_FD_BUS);
         hoodMotor = new TalonFX(HOOD_ID, CAN_FD_BUS);
         flywheelMotor = new TalonFX(FLYWHEEL_ID, CAN_FD_BUS);
-        shootMotor = new TalonFX(SHOOT_ID, CAN_FD_BUS);
+        flywheelFollowerMotor = new TalonFX(FLYWHEEL_FOLLOWER_ID, CAN_FD_BUS);
+
+        turnConfig = new TalonFXConfiguration()
+                .withFeedback(new FeedbackConfigs()
+                        .withFeedbackRemoteSensorID(ENCODER_ID)
+                        .withSensorToMechanismRatio(ENCODER_TO_TURRET_RATIO)
+                        .withRotorToSensorRatio(MOTOR_TO_TURRET_RATIO / ENCODER_TO_TURRET_RATIO)
+                        .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder))
+                .withSlot0(TURN_GAINS)
+                .withCurrentLimits(TURN_CURRENT_LIMITS)
+                .withMotorOutput(TURN_OUTPUT_CONFIGS)
+                .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
+                        .withForwardSoftLimitEnable(true)
+                        .withForwardSoftLimitThreshold(MAX_TURN_ANGLE)
+                        .withReverseSoftLimitEnable(true)
+                        .withReverseSoftLimitThreshold(MIN_TURN_ANGLE));
+
+        hoodConfig = new TalonFXConfiguration()
+                .withSlot0(HOOD_GAINS)
+                .withCurrentLimits(HOOD_CURRENT_LIMITS)
+                .withMotorOutput(HOOD_OUTPUT_CONFIGS)
+                .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
+                        .withForwardSoftLimitEnable(true)
+                        .withForwardSoftLimitThreshold(MAX_HOOD_ANGLE)
+                        .withReverseSoftLimitEnable(true)
+                        .withReverseSoftLimitThreshold(MIN_HOOD_ANGLE));
+
+        flywheelConfig = new TalonFXConfiguration()
+                .withSlot0(FLYWHEEL_GAINS)
+                .withCurrentLimits(FLYWHEEL_CURRENT_LIMITS)
+                .withMotorOutput(FLYWHEEL_OUTPUT_CONFIGS);
+
+        flywheelFollowerConfig = new TalonFXConfiguration()
+                .withCurrentLimits(FLYWHEEL_CURRENT_LIMITS)
+                .withMotorOutput(FLYWHEEL_FOLLOWER_OUTPUT_CONFIGS);
+
+        PhoenixUtil.tryUntilOk(5, () -> turnMotor.getConfigurator().apply(turnConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(hoodConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> flywheelMotor.getConfigurator().apply(flywheelConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> flywheelFollowerMotor.getConfigurator().apply(flywheelFollowerConfig, 0.25));
 
         turnPosition = turnMotor.getPosition();
         turnVelocity = turnMotor.getVelocity();
@@ -89,6 +145,9 @@ public class TurretIOTalonFX implements TurretIO {
         turnMotor.optimizeBusUtilization();
         hoodMotor.optimizeBusUtilization();
         flywheelMotor.optimizeBusUtilization();
+        flywheelFollowerMotor.optimizeBusUtilization();
+
+        flywheelFollowerMotor.setControl(followRequest);
     }
 
     @Override
@@ -149,12 +208,34 @@ public class TurretIOTalonFX implements TurretIO {
     }
 
     @Override
-    public void stopShoot() {
-        shootMotor.setControl(neutralOut);
+    public void resetTurnEncoder() {
+        turnMotor.setPosition(turnPosition.getValue().in(Rotations) % 1);
     }
 
     @Override
-    public void resetTurnEncoder() {
-        turnMotor.setPosition(turnPosition.getValue().in(Rotations) % 1);
+    public void setTurnPID(double kP, double kD, double kV, double kS) {
+        turnConfig.Slot0.kP = kP;
+        turnConfig.Slot0.kD = kD;
+        turnConfig.Slot0.kV = kV;
+        turnConfig.Slot0.kS = kS;
+
+        PhoenixUtil.tryUntilOk(5, () -> turnMotor.getConfigurator().apply(turnConfig.Slot0, 0.25));
+    }
+
+    @Override
+    public void setHoodPID(double kP, double kD, double kS) {
+        hoodConfig.Slot0.kP = kP;
+        hoodConfig.Slot0.kD = kD;
+        hoodConfig.Slot0.kS = kS;
+
+        PhoenixUtil.tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(hoodConfig.Slot0, 0.25));
+    }
+
+    @Override
+    public void setFlywheelPID(double kP, double kD) {
+        flywheelConfig.Slot0.kP = kP;
+        flywheelConfig.Slot0.kD = kD;
+
+        PhoenixUtil.tryUntilOk(5, () -> flywheelMotor.getConfigurator().apply(flywheelConfig.Slot0, 0.25));
     }
 }

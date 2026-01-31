@@ -18,6 +18,7 @@ import com.ctre.phoenix6.configs.MountPoseConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -43,6 +44,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import java.util.function.Supplier;
 
 /**
@@ -326,7 +328,7 @@ public final class Constants {
         public static final int TURN_ID = 0;
         public static final int HOOD_ID = 0;
         public static final int FLYWHEEL_ID = 0;
-        public static final int SHOOT_ID = 0;
+        public static final int FLYWHEEL_FOLLOWER_ID = 0;
         public static final int ENCODER_ID = 0;
 
         public static final Slot0Configs TURN_GAINS =
@@ -338,10 +340,33 @@ public final class Constants {
         public static final Slot0Configs FLYWHEEL_GAINS =
                 new Slot0Configs().withKP(0.3).withKD(0).withKS(0);
 
-        public static final CurrentLimitsConfigs TURN_CURRENT_LIMITS = new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(30)
-                .withSupplyCurrentLowerTime(1)
-                .withSupplyCurrentLowerLimit(40);
+        public static final CurrentLimitsConfigs TURN_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+
+        public static final CurrentLimitsConfigs HOOD_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+
+        public static final CurrentLimitsConfigs FLYWHEEL_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(60);
+
+        public static final MotorOutputConfigs TURN_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Brake);
+
+        public static final MotorOutputConfigs HOOD_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Brake);
+
+        public static final MotorOutputConfigs FLYWHEEL_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast);
+
+        public static final MotorOutputConfigs FLYWHEEL_FOLLOWER_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast);
+
+        public static final double ENCODER_TO_TURRET_RATIO = 34.0 / 78;
+        public static final double MOTOR_TO_TURRET_RATIO = 11;
 
         public static final Distance DISTANCE_ABOVE_FUNNEL = Inches.of(20); // how high to clear the funnel
         public static final Distance APEX = Inches.of(130);
@@ -350,6 +375,12 @@ public final class Constants {
         public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
         public static final Distance SHOOT_RADIUS = Inches.of(1);
         public static final int LOOKAHEAD_ITERATIONS = 3;
+
+        public static final Angle MIN_TURN_ANGLE = Rotations.of(-1);
+        public static final Angle MAX_TURN_ANGLE = Rotations.of(1);
+
+        public static final Angle MIN_HOOD_ANGLE = Rotations.of(0.13);
+        public static final Angle MAX_HOOD_ANGLE = Rotations.of(0.25);
     }
 
     public static class IntakeConstants {
@@ -364,6 +395,24 @@ public final class Constants {
                 .withKA(0.0)
                 .withKV(0.0)
                 .withKS(0.0);
+
+        public static final MotorOutputConfigs RACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Brake)
+                .withInverted(InvertedValue.CounterClockwise_Positive);
+
+        public static final CurrentLimitsConfigs RACK_CURRENT_LIMITS = new CurrentLimitsConfigs()
+                .withStatorCurrentLimit(50)
+                .withSupplyCurrentLowerLimit(30);
+
+        public static final MotionMagicConfigs RACK_MOTION_MAGIC = new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(
+                        IntakeIOTalonFX.distanceToRotorAngle(Inches.of(50)).per(Second))
+                .withMotionMagicAcceleration(IntakeIOTalonFX.distanceToRotorAngle(Inches.of(150))
+                        .per(Second)
+                        .per(Second));
+
+        public static final double ROTOR_TO_PINION_RATIO = 4.0 / 1;
+        public static final Distance PINION_PITCH_RADIUS = Inches.of(0.5);
 
         public static final Distance STOW_POS = Inches.of(0);
         public static final Distance DEPLOY_POS = Inches.of(10.875);
