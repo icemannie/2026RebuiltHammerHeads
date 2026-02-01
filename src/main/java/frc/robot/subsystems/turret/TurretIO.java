@@ -56,8 +56,6 @@ public interface TurretIO {
 
     public default void stopFlywheel() {}
 
-    public default void stopShoot() {}
-
     public default void resetTurnEncoder() {}
 
     public default void setTurnPID(double kP, double kD, double kV, double kS) {}

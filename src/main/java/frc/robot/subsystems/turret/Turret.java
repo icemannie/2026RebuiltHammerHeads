@@ -10,6 +10,7 @@ import static frc.robot.Constants.TurretConstants.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
@@ -17,10 +18,12 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.Mode;
+import frc.robot.lib.BLine.FlippingUtil;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.Supplier;
@@ -37,6 +40,8 @@ public class Turret extends SubsystemBase {
     Translation3d currentTarget = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
             ? FieldConstants.HUB_BLUE
             : FieldConstants.HUB_RED;
+
+    private boolean isActive = true;
 
     private final TurretVisualizer turretVisualizer;
 
@@ -84,14 +89,41 @@ public class Turret extends SubsystemBase {
         turretVisualizer.intakeFuel();
     }
 
+    public Command stop() {
+        return this.runOnce(() -> {
+            io.stopFlywheel();
+            io.stopHood();
+            io.stopTurn();
+            isActive = false;
+        });
+    }
+
+    public Command start() {
+        return this.runOnce(() -> isActive = true);
+    }
+
+    public void setTarget(Translation3d target) {
+        currentTarget = target;
+        if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+            Translation2d flipped = FlippingUtil.flipFieldPosition(target.toTranslation2d());
+            currentTarget = new Translation3d(flipped.getX(), flipped.getY(), target.getZ());
+        }
+    }
+
     @Override
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
-        currentTarget = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
-                ? FieldConstants.HUB_BLUE
-                : FieldConstants.HUB_RED;
 
+        if (isActive) {
+            calculateShot();
+        }
+
+        turretVisualizer.update3dPose(inputs.turnPosition);
+        updateTunables();
+    }
+
+    private void calculateShot() {
         Pose2d robot = poseSupplier.get();
         ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
 
@@ -103,10 +135,6 @@ public class Turret extends SubsystemBase {
         io.setHoodAngle(calculatedShot.getHoodAngle());
         io.setFlywheelSpeed(
                 TurretCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(), FLYWHEEL_RADIUS));
-
-        turretVisualizer.update3dPose(inputs.turnPosition);
-
-        updateTunables();
 
         Logger.recordOutput("Turret/Shot", calculatedShot);
     }

@@ -381,6 +381,13 @@ public final class Constants {
 
         public static final Angle MIN_HOOD_ANGLE = Rotations.of(0.13);
         public static final Angle MAX_HOOD_ANGLE = Rotations.of(0.25);
+
+        public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
+                Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(60)), Inches.zero());
+        public static final Translation3d PASSING_SPOT_CENTER =
+                new Translation3d(Inches.of(90), FieldConstants.FIELD_WIDTH.div(2), Inches.zero());
+        public static final Translation3d PASSING_SPOT_RIGHT = new Translation3d(
+                Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(60)), Inches.zero());
     }
 
     public static class IntakeConstants {

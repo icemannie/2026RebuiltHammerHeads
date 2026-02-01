@@ -25,13 +25,13 @@ public class Intake extends SubsystemBase {
 
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
-    private boolean isDeployed = true;
+    private boolean automaticDeploy = true;
     private boolean leftDeployed = false;
     private boolean rightDeployed = false;
     public Trigger deployLeftTrigger =
-            new Trigger(this::travelingLeft).and(() -> isDeployed).debounce(0.2);
+            new Trigger(this::travelingLeft).and(() -> automaticDeploy).debounce(0.2);
     public Trigger deployRightTrigger =
-            new Trigger(this::travelingRight).and(() -> isDeployed).debounce(0.2);
+            new Trigger(this::travelingRight).and(() -> automaticDeploy).debounce(0.2);
 
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
 
@@ -79,8 +79,12 @@ public class Intake extends SubsystemBase {
         return rightDeployed;
     }
 
+    public void setAutomaticDeploy(boolean shouldDeployAutomatically) {
+        this.automaticDeploy = shouldDeployAutomatically;
+    }
+
     public Command deploy() {
-        return this.runOnce(() -> isDeployed = true)
+        return this.runOnce(() -> automaticDeploy = true)
                 .andThen(deployLeft().onlyIf(() -> !travelingLeft() && !travelingRight()))
                 .withName("Deploy intake");
     }
@@ -109,7 +113,7 @@ public class Intake extends SubsystemBase {
 
     public Command stow() {
         return this.runOnce(() -> {
-                    isDeployed = false;
+                    automaticDeploy = false;
                     leftIO.setRackPosition(STOW_POS);
                     rightIO.setRackPosition(STOW_POS);
 
