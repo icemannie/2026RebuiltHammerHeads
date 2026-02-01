@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -25,11 +26,17 @@ public class Intake extends SubsystemBase {
 
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
+    @AutoLogOutput
     private boolean automaticDeploy = true;
+
     private boolean leftDeployed = false;
     private boolean rightDeployed = false;
+
+    @AutoLogOutput
     public Trigger deployLeftTrigger =
             new Trigger(this::travelingLeft).and(() -> automaticDeploy).debounce(0.2);
+
+    @AutoLogOutput
     public Trigger deployRightTrigger =
             new Trigger(this::travelingRight).and(() -> automaticDeploy).debounce(0.2);
 
@@ -91,6 +98,8 @@ public class Intake extends SubsystemBase {
 
     public Command deployLeft() {
         return this.runOnce(() -> {
+                    leftDeployed = true;
+                    rightDeployed = false;
                     leftIO.setRackPosition(DEPLOY_POS);
                     rightIO.setRackPosition(STOW_POS);
 
@@ -102,6 +111,8 @@ public class Intake extends SubsystemBase {
 
     public Command deployRight() {
         return this.runOnce(() -> {
+                    leftDeployed = false;
+                    rightDeployed = true;
                     leftIO.setRackPosition(STOW_POS);
                     rightIO.setRackPosition(DEPLOY_POS);
 

@@ -4,6 +4,9 @@
 
 package frc.robot.subsystems.superstructure;
 
+import static frc.robot.Constants.TurretConstants.PASSING_SPOT_LEFT;
+import static frc.robot.Constants.TurretConstants.PASSING_SPOT_RIGHT;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -12,12 +15,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 
 public class Superstructure extends SubsystemBase {
     private final Turret turret;
@@ -25,11 +28,19 @@ public class Superstructure extends SubsystemBase {
 
     private final Supplier<Pose2d> poseSupplier;
 
+    @AutoLogOutput
     private Goal goal = Goal.IDLE;
+
     private Goal nonCollectingGoal = goal;
 
+    @AutoLogOutput
     public final Trigger inAllianceZoneTrigger = new Trigger(this::inAllianceZone);
-    public final Trigger activeHubTrigger = new Trigger(HubTracker::isActive);
+
+    @AutoLogOutput
+    public final Trigger activeHubTrigger = new Trigger(HubTracker::isActive).or(() -> HubTracker.getMatchTime() < 0);
+
+    @AutoLogOutput
+    public final Trigger onLeftSideTrigger;
 
     private final Map<Goal, Command> goalCommands;
 
@@ -39,37 +50,57 @@ public class Superstructure extends SubsystemBase {
         this.intake = intake;
         this.poseSupplier = poseSupplier;
 
-        inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
-        inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
-        inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
+        onLeftSideTrigger = new Trigger(() -> (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                        && poseSupplier.get().getMeasureY().gt(FieldConstants.FIELD_WIDTH.div(2)))
+                || (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                        && poseSupplier.get().getMeasureY().lte(FieldConstants.FIELD_WIDTH.div(2))));
 
         goalCommands = Map.of(
                 Goal.SCORING,
-                        Commands.sequence(
+                Commands.sequence(
                                 this.turret.setTarget(FieldConstants.HUB_BLUE),
                                 this.turret.start(),
-                                this.intake.setAutomaticDeploy(true)),
+                                this.intake.setAutomaticDeploy(true))
+                        .withName("Start scoring"),
                 Goal.PASSING,
-                        Commands.sequence(
-                                this.turret.setTarget(TurretConstants.PASSING_SPOT_CENTER),
+                Commands.sequence(
+                                this.turret.setTarget(
+                                        onLeftSideTrigger.getAsBoolean() ? PASSING_SPOT_LEFT : PASSING_SPOT_RIGHT),
                                 this.turret.start(),
-                                this.intake.setAutomaticDeploy(true)),
+                                this.intake.setAutomaticDeploy(true))
+                        .withName("Start passing"),
                 Goal.COLLECTING,
-                        Commands.sequence(
+                Commands.sequence(
                                 this.turret.stop(),
                                 this.intake.setAutomaticDeploy(false),
                                 Commands.either(
                                         this.intake.deployLeft(),
                                         this.intake.deployRight(),
-                                        this.intake::travelingLeft)),
-                Goal.IDLE, Commands.sequence(this.turret.stop(), this.intake.stow()));
+                                        this.intake::travelingLeft))
+                        .withName("Start collecting"),
+                Goal.IDLE,
+                Commands.sequence(this.turret.stop(), this.intake.stow()).withName("Idle"));
+
+        inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
+        inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
+        inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
+
+        onLeftSideTrigger
+                .and(() -> this.goal == Goal.PASSING)
+                .debounce(0.1)
+                .onTrue(this.turret.setTarget(PASSING_SPOT_LEFT));
+        onLeftSideTrigger
+                .negate()
+                .and(() -> this.goal == Goal.PASSING)
+                .debounce(0.1)
+                .onTrue(this.turret.setTarget(PASSING_SPOT_RIGHT));
     }
 
     private boolean inAllianceZone() {
         Pose2d pose = poseSupplier.get();
         return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
                         && pose.getMeasureX().lt(FieldConstants.ALLIANCE_ZONE)
-                || DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                || DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
                         && pose.getMeasureX().gt(FieldConstants.FIELD_LENGTH.minus(FieldConstants.ALLIANCE_ZONE));
     }
 

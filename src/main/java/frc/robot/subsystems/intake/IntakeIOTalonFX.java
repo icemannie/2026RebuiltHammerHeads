@@ -4,11 +4,11 @@
 
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Value;
 import static frc.robot.Constants.IntakeConstants.DEPLOY_POS;
 import static frc.robot.Constants.IntakeConstants.PINION_PITCH_RADIUS;
 import static frc.robot.Constants.IntakeConstants.RACK_CURRENT_LIMITS;
@@ -124,7 +124,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     }
 
     public static Angle distanceToRotorAngle(Distance distance) {
-        return Radians.of(distance.div(PINION_PITCH_RADIUS).in(Value) * ROTOR_TO_PINION_RATIO);
+        return Radians.of(distance.in(Meters) / PINION_PITCH_RADIUS.in(Meters) * ROTOR_TO_PINION_RATIO);
     }
 
     @Override

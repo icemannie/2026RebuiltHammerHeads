@@ -22,6 +22,7 @@ public class IntakeIOSim implements IntakeIO {
     public void updateInputs(IntakeIOInputs inputs) {
         inputs.rackMotorConnected = true;
         inputs.rackPosition = Meters.of(rackProfile.getSetpoint().position);
+        rackProfile.calculate(rackProfile.getSetpoint().position);
         inputs.rackVelocity = MetersPerSecond.of(rackProfile.getSetpoint().velocity);
         inputs.rackSetpoint = Meters.of(rackProfile.getSetpoint().position);
         inputs.rackSetpointVelocity = MetersPerSecond.of(rackProfile.getSetpoint().velocity);

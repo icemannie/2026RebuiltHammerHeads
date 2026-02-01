@@ -383,11 +383,11 @@ public final class Constants {
         public static final Angle MAX_HOOD_ANGLE = Rotations.of(0.25);
 
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
-                Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(60)), Inches.zero());
+                Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
         public static final Translation3d PASSING_SPOT_CENTER =
                 new Translation3d(Inches.of(90), FieldConstants.FIELD_WIDTH.div(2), Inches.zero());
         public static final Translation3d PASSING_SPOT_RIGHT = new Translation3d(
-                Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(60)), Inches.zero());
+                Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(85)), Inches.zero());
     }
 
     public static class IntakeConstants {
@@ -395,6 +395,9 @@ public final class Constants {
         public static final int RIGHT_RACK_ID = 0;
         public static final int LEFT_SPIN_ID = 0;
         public static final int RIGHT_SPIN_ID = 0;
+
+        public static final double ROTOR_TO_PINION_RATIO = 4.0 / 1;
+        public static final Distance PINION_PITCH_RADIUS = Inches.of(0.5);
 
         public static final Slot0Configs RACK_GAINS = new Slot0Configs()
                 .withKP(0.0)
@@ -423,9 +426,6 @@ public final class Constants {
                 .withMotionMagicAcceleration(IntakeIOTalonFX.distanceToRotorAngle(Inches.of(150))
                         .per(Second)
                         .per(Second));
-
-        public static final double ROTOR_TO_PINION_RATIO = 4.0 / 1;
-        public static final Distance PINION_PITCH_RADIUS = Inches.of(0.5);
 
         public static final Distance STOW_POS = Inches.of(0);
         public static final Distance DEPLOY_POS = Inches.of(10.875);

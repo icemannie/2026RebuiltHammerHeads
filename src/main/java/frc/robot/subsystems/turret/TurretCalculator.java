@@ -122,6 +122,10 @@ public class TurretCalculator {
         double b = (D1 - A1 * a) / B1;
         double theta = Math.atan(b);
         double v0 = Math.sqrt(-g / (2 * a * (Math.cos(theta)) * (Math.cos(theta))));
+        if (Double.isNaN(v0) || Double.isNaN(theta)) {
+            v0 = 0;
+            theta = 0;
+        }
         return new ShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
     }
 
