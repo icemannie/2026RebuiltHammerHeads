@@ -102,12 +102,14 @@ public class Turret extends SubsystemBase {
         return this.runOnce(() -> isActive = true);
     }
 
-    public void setTarget(Translation3d target) {
-        currentTarget = target;
-        if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
-            Translation2d flipped = FlippingUtil.flipFieldPosition(target.toTranslation2d());
-            currentTarget = new Translation3d(flipped.getX(), flipped.getY(), target.getZ());
-        }
+    public Command setTarget(Translation3d target) {
+        return this.runOnce(() -> {
+            currentTarget = target;
+            if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+                Translation2d flipped = FlippingUtil.flipFieldPosition(target.toTranslation2d());
+                currentTarget = new Translation3d(flipped.getX(), flipped.getY(), target.getZ());
+            }
+        });
     }
 
     @Override

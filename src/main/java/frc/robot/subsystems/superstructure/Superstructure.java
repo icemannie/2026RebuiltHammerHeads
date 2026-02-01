@@ -8,13 +8,15 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
-
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class Superstructure extends SubsystemBase {
@@ -24,9 +26,12 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> poseSupplier;
 
     private Goal goal = Goal.IDLE;
+    private Goal nonCollectingGoal = goal;
 
     public final Trigger inAllianceZoneTrigger = new Trigger(this::inAllianceZone);
     public final Trigger activeHubTrigger = new Trigger(HubTracker::isActive);
+
+    private final Map<Goal, Command> goalCommands;
 
     /** Creates a new Superstructure. */
     public Superstructure(Turret turret, Intake intake, Supplier<Pose2d> poseSupplier) {
@@ -35,6 +40,29 @@ public class Superstructure extends SubsystemBase {
         this.poseSupplier = poseSupplier;
 
         inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
+        inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
+        inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
+
+        goalCommands = Map.of(
+                Goal.SCORING,
+                        Commands.sequence(
+                                this.turret.setTarget(FieldConstants.HUB_BLUE),
+                                this.turret.start(),
+                                this.intake.setAutomaticDeploy(true)),
+                Goal.PASSING,
+                        Commands.sequence(
+                                this.turret.setTarget(TurretConstants.PASSING_SPOT_CENTER),
+                                this.turret.start(),
+                                this.intake.setAutomaticDeploy(true)),
+                Goal.COLLECTING,
+                        Commands.sequence(
+                                this.turret.stop(),
+                                this.intake.setAutomaticDeploy(false),
+                                Commands.either(
+                                        this.intake.deployLeft(),
+                                        this.intake.deployRight(),
+                                        this.intake::travelingLeft)),
+                Goal.IDLE, Commands.sequence(this.turret.stop(), this.intake.stow()));
     }
 
     private boolean inAllianceZone() {
@@ -46,18 +74,15 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command setGoal(Goal goal) {
-        return this.runOnce(() -> {
-            this.goal = goal;
-            switch (goal) {
-                case SCORING:
-                    turret.setTarget(FieldConstants.HUB_BLUE);
-                    intake.setAutomaticDeploy(true);
-                    break;
+        return this.runOnce(() -> this.goal = goal).andThen(goalCommands.get(goal));
+    }
 
-                default:
-                    break;
-            }
-        });
+    public Command startCollecting() {
+        return this.setGoal(Goal.COLLECTING).beforeStarting(() -> nonCollectingGoal = goal);
+    }
+
+    public Command stopCollecting() {
+        return this.setGoal(nonCollectingGoal);
     }
 
     @Override
@@ -67,7 +92,6 @@ public class Superstructure extends SubsystemBase {
 
     public static enum Goal {
         SCORING,
-        DUMPING,
         PASSING,
         COLLECTING,
         IDLE

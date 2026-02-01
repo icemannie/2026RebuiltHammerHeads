@@ -63,11 +63,11 @@ public class Intake extends SubsystemBase {
         SmartDashboard.putData(stow());
     }
 
-    private boolean travelingLeft() {
+    public boolean travelingLeft() {
         return chassisSpeedsSupplier.get().vyMetersPerSecond > MIN_SWITCH_ROBOT_VELOCITY.in(MetersPerSecond);
     }
 
-    private boolean travelingRight() {
+    public boolean travelingRight() {
         return chassisSpeedsSupplier.get().vyMetersPerSecond < -MIN_SWITCH_ROBOT_VELOCITY.in(MetersPerSecond);
     }
 
@@ -79,8 +79,8 @@ public class Intake extends SubsystemBase {
         return rightDeployed;
     }
 
-    public void setAutomaticDeploy(boolean shouldDeployAutomatically) {
-        this.automaticDeploy = shouldDeployAutomatically;
+    public Command setAutomaticDeploy(boolean shouldDeployAutomatically) {
+        return this.runOnce(() -> this.automaticDeploy = shouldDeployAutomatically);
     }
 
     public Command deploy() {
@@ -89,7 +89,7 @@ public class Intake extends SubsystemBase {
                 .withName("Deploy intake");
     }
 
-    private Command deployLeft() {
+    public Command deployLeft() {
         return this.runOnce(() -> {
                     leftIO.setRackPosition(DEPLOY_POS);
                     rightIO.setRackPosition(STOW_POS);
@@ -100,7 +100,7 @@ public class Intake extends SubsystemBase {
                 .withName("Deploy Left Intake");
     }
 
-    private Command deployRight() {
+    public Command deployRight() {
         return this.runOnce(() -> {
                     leftIO.setRackPosition(STOW_POS);
                     rightIO.setRackPosition(DEPLOY_POS);
