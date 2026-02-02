@@ -4,8 +4,10 @@
 
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,16 +15,22 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ControllerConstants;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.SlewRateLimiter2d;
+import frc.robot.util.TunableControls.TunablePIDController;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 /** Default drive command to run that drives based on controller input */
 public class TeleopDrive extends Command {
@@ -36,6 +44,20 @@ public class TeleopDrive extends Command {
     private LinearVelocity maxDriveSpeed = SwerveConstants.DEFAULT_DRIVE_SPEED;
     private AngularVelocity maxRotSpeed = SwerveConstants.DEFAULT_ROT_SPEED;
 
+    @AutoLogOutput
+    private final Trigger inTrenchZoneTrigger = new Trigger(this::inTrenchZone).debounce(0.1);
+
+    @AutoLogOutput
+    private final Trigger inBumpZoneTrigger = new Trigger(this::inBumpZone).debounce(0.1);
+
+    private final TunablePIDController trenchYController =
+            new TunablePIDController(SwerveConstants.TRENCH_TRANSLATION_CONSTANTS);
+    private final TunablePIDController rotationController =
+            new TunablePIDController(SwerveConstants.ROTATION_CONSTANTS);
+
+    @AutoLogOutput
+    private DriveMode currentDriveMode = DriveMode.NORMAL;
+
     /** Creates a new TeleopDrive. */
     public TeleopDrive(Drive drive, CommandXboxController controller) {
         this.drive = drive;
@@ -44,6 +66,13 @@ public class TeleopDrive extends Command {
         this.omegaSupplier = () -> -controller.getRightX();
         this.driveLimiter = new SlewRateLimiter2d(SwerveConstants.MAX_TELEOP_ACCEL.in(MetersPerSecondPerSecond));
 
+        inTrenchZoneTrigger.onTrue(updateDriveMode(DriveMode.TRENCH_LOCK));
+        inBumpZoneTrigger.onTrue(updateDriveMode(DriveMode.BUMP_LOCK));
+        inTrenchZoneTrigger.or(inBumpZoneTrigger).onFalse(updateDriveMode(DriveMode.NORMAL));
+        for (int i = 0; i < 4; i++) {
+            Logger.recordOutput("Trench" + i, FieldConstants.TRENCH_ZONES[i]);
+            Logger.recordOutput("Bump" + i, FieldConstants.BUMP_ZONES[i]);
+        }
         addRequirements(drive);
     }
 
@@ -59,6 +88,61 @@ public class TeleopDrive extends Command {
         return new Pose2d(new Translation2d(), linearDirection)
                 .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                 .getTranslation();
+    }
+
+    private boolean inTrenchZone() {
+        Pose2d robotPose = drive.getPose();
+        for (Translation2d[] zone : FieldConstants.TRENCH_ZONES) {
+            if (robotPose.getX() >= zone[0].getX()
+                    && robotPose.getX() <= zone[1].getX()
+                    && robotPose.getY() >= zone[0].getY()
+                    && robotPose.getY() <= zone[1].getY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Distance getTrenchY() {
+        Pose2d robotPose = drive.getPose();
+        if (robotPose.getMeasureY().gte(FieldConstants.FIELD_WIDTH.div(2))) {
+            return FieldConstants.FIELD_WIDTH.minus(FieldConstants.TRENCH_CENTER);
+        }
+        return FieldConstants.TRENCH_CENTER;
+    }
+
+    private Rotation2d getTrenchLockAngle() {
+        if (Math.abs(MathUtil.inputModulus(drive.getRotation().getDegrees() - 90, -180, 180)) < 90) {
+            return Rotation2d.kCCW_90deg;
+        } else {
+            return Rotation2d.kCW_90deg;
+        }
+    }
+
+    private Rotation2d getBumpLockAngle() {
+        for (int i = -135; i < 180; i += 90) {
+            if (Math.abs(MathUtil.inputModulus(drive.getRotation().getDegrees() - i, -180, 180)) <= 45) {
+                return Rotation2d.fromDegrees(i);
+            }
+        }
+        return Rotation2d.kZero;
+    }
+
+    private boolean inBumpZone() {
+        Pose2d robotPose = drive.getPose();
+        for (Translation2d[] zone : FieldConstants.BUMP_ZONES) {
+            if (robotPose.getX() >= zone[0].getX()
+                    && robotPose.getX() <= zone[1].getX()
+                    && robotPose.getY() >= zone[0].getY()
+                    && robotPose.getY() <= zone[1].getY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Command updateDriveMode(DriveMode driveMode) {
+        return Commands.runOnce(() -> currentDriveMode = driveMode);
     }
 
     // Called when the command is initially scheduled.
@@ -77,13 +161,36 @@ public class TeleopDrive extends Command {
         linearVelocity = linearVelocity.times(maxDriveSpeed.in(MetersPerSecond));
         linearVelocity = driveLimiter.calculate(linearVelocity);
 
-        double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), ControllerConstants.CONTROLLER_DEADBAND);
-        omega = Math.copySign(omega * omega, omega); // square for more precise rotation control
+        switch (currentDriveMode) {
+            case NORMAL:
+                double omega =
+                        MathUtil.applyDeadband(omegaSupplier.getAsDouble(), ControllerConstants.CONTROLLER_DEADBAND);
+                omega = Math.copySign(omega * omega, omega); // square for more precise rotation control
 
-        drive.driveFieldCentric(
-                MetersPerSecond.of(linearVelocity.getX()),
-                MetersPerSecond.of(linearVelocity.getY()),
-                maxRotSpeed.times(omega));
+                drive.driveFieldCentric(
+                        MetersPerSecond.of(linearVelocity.getX()),
+                        MetersPerSecond.of(linearVelocity.getY()),
+                        maxRotSpeed.times(omega));
+                break;
+            case TRENCH_LOCK:
+                double yVel = trenchYController.calculate(
+                        drive.getPose().getY(), getTrenchY().in(Meters));
+                double rotSpeedToStraight = rotationController.calculate(
+                        drive.getRotation().getRadians(), getTrenchLockAngle().getRadians());
+                drive.driveFieldCentric(
+                        MetersPerSecond.of(linearVelocity.getX()),
+                        MetersPerSecond.of(yVel),
+                        RadiansPerSecond.of(rotSpeedToStraight));
+                break;
+            case BUMP_LOCK:
+                double rotSpeedToDiagonal = rotationController.calculate(
+                        drive.getRotation().getRadians(), getBumpLockAngle().getRadians());
+                drive.driveFieldCentric(
+                        MetersPerSecond.of(linearVelocity.getX()),
+                        MetersPerSecond.of(linearVelocity.getY()),
+                        RadiansPerSecond.of(rotSpeedToDiagonal));
+                break;
+        }
     }
 
     private void setDriveSpeed(LinearVelocity speed) {
@@ -114,5 +221,11 @@ public class TeleopDrive extends Command {
     @Override
     public boolean isFinished() {
         return false;
+    }
+
+    private enum DriveMode {
+        NORMAL,
+        TRENCH_LOCK,
+        BUMP_LOCK
     }
 }

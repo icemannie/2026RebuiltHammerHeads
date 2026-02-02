@@ -45,6 +45,8 @@ import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.util.TunableControls.ControlConstants;
+import frc.robot.util.TunableControls.TunableControlConstants;
 import java.util.function.Supplier;
 
 /**
@@ -322,6 +324,17 @@ public final class Constants {
         public static final Velocity<VoltageUnit> FF_RAMP_RATE = Volts.of(0.1).per(Second);
         public static final AngularVelocity FF_WHEEL_RADIUS_MAX_VELOCITY = RadiansPerSecond.of(0.25);
         public static final AngularAcceleration FF_WHEEL_RADIUS_RAMP_RATE = RadiansPerSecondPerSecond.of(0.05);
+
+        // Alignment
+        private static final ControlConstants TRENCH_TRANSLATION_BASE_CONSTANTS =
+                new ControlConstants().withPID(6, 0, 0);
+        private static final ControlConstants ROTATION_BASE_CONSTANTS =
+                new ControlConstants().withPID(8, 0, 0).withContinuous(-180, 180);
+
+        public static final TunableControlConstants TRENCH_TRANSLATION_CONSTANTS =
+                new TunableControlConstants("Swerve/Trench Translation", TRENCH_TRANSLATION_BASE_CONSTANTS);
+        public static final TunableControlConstants ROTATION_CONSTANTS =
+                new TunableControlConstants("Swerve/Rotation", ROTATION_BASE_CONSTANTS);
     }
 
     public static class TurretConstants {
@@ -479,6 +492,68 @@ public final class Constants {
                 new Translation3d(FIELD_LENGTH.minus(Inches.of(181.56)), FIELD_WIDTH.div(2), Inches.of(56.4));
         public static final Distance FUNNEL_RADIUS = Inches.of(24);
         public static final Distance FUNNEL_HEIGHT = Inches.of(72 - 56.4);
+
+        private static final Distance TRENCH_BUMP_X = Inches.of(181.56);
+        private static final Distance TRENCH_WIDTH = Inches.of(49.86);
+        private static final Distance BUMP_INSET = TRENCH_WIDTH.plus(Inches.of(12));
+        private static final Distance BUMP_LENGTH = Inches.of(73);
+
+        private static final Distance TRENCH_ZONE_EXTENSION = Inches.of(70);
+        private static final Distance BUMP_ZONE_EXTENSION = Inches.of(60);
+        private static final Distance TRENCH_BUMP_ZONE_TRANSITION =
+                TRENCH_WIDTH.plus(BUMP_INSET).div(2);
+
+        public static final Translation2d[][] TRENCH_ZONES = {
+            new Translation2d[] {
+                new Translation2d(TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION), Inches.zero()),
+                new Translation2d(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION), TRENCH_BUMP_ZONE_TRANSITION)
+            },
+            new Translation2d[] {
+                new Translation2d(
+                        TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION), FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION)),
+                new Translation2d(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION), FIELD_WIDTH)
+            },
+            new Translation2d[] {
+                new Translation2d(FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION)), Inches.zero()),
+                new Translation2d(
+                        FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION)), TRENCH_BUMP_ZONE_TRANSITION)
+            },
+            new Translation2d[] {
+                new Translation2d(
+                        FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION)),
+                        FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION)),
+                new Translation2d(FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION)), FIELD_WIDTH)
+            }
+        };
+
+        public static final Translation2d[][] BUMP_ZONES = {
+            new Translation2d[] {
+                new Translation2d(TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION), TRENCH_BUMP_ZONE_TRANSITION),
+                new Translation2d(TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION), BUMP_INSET.plus(BUMP_LENGTH))
+            },
+            new Translation2d[] {
+                new Translation2d(
+                        TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION), FIELD_WIDTH.minus(BUMP_INSET.plus(BUMP_LENGTH))),
+                new Translation2d(
+                        TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION), FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION))
+            },
+            new Translation2d[] {
+                new Translation2d(
+                        FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION)),
+                        FIELD_WIDTH.minus(BUMP_INSET.plus(BUMP_LENGTH))),
+                new Translation2d(
+                        FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION)),
+                        FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION))
+            },
+            new Translation2d[] {
+                new Translation2d(
+                        FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION)), TRENCH_BUMP_ZONE_TRANSITION),
+                new Translation2d(
+                        FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION)), BUMP_INSET.plus(BUMP_LENGTH))
+            }
+        };
+
+        public static final Distance TRENCH_CENTER = TRENCH_WIDTH.div(2);
     }
 
     private Constants() {}

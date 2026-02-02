@@ -21,7 +21,7 @@ public class TurretIOSim implements TurretIO {
     private AngularVelocity flywheelGoal = RadiansPerSecond.zero();
 
     private SlewRateLimiter flywheelAccelLimiter =
-            new SlewRateLimiter(RPM.of(4000).div(Seconds.of(4)).in(RadiansPerSecondPerSecond));
+            new SlewRateLimiter(RPM.of(4000).div(Seconds.of(2)).in(RadiansPerSecondPerSecond));
 
     public TurretIOSim() {}
 
