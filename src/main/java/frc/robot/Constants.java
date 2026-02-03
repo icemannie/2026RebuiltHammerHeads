@@ -451,7 +451,27 @@ public final class Constants {
         public static final LinearVelocity BASE_VEL = InchesPerSecond.of(50); // added to final velocity
     }
 
-    public static class IndexerConstants {}
+    public static class IndexerConstants {
+        public static final int SPIN_ID = 18;
+        public static final int FEED_ID = 8;
+
+        public static final MotorOutputConfigs SPIN_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Coast)
+                .withInverted(InvertedValue.CounterClockwise_Positive);
+
+        public static final MotorOutputConfigs FEED_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Brake)
+                .withInverted(InvertedValue.Clockwise_Positive);
+
+        public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+
+        public static final CurrentLimitsConfigs FEED_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+
+        public static final Voltage SPIN_VOLTAGE = Volts.of(6);
+        public static final Voltage FEED_VOLTAGE = Volts.of(6);
+    }
 
     public static class ClimberConstants {}
 
