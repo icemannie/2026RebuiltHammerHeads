@@ -61,12 +61,4 @@ public class Indexer extends SubsystemBase {
                 })
                 .withName("IndexerStop");
     }
-
-    public void stopSpin() {
-        io.stopSpin();
-    }
-
-    public void stopFeed() {
-        io.stopFeed();
-    }
 }

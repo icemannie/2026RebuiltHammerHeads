@@ -456,20 +456,20 @@ public final class Constants {
         public static final int FEED_ID = 8;
 
         public static final MotorOutputConfigs SPIN_OUTPUT_CONFIGS = new MotorOutputConfigs()
-                .withNeutralMode(NeutralModeValue.Coast)
+                .withNeutralMode(NeutralModeValue.Brake)
                 .withInverted(InvertedValue.CounterClockwise_Positive);
 
         public static final MotorOutputConfigs FEED_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
-                .withInverted(InvertedValue.Clockwise_Positive);
+                .withInverted(InvertedValue.CounterClockwise_Positive);
 
         public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
         public static final CurrentLimitsConfigs FEED_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
-        public static final Voltage SPIN_VOLTAGE = Volts.of(6);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(3);
         public static final Voltage FEED_VOLTAGE = Volts.of(6);
     }
 

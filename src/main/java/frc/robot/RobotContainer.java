@@ -30,6 +30,10 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIO;
+import frc.robot.subsystems.indexer.IndexerIOSim;
+import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
@@ -52,6 +56,7 @@ public class RobotContainer {
     private final Drive drive;
     private final Intake intake;
     private final Turret turret;
+    private final Indexer indexer;
     private final Superstructure superstructure;
 
     // Controller
@@ -62,6 +67,7 @@ public class RobotContainer {
 
     // Bindings
     private final Trigger resetHeadingTrigger = controller.y();
+    private final Trigger indexTrigger = controller.a();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -83,6 +89,7 @@ public class RobotContainer {
                         // new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
                         // new IntakeIOTalonFX(IntakeConstants.RIGHT_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
+                indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
                 break;
 
@@ -96,7 +103,7 @@ public class RobotContainer {
                         new ModuleIOSim(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intake = new Intake(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(new TurretIOSim(), drive::getPose, drive::getFieldSpeeds);
-
+                indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
                 configureFuelSim();
                 break;
 
@@ -106,6 +113,7 @@ public class RobotContainer {
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 intake = new Intake(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
+                indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 break;
         }
 
@@ -143,6 +151,8 @@ public class RobotContainer {
         drive.setDefaultCommand(teleopDrive);
 
         resetHeadingTrigger.onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d())));
+        indexTrigger.onTrue(indexer.activate());
+        indexTrigger.onFalse(indexer.stop());
     }
 
     private void configureFuelSim() {

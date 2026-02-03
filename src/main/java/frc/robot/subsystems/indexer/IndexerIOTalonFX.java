@@ -1,8 +1,10 @@
 package frc.robot.subsystems.indexer;
 
 import static frc.robot.Constants.IndexerConstants.FEED_CURRENT_LIMITS;
+import static frc.robot.Constants.IndexerConstants.FEED_ID;
 import static frc.robot.Constants.IndexerConstants.FEED_OUTPUT_CONFIGS;
 import static frc.robot.Constants.IndexerConstants.SPIN_CURRENT_LIMITS;
+import static frc.robot.Constants.IndexerConstants.SPIN_ID;
 import static frc.robot.Constants.IndexerConstants.SPIN_OUTPUT_CONFIGS;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -34,9 +36,9 @@ public class IndexerIOTalonFX implements IndexerIO {
     private final StatusSignal<Current> feedCurrent;
     private final StatusSignal<Voltage> feedAppliedVolts;
 
-    public IndexerIOTalonFX(int spinMotorID, int feedMotorID) {
-        spinMotor = new TalonFX(spinMotorID, Constants.CAN_FD_BUS);
-        feedMotor = new TalonFX(feedMotorID, Constants.CAN_FD_BUS);
+    public IndexerIOTalonFX() {
+        spinMotor = new TalonFX(SPIN_ID, Constants.CAN_FD_BUS);
+        feedMotor = new TalonFX(FEED_ID, Constants.CAN_FD_BUS);
 
         TalonFXConfiguration spinConfig =
                 new TalonFXConfiguration().withMotorOutput(SPIN_OUTPUT_CONFIGS).withCurrentLimits(SPIN_CURRENT_LIMITS);
@@ -65,12 +67,14 @@ public class IndexerIOTalonFX implements IndexerIO {
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
-        inputs.spinMotorConnected = BaseStatusSignal.refreshAll(spinVelocity, spinCurrent, spinAppliedVolts).isOK();
+        inputs.spinMotorConnected = BaseStatusSignal.refreshAll(spinVelocity, spinCurrent, spinAppliedVolts)
+                .isOK();
         inputs.spinVelocity = spinVelocity.getValue();
         inputs.spinCurrent = spinCurrent.getValue();
         inputs.spinAppliedVolts = spinAppliedVolts.getValue();
 
-        inputs.feedMotorConnected = BaseStatusSignal.refreshAll(feedVelocity, feedCurrent, feedAppliedVolts).isOK();
+        inputs.feedMotorConnected = BaseStatusSignal.refreshAll(feedVelocity, feedCurrent, feedAppliedVolts)
+                .isOK();
         inputs.feedVelocity = feedVelocity.getValue();
         inputs.feedCurrent = feedCurrent.getValue();
         inputs.feedAppliedVolts = feedAppliedVolts.getValue();
