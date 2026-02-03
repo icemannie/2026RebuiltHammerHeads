@@ -5,6 +5,7 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.IntakeConstants.*;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -51,6 +52,8 @@ public class Intake extends SubsystemBase {
             new LoggedTunableNumber("Intake/maxVelRotPerSec", RACK_MOTION_MAGIC.MotionMagicCruiseVelocity);
     private final LoggedTunableNumber rackMaxAcc =
             new LoggedTunableNumber("Intake/maxAccRotPerSecPerSec", RACK_MOTION_MAGIC.MotionMagicAcceleration);
+    private final LoggedTunableNumber spinVoltage =
+            new LoggedTunableNumber("Intake/Spin Voltage", SPIN_VOLTAGE.in(Volts));
 
     /** Creates a new Intake. */
     public Intake(IntakeIO leftIO, IntakeIO rightIO, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
@@ -103,7 +106,7 @@ public class Intake extends SubsystemBase {
                     leftIO.setRackPosition(DEPLOY_POS);
                     rightIO.setRackPosition(STOW_POS);
 
-                    leftIO.setSpinOutput(SPIN_VOLTAGE);
+                    leftIO.setSpinOutput(Volts.of(spinVoltage.get()));
                     rightIO.stopSpin();
                 })
                 .withName("Deploy Left Intake");
@@ -117,7 +120,7 @@ public class Intake extends SubsystemBase {
                     rightIO.setRackPosition(DEPLOY_POS);
 
                     leftIO.stopSpin();
-                    rightIO.setSpinOutput(SPIN_VOLTAGE);
+                    rightIO.setSpinOutput(Volts.of(spinVoltage.get()));
                 })
                 .withName("Deploy Right Intake");
     }
@@ -158,6 +161,15 @@ public class Intake extends SubsystemBase {
                     rackKS.get(),
                     rackMaxVel.get(),
                     rackMaxAcc.get());
+        }
+
+        if (spinVoltage.hasChanged(hashCode())) {
+            if (leftDeployed) {
+                leftIO.setSpinOutput(Volts.of(spinVoltage.get()));
+            }
+            if (rightDeployed) {
+                rightIO.setSpinOutput(Volts.of(spinVoltage.get()));
+            }
         }
     }
 

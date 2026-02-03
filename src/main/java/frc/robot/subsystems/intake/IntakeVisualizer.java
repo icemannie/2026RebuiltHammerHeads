@@ -25,7 +25,7 @@ public class IntakeVisualizer {
     private final LoggedMechanismRoot2d rightRoot;
     private final LoggedMechanismLigament2d rightIntake;
 
-    @AutoLogOutput
+    @AutoLogOutput(key = "Intake/Mechanism2d")
     private final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 0.75);
 
     private final LoggedMechanismRoot2d leftRoot;
