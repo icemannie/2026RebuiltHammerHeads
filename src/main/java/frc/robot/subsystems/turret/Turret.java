@@ -17,12 +17,9 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.Mode;
 import frc.robot.lib.BLine.FlippingUtil;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
@@ -67,26 +64,6 @@ public class Turret extends SubsystemBase {
                                 .rotateAround(poseSupplier.get().getTranslation(), new Rotation2d(inputs.turnPosition)))
                         .transformBy(ROBOT_TO_TURRET_TRANSFORM),
                 fieldSpeedsSupplier);
-
-        if (Constants.CURRENT_MODE == Mode.SIM) {
-            this.setDefaultCommand(turretVisualizer.repeatedlyLaunchFuel(
-                    () -> TurretCalculator.angularToLinearVelocity(inputs.flywheelSpeed, FLYWHEEL_RADIUS),
-                    () -> inputs.hoodPosition,
-                    this));
-
-            SmartDashboard.putData(this.runOnce(() -> turretVisualizer.launchFuel(
-                            TurretCalculator.angularToLinearVelocity(inputs.flywheelSpeed, FLYWHEEL_RADIUS),
-                            inputs.hoodPosition))
-                    .withName("Launch Fuel"));
-        }
-    }
-
-    public boolean simAbleToIntake() {
-        return turretVisualizer.canIntake();
-    }
-
-    public void simIntake() {
-        turretVisualizer.intakeFuel();
     }
 
     public Command stop() {

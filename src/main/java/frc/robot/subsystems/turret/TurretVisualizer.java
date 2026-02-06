@@ -13,9 +13,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.util.FuelSim;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,7 +21,6 @@ public class TurretVisualizer {
     private Translation3d[] trajectory = new Translation3d[50];
     private Supplier<Pose3d> poseSupplier;
     private Supplier<ChassisSpeeds> fieldSpeedsSupplier;
-    private final int CAPACITY = 30;
 
     public TurretVisualizer(Supplier<Pose3d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.poseSupplier = poseSupplier;
@@ -46,32 +42,6 @@ public class TurretVisualizer {
         yVel += fieldSpeeds.vyMetersPerSecond;
 
         return new Translation3d(xVel, yVel, verticalVel);
-    }
-
-    private int fuelStored = 8;
-
-    public boolean canIntake() {
-        return fuelStored < CAPACITY;
-    }
-
-    public void intakeFuel() {
-        fuelStored++;
-    }
-
-    public void launchFuel(LinearVelocity vel, Angle angle) {
-        if (fuelStored == 0) return;
-        fuelStored--;
-        Pose3d robot = poseSupplier.get();
-
-        Translation3d initialPosition = robot.getTranslation();
-        FuelSim.getInstance().spawnFuel(initialPosition, launchVel(vel, angle));
-    }
-
-    public Command repeatedlyLaunchFuel(
-            Supplier<LinearVelocity> velSupplier, Supplier<Angle> angleSupplier, Turret turret) {
-        return turret.runOnce(() -> launchFuel(velSupplier.get(), angleSupplier.get()))
-                .andThen(Commands.waitSeconds(0.25))
-                .repeatedly();
     }
 
     public void updateFuel(LinearVelocity vel, Angle angle) {

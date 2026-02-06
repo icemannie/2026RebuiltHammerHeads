@@ -42,6 +42,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.util.FuelSim;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -72,6 +73,8 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
+    public FuelSim fuelSim;
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         switch (Constants.CURRENT_MODE) {
@@ -94,7 +97,8 @@ public class RobotContainer {
                 break;
 
             case SIM:
-                // Sim robot, instantiate physics sim IO implementations
+                configureFuelSim();
+                TurretIOSim turretSim = new TurretIOSim(fuelSim);
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(SwerveConstants.FrontLeft.MODULE_CONSTANTS),
@@ -102,9 +106,10 @@ public class RobotContainer {
                         new ModuleIOSim(SwerveConstants.BackLeft.MODULE_CONSTANTS),
                         new ModuleIOSim(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intake = new Intake(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
-                turret = new Turret(new TurretIOSim(), drive::getPose, drive::getFieldSpeeds);
+                turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
-                configureFuelSim();
+
+                configureFuelSimRobot(turretSim::canIntake, turretSim::intakeFuel);
                 break;
 
             default:
@@ -156,36 +161,39 @@ public class RobotContainer {
     }
 
     private void configureFuelSim() {
-        FuelSim instance = FuelSim.getInstance();
-        instance.spawnStartingFuel();
-        instance.registerRobot(
+        fuelSim = new FuelSim();
+        fuelSim.spawnStartingFuel();
+
+        fuelSim.start();
+        SmartDashboard.putData(Commands.runOnce(() -> {
+                    fuelSim.clearFuel();
+                    fuelSim.spawnStartingFuel();
+                })
+                .withName("Reset Fuel")
+                .ignoringDisable(true));
+    }
+
+    private void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
+        fuelSim.registerRobot(
                 Dimensions.FULL_WIDTH.in(Meters),
                 Dimensions.FULL_LENGTH.in(Meters),
                 Dimensions.BUMPER_HEIGHT.in(Meters),
                 drive::getPose,
                 drive::getFieldSpeeds);
-        instance.registerIntake(
+        fuelSim.registerIntake(
                 -Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                 -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
                 -Dimensions.FULL_WIDTH.div(2).in(Meters),
-                () -> intake.isRightDeployed() && turret.simAbleToIntake(),
-                turret::simIntake);
-        instance.registerIntake(
+                () -> intake.isRightDeployed() && ableToIntake.getAsBoolean(),
+                intakeCallback);
+        fuelSim.registerIntake(
                 -Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_WIDTH.div(2).in(Meters),
                 Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
-                () -> intake.isLeftDeployed() && turret.simAbleToIntake(),
-                turret::simIntake);
-
-        instance.start();
-        SmartDashboard.putData(Commands.runOnce(() -> {
-                    FuelSim.getInstance().clearFuel();
-                    FuelSim.getInstance().spawnStartingFuel();
-                })
-                .withName("Reset Fuel")
-                .ignoringDisable(true));
+                () -> intake.isLeftDeployed() && ableToIntake.getAsBoolean(),
+                intakeCallback);
     }
 
     /**
