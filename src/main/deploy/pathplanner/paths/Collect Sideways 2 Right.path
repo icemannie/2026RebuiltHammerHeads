@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.858250000000001,
+        "x": 5.99,
         "y": 0.65
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.108250000000001,
+        "x": 6.24,
         "y": 0.6500000000000004
       },
       "isLocked": false,
@@ -64,11 +64,11 @@
     },
     {
       "anchor": {
-        "x": 5.858250000000001,
+        "x": 5.99,
         "y": 0.65
       },
       "prevControl": {
-        "x": 6.358250000000001,
+        "x": 6.49,
         "y": 0.6500000000000004
       },
       "nextControl": null,
@@ -76,7 +76,16 @@
       "linkedName": "Trench Exit Right"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 3.0,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",

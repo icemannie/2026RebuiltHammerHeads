@@ -8,7 +8,7 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.014966807164882,
+        "x": 6.239800000002521,
         "y": 7.440683333333332
       },
       "isLocked": false,
@@ -16,72 +16,81 @@
     },
     {
       "anchor": {
-        "x": 3.7778111111111112,
-        "y": 7.440683333333332
+        "x": 7.782777777777778,
+        "y": 6.9924388888888895
       },
       "prevControl": {
-        "x": 4.382673511237305,
-        "y": 7.440683333333332
+        "x": 7.782777777777778,
+        "y": 7.431047147130263
       },
       "nextControl": {
-        "x": 2.7741333333333333,
-        "y": 7.440683333333332
+        "x": 7.782777777777778,
+        "y": 6.723758914434447
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": "Collect Sideways Left"
     },
     {
       "anchor": {
-        "x": 1.2150222222222222,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 5.0484222222222215
       },
       "prevControl": {
-        "x": 2.3212849283081427,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 4.7984222222222215
       },
       "nextControl": {
-        "x": 0.7150222222222238,
-        "y": 5.9497833333333325
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 0.75,
-        "y": 5.9497833333333325
-      },
-      "prevControl": {
-        "x": 1.0,
-        "y": 5.9497833333333325
-      },
-      "nextControl": {
-        "x": 0.5,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 5.2984222222222215
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.2150222222222222,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 6.9924388888888895
       },
       "prevControl": {
-        "x": 0.7859957994759874,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 6.445359707583949
+      },
+      "nextControl": {
+        "x": 7.782777777777778,
+        "y": 7.309732424801771
+      },
+      "isLocked": false,
+      "linkedName": "Collect Sideways Left"
+    },
+    {
+      "anchor": {
+        "x": 5.989800000002521,
+        "y": 7.440683333333332
+      },
+      "prevControl": {
+        "x": 6.489800000002521,
+        "y": 7.440683333333332
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": "Trench Exit Left"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 3.0,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 2.0,
-      "maxWaypointRelativePos": 4.0,
+      "minWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 3.0,
       "constraints": {
         "maxVelocity": 2.0,
         "maxAcceleration": 3.0,
@@ -107,7 +116,7 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Inside Zone",
+  "folder": "Collection",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -90.0

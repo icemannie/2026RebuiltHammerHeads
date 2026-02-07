@@ -3,85 +3,94 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.989800000002521,
-        "y": 7.440683333333332
+        "x": 5.99,
+        "y": 0.65
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.014966807164882,
-        "y": 7.440683333333332
+        "x": 6.24,
+        "y": 0.6500000000000004
       },
       "isLocked": false,
-      "linkedName": "Trench Exit Left"
+      "linkedName": "Trench Exit Right"
     },
     {
       "anchor": {
-        "x": 3.7778111111111112,
-        "y": 7.440683333333332
+        "x": 7.782777777777778,
+        "y": 1.0824333333333334
       },
       "prevControl": {
-        "x": 4.382673511237305,
-        "y": 7.440683333333332
+        "x": 7.782777777777778,
+        "y": 0.6438250750919603
       },
       "nextControl": {
-        "x": 2.7741333333333333,
-        "y": 7.440683333333332
+        "x": 7.782777777777778,
+        "y": 1.3511133077877753
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": "Collect Sideways Right"
     },
     {
       "anchor": {
-        "x": 1.2150222222222222,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 3.5770111111111103
       },
       "prevControl": {
-        "x": 2.3212849283081427,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 3.3270111111111103
       },
       "nextControl": {
-        "x": 0.7150222222222238,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 3.8270111111111103
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.75,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 1.0824333333333334
       },
       "prevControl": {
-        "x": 1.0,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 1.6295125146382738
       },
       "nextControl": {
-        "x": 0.5,
-        "y": 5.9497833333333325
+        "x": 7.782777777777778,
+        "y": 0.7651397974204519
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Collect Sideways Right"
     },
     {
       "anchor": {
-        "x": 1.2150222222222222,
-        "y": 5.9497833333333325
+        "x": 5.99,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 0.7859957994759874,
-        "y": 5.9497833333333325
+        "x": 6.49,
+        "y": 0.6500000000000004
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": "Trench Exit Right"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 3.0,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 2.0,
-      "maxWaypointRelativePos": 4.0,
+      "minWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 3.0,
       "constraints": {
         "maxVelocity": 2.0,
         "maxAcceleration": 3.0,
@@ -104,13 +113,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Inside Zone",
+  "folder": "Collection",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }
