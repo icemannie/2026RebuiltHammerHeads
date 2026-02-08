@@ -30,6 +30,8 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -40,6 +42,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.*;
@@ -48,6 +51,7 @@ import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.util.TunableControls.ControlConstants;
 import frc.robot.util.TunableControls.TunableControlConstants;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.networktables.LoggedNetworkString;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always
@@ -172,6 +176,8 @@ public final class Constants {
         // SIMULATION voltage necessary to overcome friction
         private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
         private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
+
+        private static final double WHEEL_COF = 2.255;
 
         public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS = new SwerveDrivetrainConstants()
                 .withCANBusName(CAN_FD_BUS.getName())
@@ -574,6 +580,23 @@ public final class Constants {
         };
 
         public static final Distance TRENCH_CENTER = TRENCH_WIDTH.div(2);
+    }
+
+    public static class AutoConstants {
+        public static final LoggedNetworkString AUTO_SELECTION = new LoggedNetworkString("Auto/Selection");
+
+        public static final RobotConfig PP_CONFIG = new RobotConfig(
+                Pounds.of(130),
+                KilogramSquareMeters.of(6.3),
+                new ModuleConfig(
+                        SwerveConstants.WHEEL_RADIUS,
+                        SwerveConstants.SPEED_AT_12V,
+                        SwerveConstants.WHEEL_COF,
+                        DCMotor.getKrakenX60Foc(1),
+                        SwerveConstants.DRIVE_GEAR_RATIO,
+                        Amps.of(SwerveConstants.DRIVE_CONFIGS.CurrentLimits.StatorCurrentLimit),
+                        1),
+                SwerveConstants.GET_MODULE_POSITIONS.get());
     }
 
     private Constants() {}

@@ -10,8 +10,13 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,8 +25,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.drive.Drive;
@@ -72,6 +79,8 @@ public class RobotContainer {
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
+
+    public final AutoCreator autoCreator;
 
     public FuelSim fuelSim;
 
@@ -125,7 +134,7 @@ public class RobotContainer {
         superstructure = new Superstructure(turret, intake, drive::getPose);
 
         // Set up auto routines
-        autoChooser = new LoggedDashboardChooser<>("Auto Choices");
+        autoChooser = new LoggedDashboardChooser<>("Characterizations");
 
         // Set up SysId routines
         autoChooser.addOption(
@@ -138,6 +147,17 @@ public class RobotContainer {
                 "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        autoCreator = new AutoCreator();
+        AutoBuilder.configure(
+                drive::getPose,
+                drive::setPose,
+                drive::getChassisSpeeds,
+                (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
+                new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
+                AutoConstants.PP_CONFIG,
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                drive);
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
@@ -202,6 +222,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.get();
+        return autoCreator.buildAuto();
     }
 }

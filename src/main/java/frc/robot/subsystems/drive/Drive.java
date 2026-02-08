@@ -9,6 +9,7 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.pathplanner.lib.util.DriveFeedforwards;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -181,6 +182,14 @@ public class Drive extends SubsystemBase {
      * @param speeds Speeds in meters/sec
      */
     public void runVelocity(ChassisSpeeds speeds) {
+        runVelocity(speeds, DriveFeedforwards.zeros(0));
+    }
+    /**
+     * Runs the drive at the desired velocity.
+     *
+     * @param speeds Speeds in meters/sec
+     */
+    public void runVelocity(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
         // Calculate module setpoints
         ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
