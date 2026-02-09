@@ -3,10 +3,15 @@ package frc.robot.commands;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
 import com.pathplanner.lib.util.FileVersionException;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.StringArrayPublisher;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.AutoConstants;
@@ -16,7 +21,6 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import org.json.simple.parser.ParseException;
-import org.littletonrobotics.junction.Logger;
 
 public class AutoCreator {
     private enum StartEndPoint {
@@ -79,11 +83,32 @@ public class AutoCreator {
                 throw new RuntimeException("Failed to load path: " + name, e);
             }
         }
+
+        private List<PathPlannerTrajectoryState> getTrajectoryStates() {
+            return getPathPlannerPath()
+                    .getIdealTrajectory(AutoConstants.PP_CONFIG)
+                    .orElse(new PathPlannerTrajectory(new ArrayList<>()))
+                    .getStates();
+        }
+
+        private double getTotalTime() {
+            return getPathPlannerPath()
+                    .getIdealTrajectory(AutoConstants.PP_CONFIG)
+                    .orElse(new PathPlannerTrajectory(new ArrayList<>()))
+                    .getTotalTimeSeconds();
+        }
     }
 
     private EnumMap<StartEndPoint, List<AutoPath>> autoPathsByStartPoint = new EnumMap<>(StartEndPoint.class);
     private ArrayList<AutoPath> selectedAutoPaths = new ArrayList<>();
     private String lastAutoSelection = "";
+    private ArrayList<PathPlannerTrajectoryState> trajStates = new ArrayList<>();
+    private final StringArrayPublisher autoOptionsPub = AutoConstants.AUTO_OPTIONS.publish();
+    private final DoubleArrayPublisher autoOptionTimesPub = AutoConstants.AUTO_OPTION_TIMES.publish();
+    private final StringArrayPublisher startOptionsPub = AutoConstants.START_OPTIONS.publish();
+    private final StructArrayPublisher<Translation2d> trajPub = AutoConstants.TRAJECTORY.publish();
+    private final DoubleArrayPublisher trajTimePub = AutoConstants.TRAJECTORY_TIMESTAMPS.publish();
+    private final DoublePublisher timestampPub = AutoConstants.TIMESTAMP.publish();
 
     public void loadPathplannerPaths() {
         File pathplannerDir = new File(Filesystem.getDeployDirectory(), "pathplanner\\paths");
@@ -114,17 +139,25 @@ public class AutoCreator {
 
     public AutoCreator() {
         loadPathplannerPaths();
-        Logger.recordOutput("Autos/Auto Options", new AutoPath[0]);
-        Logger.recordOutput("Autos/Start Options", new StartEndPoint[] {
-            StartEndPoint.TRENCH_START_LEFT,
-            StartEndPoint.TRENCH_START_RIGHT,
-            StartEndPoint.BUMP_START_LEFT,
-            StartEndPoint.BUMP_START_RIGHT
+        autoOptionsPub.set(new String[0]);
+        autoOptionTimesPub.set(new double[0]);
+
+        startOptionsPub.set(new String[] {
+            StartEndPoint.TRENCH_START_LEFT.name,
+            StartEndPoint.TRENCH_START_RIGHT.name,
+            StartEndPoint.BUMP_START_LEFT.name,
+            StartEndPoint.BUMP_START_RIGHT.name
         });
-        NetworkTableInstance.getDefault()
-                .getStringTopic("Auto/Selection")
-                .publish()
-                .set("");
+        timestampPub.set(Timer.getFPGATimestamp());
+    }
+
+    private static String[] autoPathsToStringArray(List<AutoPath> autoPaths) {
+        String[] arr = new String[autoPaths.size()];
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = autoPaths.get(i).name;
+        }
+
+        return arr;
     }
 
     public void updateNT() {
@@ -133,50 +166,74 @@ public class AutoCreator {
             return;
         }
 
-        String[] parts = selected.split(":");
+        String[] parts = selected.split(";");
         if (parts.length == 1 && parts[0].isEmpty()) {
             selectedAutoPaths.clear();
             return;
         }
 
-        StartEndPoint selectedStart = StartEndPoint.fromString(parts[0].trim());
+        try {
+            StartEndPoint selectedStart = StartEndPoint.fromString(parts[0].trim());
 
-        if (parts.length == 1) {
-            Logger.recordOutput(
-                    "Autos/Auto Options",
-                    autoPathsByStartPoint.get(selectedStart).toArray(AutoPath[]::new));
+            if (parts.length == 1) {
+                List<AutoPath> autoPaths = autoPathsByStartPoint.get(selectedStart);
+                autoOptionsPub.set(autoPathsToStringArray(autoPaths));
+                autoOptionTimesPub.set(autoPaths.stream()
+                        .mapToDouble((stream) -> stream.getTotalTime())
+                        .toArray());
+                timestampPub.set(Timer.getFPGATimestamp());
+                selectedAutoPaths.clear();
+                return;
+            }
+
             selectedAutoPaths.clear();
+            for (int i = 1; i < parts.length; i++) {
+                selectedAutoPaths.add(AutoPath.fromString(parts[i].trim()));
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
             return;
         }
 
-        selectedAutoPaths.clear();
-        for (int i = 1; i < parts.length; i++) {
-            selectedAutoPaths.add(AutoPath.fromString(parts[i].trim()));
+        try {
+            updateCurrentTrajectoryStates();
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            return;
         }
 
-        Logger.recordOutput(
-                "Autos/Auto Options",
-                autoPathsByStartPoint
-                        .get(selectedAutoPaths.get(selectedAutoPaths.size() - 1).end)
-                        .toArray(AutoPath[]::new));
+        List<AutoPath> autoPaths = autoPathsByStartPoint.get(selectedAutoPaths.get(selectedAutoPaths.size() - 1).end);
+        autoOptionsPub.set(autoPathsToStringArray(autoPaths));
+        autoOptionTimesPub.set(autoPaths.stream()
+                .mapToDouble((stream) -> stream.getTotalTime())
+                .toArray());
+        trajPub.set(getCurrentTrajectory());
+        trajTimePub.set(getCurrentTrajectoryTimestamps());
+        timestampPub.set(Timer.getFPGATimestamp());
+    }
 
-        Logger.recordOutput("Autos/Trajectory", getCurrentTrajectory());
+    private void updateCurrentTrajectoryStates() {
+        trajStates.clear();
+        for (AutoPath path : selectedAutoPaths) {
+            trajStates.addAll(path.getTrajectoryStates());
+        }
     }
 
     public Translation2d[] getCurrentTrajectory() {
-        ArrayList<Translation2d> points = new ArrayList<>();
-        for (AutoPath path : selectedAutoPaths) {
-            points.addAll(path
-                    .getPathPlannerPath()
-                    .getIdealTrajectory(AutoConstants.PP_CONFIG)
-                    .orElse(new PathPlannerTrajectory(new ArrayList<>()))
-                    .getStates()
-                    .stream()
-                    .map((state) -> state.pose.getTranslation())
-                    .toList());
-        }
+        return trajStates.stream().map((state) -> state.pose.getTranslation()).toArray(Translation2d[]::new);
+    }
 
-        return points.toArray(Translation2d[]::new);
+    private double[] getCurrentTrajectoryTimestamps() {
+        double[] timestamps = new double[trajStates.size()];
+        double totalTime = 0;
+        timestamps[0] = 0;
+        for (int i = 1; i < timestamps.length; i++) {
+            if (trajStates.get(i).timeSeconds < trajStates.get(i - 1).timeSeconds) {
+                totalTime += trajStates.get(i - 1).timeSeconds;
+            }
+            timestamps[i] = trajStates.get(i).timeSeconds + totalTime;
+        }
+        return timestamps;
     }
 
     public Command buildAuto() {

@@ -43,7 +43,11 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.networktables.DoubleArrayTopic;
+import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringArrayTopic;
+import edu.wpi.first.networktables.StructArrayTopic;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -583,7 +587,15 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final LoggedNetworkString AUTO_SELECTION = new LoggedNetworkString("Auto/Selection");
+        public static final LoggedNetworkString AUTO_SELECTION = new LoggedNetworkString("Autos/Selection");
+        public static final StringArrayTopic AUTO_OPTIONS = INST.getStringArrayTopic("Autos/Auto Options");
+        public static final DoubleArrayTopic AUTO_OPTION_TIMES = INST.getDoubleArrayTopic("Autos/Auto Option Times");
+        public static final StringArrayTopic START_OPTIONS = INST.getStringArrayTopic("Autos/Start Options");
+        public static final StructArrayTopic<Translation2d> TRAJECTORY =
+                INST.getStructArrayTopic("Autos/Trajectory", Translation2d.struct);
+        public static final DoubleArrayTopic TRAJECTORY_TIMESTAMPS =
+                INST.getDoubleArrayTopic("Autos/Trajectory Timestamps");
+        public static final DoubleTopic TIMESTAMP = INST.getDoubleTopic("Autos/timestamp");
 
         public static final RobotConfig PP_CONFIG = new RobotConfig(
                 Pounds.of(130),
