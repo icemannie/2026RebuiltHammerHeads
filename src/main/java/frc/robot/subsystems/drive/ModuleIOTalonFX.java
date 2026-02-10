@@ -97,7 +97,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         cancoder = new CANcoder(constants.EncoderId, Constants.CAN_FD_BUS);
 
         // Configure drive motor
-        driveConfig = constants.DriveMotorInitialConfigs;
+        driveConfig = constants.DriveMotorInitialConfigs.clone();
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         driveConfig.Slot0 = constants.DriveMotorGains;
         driveConfig.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
@@ -108,6 +108,11 @@ public class ModuleIOTalonFX implements ModuleIO {
         driveConfig.MotorOutput.Inverted = constants.DriveMotorInverted
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
+        System.out.println(String.format(
+                "Applying driveConfig to device %d; configHash=%d; DriveMotorInverted=%s",
+                constants.DriveMotorId,
+                System.identityHashCode(constants.DriveMotorInitialConfigs),
+                constants.DriveMotorInverted));
         tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
         tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 

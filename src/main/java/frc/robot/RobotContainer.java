@@ -10,13 +10,8 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,10 +20,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.Dimensions;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.drive.Drive;
@@ -44,6 +38,7 @@ import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
@@ -75,11 +70,13 @@ public class RobotContainer {
     // Bindings
     private final Trigger resetHeadingTrigger = controller.y();
     private final Trigger indexTrigger = controller.a();
+    private final Trigger deployIntakeTrigger = controller.b();
+    private final Trigger zeroRackTrigger = controller.x();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
-    public final AutoCreator autoCreator;
+    //     public final AutoCreator autoCreator;
 
     public FuelSim fuelSim;
 
@@ -96,9 +93,9 @@ public class RobotContainer {
                         new ModuleIOTalonFX(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intake = new Intake(
                         new IntakeIO() {},
-                        new IntakeIO() {},
                         // new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
-                        // new IntakeIOTalonFX(IntakeConstants.RIGHT_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
+                        new IntakeIOTalonFX(
+                                IntakeConstants.FR_RACK_ID, IntakeConstants.BR_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
                 indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
@@ -147,16 +144,16 @@ public class RobotContainer {
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        autoCreator = new AutoCreator();
-        AutoBuilder.configure(
-                drive::getPose,
-                drive::setPose,
-                drive::getChassisSpeeds,
-                (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
-                new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
-                AutoConstants.PP_CONFIG,
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-                drive);
+        // autoCreator = new AutoCreator();
+        // AutoBuilder.configure(
+        //         drive::getPose,
+        //         drive::setPose,
+        //         drive::getChassisSpeeds,
+        //         (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
+        //         new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
+        //         AutoConstants.PP_CONFIG,
+        //         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        //         drive);
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
@@ -177,6 +174,12 @@ public class RobotContainer {
         resetHeadingTrigger.onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d())));
         indexTrigger.onTrue(indexer.activate());
         indexTrigger.onFalse(indexer.stop());
+
+        deployIntakeTrigger.onTrue(intake.deployRight());
+        deployIntakeTrigger.onFalse(intake.stow());
+
+        zeroRackTrigger.whileTrue(intake.zeroRightSequence());
+        zeroRackTrigger.onFalse(intake.stow());
     }
 
     private void configureFuelSim() {
@@ -221,6 +224,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoCreator.buildAuto();
+        return Commands.none(); // autoCreator.buildAuto();
     }
 }

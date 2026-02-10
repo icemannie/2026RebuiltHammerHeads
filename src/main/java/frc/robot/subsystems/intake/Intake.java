@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.LoggedTunableNumber;
@@ -41,6 +42,9 @@ public class Intake extends SubsystemBase {
     public Trigger deployRightTrigger =
             new Trigger(this::travelingRight).and(() -> automaticDeploy).debounce(0.2);
 
+    @AutoLogOutput
+    private Trigger rightRackStallTrigger;
+
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
 
     private final LoggedTunableNumber rackKP = new LoggedTunableNumber("Intake/kP", RACK_GAINS.kP);
@@ -67,7 +71,7 @@ public class Intake extends SubsystemBase {
 
         // this.deployLeftTrigger.onTrue(deployLeft());
         // this.deployRightTrigger.onTrue(deployRight());
-
+        rightRackStallTrigger = new Trigger(() -> rightIO.rackIsStalled()).debounce(0.1);
         SmartDashboard.putData(deployLeft());
         SmartDashboard.putData(deployRight());
         SmartDashboard.putData(stow());
@@ -135,6 +139,19 @@ public class Intake extends SubsystemBase {
                     rightIO.stopSpin();
                 })
                 .withName("Stow intakes");
+    }
+
+    public Command zeroRightSequence() {
+        return Commands.sequence(
+                this.runOnce(() -> rightIO.setRackOutput(ZEROING_VOLTAGE)),
+                Commands.waitSeconds(0.1),
+                Commands.waitUntil(rightRackStallTrigger::getAsBoolean),
+                this.runOnce(rightIO::stopRack),
+                Commands.waitSeconds(0.1),
+                this.runOnce(() -> {
+                    rightIO.zeroPosition();
+                    rightIO.setRackPosition(STOW_POS);
+                }));
     }
 
     private void updateTunables() {

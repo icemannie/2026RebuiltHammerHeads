@@ -415,19 +415,20 @@ public final class Constants {
 
     public static class IntakeConstants {
         public static final int LEFT_RACK_ID = 0;
-        public static final int RIGHT_RACK_ID = 0;
+        public static final int FR_RACK_ID = 12;
+        public static final int BR_RACK_ID = 2;
         public static final int LEFT_SPIN_ID = 0;
-        public static final int RIGHT_SPIN_ID = 0;
+        public static final int RIGHT_SPIN_ID = 26;
 
-        public static final double ROTOR_TO_PINION_RATIO = 4.0 / 1;
+        public static final double ROTOR_TO_PINION_RATIO = 2.0 / 1;
         public static final Distance PINION_PITCH_RADIUS = Inches.of(0.5);
 
         public static final Slot0Configs RACK_GAINS = new Slot0Configs()
-                .withKP(0.0)
-                .withKD(0.0)
+                .withKP(3.0)
+                .withKD(0.1)
                 .withKA(0.0)
-                .withKV(0.0)
-                .withKS(0.0);
+                .withKV(0.23)
+                .withKS(0.4);
 
         public static final MotorOutputConfigs RACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
@@ -445,20 +446,24 @@ public final class Constants {
 
         public static final MotionMagicConfigs RACK_MOTION_MAGIC = new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(
-                        IntakeIOTalonFX.distanceToRotorAngle(Inches.of(50)).per(Second))
+                        IntakeIOTalonFX.distanceToRotorAngle(Inches.of(200)).per(Second))
                 .withMotionMagicAcceleration(IntakeIOTalonFX.distanceToRotorAngle(Inches.of(150))
                         .per(Second)
                         .per(Second));
 
         public static final Distance STOW_POS = Inches.of(0);
-        public static final Distance DEPLOY_POS = Inches.of(10.875);
-        public static final Voltage SPIN_VOLTAGE = Volts.of(3);
+        public static final Distance DEPLOY_POS = Inches.of(11.);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(12);
 
         public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.5);
 
         public static final double VEL_MULTIPLIER = 70.0; // multiplies goal velocity for targetting
         public static final double VEL_POWER = 0.3; // raises goal velocity to power
         public static final LinearVelocity BASE_VEL = InchesPerSecond.of(50); // added to final velocity
+
+        public static final Current STALL_CURRENT = Amps.of(40);
+        public static final AngularVelocity STALL_ANGULAR_VEL = RadiansPerSecond.of(0.1);
+        public static final Voltage ZEROING_VOLTAGE = Volts.of(-3);
     }
 
     public static class IndexerConstants {
@@ -479,8 +484,8 @@ public final class Constants {
         public static final CurrentLimitsConfigs FEED_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
-        public static final Voltage SPIN_VOLTAGE = Volts.of(3);
-        public static final Voltage FEED_VOLTAGE = Volts.of(6);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(4);
+        public static final Voltage FEED_VOLTAGE = Volts.of(12);
 
         public static final AngularVelocity FEED_THRESHOLD = RPM.of(4000);
     }

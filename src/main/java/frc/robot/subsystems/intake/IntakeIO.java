@@ -39,11 +39,19 @@ public interface IntakeIO {
 
     public default void setRackPosition(Distance position) {}
 
+    public default void setRackOutput(Voltage out) {}
+
     public default void setSpinOutput(Voltage out) {}
 
     public default void stopRack() {}
 
     public default void stopSpin() {}
+
+    public default void zeroPosition() {}
+
+    public default boolean rackIsStalled() {
+        return false;
+    }
 
     public default void setRackPID(
             double kP, double kD, double kV, double kA, double kS, double maxVel, double maxAcc) {}
