@@ -1,11 +1,14 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.Constants.IndexerConstants.FEED_THRESHOLD;
 import static frc.robot.Constants.IndexerConstants.FEED_VOLTAGE;
 import static frc.robot.Constants.IndexerConstants.SPIN_VOLTAGE;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.Supplier;
@@ -36,7 +39,7 @@ public class Indexer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Indexer", inputs);
 
-        if (isActive && (spinVoltage.hasChanged(hashCode()) || feedVoltage.hasChanged(hashCode()))) {
+        if ((spinVoltage.hasChanged(hashCode()) || feedVoltage.hasChanged(hashCode())) && isActive) {
             io.setSpinOutput(Volts.of(spinVoltage.get()));
             io.setFeedOutput(Volts.of(feedVoltage.get()));
         }
@@ -46,10 +49,17 @@ public class Indexer extends SubsystemBase {
 
     public Command activate() {
         return this.runOnce(() -> {
-                    io.setSpinOutput(Volts.of(spinVoltage.get()));
-                    io.setFeedOutput(Volts.of(feedVoltage.get()));
+                    io.setFeedOutput(Volts.of(-4));
+                    io.setSpinOutput(Volts.of(-2));
                     isActive = true;
                 })
+                .andThen(Commands.waitSeconds(0.1875))
+                .andThen(this.runOnce(() -> {
+                    io.setFeedOutput(Volts.of(feedVoltage.get()));
+                    io.stopSpin();
+                }))
+                .andThen(Commands.waitUntil(() -> inputs.feedVelocity.abs(RPM) >= FEED_THRESHOLD.in(RPM)))
+                .andThen(this.runOnce(() -> io.setSpinOutput(Volts.of(spinVoltage.get()))))
                 .withName("IndexerActivate");
     }
 

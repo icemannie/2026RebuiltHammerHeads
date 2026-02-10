@@ -254,9 +254,9 @@ public final class Constants {
         }
 
         public static class BackLeft {
-            private static final int DRIVE_ID = 19;
-            private static final int STEER_ID = 20;
-            private static final int ENCODER_ID = 21;
+            private static final int DRIVE_ID = 18;
+            private static final int STEER_ID = 19;
+            private static final int ENCODER_ID = 20;
             private static final Angle ENCODER_OFFSET = Rotations.of(-0.188232421875);
             private static final boolean STEER_INVERTED = false;
             private static final boolean ENCODER_INVERTED = false;
@@ -452,16 +452,16 @@ public final class Constants {
     }
 
     public static class IndexerConstants {
-        public static final int SPIN_ID = 18;
+        public static final int SPIN_ID = 17;
         public static final int FEED_ID = 8;
 
         public static final MotorOutputConfigs SPIN_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
-                .withInverted(InvertedValue.CounterClockwise_Positive);
+                .withInverted(InvertedValue.Clockwise_Positive);
 
         public static final MotorOutputConfigs FEED_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
-                .withInverted(InvertedValue.CounterClockwise_Positive);
+                .withInverted(InvertedValue.Clockwise_Positive);
 
         public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
@@ -471,6 +471,8 @@ public final class Constants {
 
         public static final Voltage SPIN_VOLTAGE = Volts.of(3);
         public static final Voltage FEED_VOLTAGE = Volts.of(6);
+
+        public static final AngularVelocity FEED_THRESHOLD = RPM.of(4000);
     }
 
     public static class ClimberConstants {}

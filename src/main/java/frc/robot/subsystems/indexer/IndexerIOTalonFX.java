@@ -24,7 +24,7 @@ public class IndexerIOTalonFX implements IndexerIO {
     private final TalonFX feedMotor;
 
     private final VoltageOut spinVoltageOut = new VoltageOut(0);
-    private final VoltageOut feedVoltageOut = new VoltageOut(0);
+    private final VoltageOut feedVoltageOut = new VoltageOut(0).withEnableFOC(false);
 
     private final NeutralOut neutralOut = new NeutralOut();
 

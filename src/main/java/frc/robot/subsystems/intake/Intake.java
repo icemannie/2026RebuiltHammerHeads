@@ -65,8 +65,8 @@ public class Intake extends SubsystemBase {
 
         this.chassisSpeedsSupplier = chassisSpeedsSupplier;
 
-        this.deployLeftTrigger.onTrue(deployLeft());
-        this.deployRightTrigger.onTrue(deployRight());
+        // this.deployLeftTrigger.onTrue(deployLeft());
+        // this.deployRightTrigger.onTrue(deployRight());
 
         SmartDashboard.putData(deployLeft());
         SmartDashboard.putData(deployRight());

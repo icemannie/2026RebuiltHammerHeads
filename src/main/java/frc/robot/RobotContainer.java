@@ -37,7 +37,6 @@ import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
@@ -57,7 +56,7 @@ public class RobotContainer {
     private final Intake intake;
     private final Turret turret;
     private final Indexer indexer;
-    private final Superstructure superstructure;
+    // private final Superstructure superstructure;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -117,7 +116,7 @@ public class RobotContainer {
                 break;
         }
 
-        superstructure = new Superstructure(turret, intake, drive::getPose);
+        // superstructure = new Superstructure(turret, intake, drive::getPose);
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices");

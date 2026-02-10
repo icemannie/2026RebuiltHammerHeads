@@ -41,7 +41,7 @@ public class Turret extends SubsystemBase {
             ? FieldConstants.HUB_BLUE
             : FieldConstants.HUB_RED;
 
-    private boolean isActive = true;
+    private boolean isActive = false;
 
     private final TurretVisualizer turretVisualizer;
 
