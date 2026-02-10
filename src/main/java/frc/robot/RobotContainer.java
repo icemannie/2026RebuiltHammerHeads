@@ -10,8 +10,13 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,8 +25,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.drive.Drive;
@@ -41,6 +48,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.util.FuelSim;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -71,6 +79,10 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
+    public final AutoCreator autoCreator;
+
+    public FuelSim fuelSim;
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         switch (Constants.CURRENT_MODE) {
@@ -93,7 +105,8 @@ public class RobotContainer {
                 break;
 
             case SIM:
-                // Sim robot, instantiate physics sim IO implementations
+                configureFuelSim();
+                TurretIOSim turretSim = new TurretIOSim(fuelSim);
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(SwerveConstants.FrontLeft.MODULE_CONSTANTS),
@@ -101,9 +114,10 @@ public class RobotContainer {
                         new ModuleIOSim(SwerveConstants.BackLeft.MODULE_CONSTANTS),
                         new ModuleIOSim(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intake = new Intake(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
-                turret = new Turret(new TurretIOSim(), drive::getPose, drive::getFieldSpeeds);
+                turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
-                configureFuelSim();
+
+                configureFuelSimRobot(turretSim::canIntake, turretSim::intakeFuel);
                 break;
 
             default:
@@ -119,7 +133,7 @@ public class RobotContainer {
         // superstructure = new Superstructure(turret, intake, drive::getPose);
 
         // Set up auto routines
-        autoChooser = new LoggedDashboardChooser<>("Auto Choices");
+        autoChooser = new LoggedDashboardChooser<>("Characterizations");
 
         // Set up SysId routines
         autoChooser.addOption(
@@ -132,6 +146,17 @@ public class RobotContainer {
                 "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        autoCreator = new AutoCreator();
+        AutoBuilder.configure(
+                drive::getPose,
+                drive::setPose,
+                drive::getChassisSpeeds,
+                (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
+                new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
+                AutoConstants.PP_CONFIG,
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                drive);
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
@@ -155,36 +180,39 @@ public class RobotContainer {
     }
 
     private void configureFuelSim() {
-        FuelSim instance = FuelSim.getInstance();
-        instance.spawnStartingFuel();
-        instance.registerRobot(
+        fuelSim = new FuelSim();
+        fuelSim.spawnStartingFuel();
+
+        fuelSim.start();
+        SmartDashboard.putData(Commands.runOnce(() -> {
+                    fuelSim.clearFuel();
+                    fuelSim.spawnStartingFuel();
+                })
+                .withName("Reset Fuel")
+                .ignoringDisable(true));
+    }
+
+    private void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
+        fuelSim.registerRobot(
                 Dimensions.FULL_WIDTH.in(Meters),
                 Dimensions.FULL_LENGTH.in(Meters),
                 Dimensions.BUMPER_HEIGHT.in(Meters),
                 drive::getPose,
                 drive::getFieldSpeeds);
-        instance.registerIntake(
+        fuelSim.registerIntake(
                 -Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                 -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
                 -Dimensions.FULL_WIDTH.div(2).in(Meters),
-                () -> intake.isRightDeployed() && turret.simAbleToIntake(),
-                turret::simIntake);
-        instance.registerIntake(
+                () -> intake.isRightDeployed() && ableToIntake.getAsBoolean(),
+                intakeCallback);
+        fuelSim.registerIntake(
                 -Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_WIDTH.div(2).in(Meters),
                 Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
-                () -> intake.isLeftDeployed() && turret.simAbleToIntake(),
-                turret::simIntake);
-
-        instance.start();
-        SmartDashboard.putData(Commands.runOnce(() -> {
-                    FuelSim.getInstance().clearFuel();
-                    FuelSim.getInstance().spawnStartingFuel();
-                })
-                .withName("Reset Fuel")
-                .ignoringDisable(true));
+                () -> intake.isLeftDeployed() && ableToIntake.getAsBoolean(),
+                intakeCallback);
     }
 
     /**
@@ -193,6 +221,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.get();
+        return autoCreator.buildAuto();
     }
 }

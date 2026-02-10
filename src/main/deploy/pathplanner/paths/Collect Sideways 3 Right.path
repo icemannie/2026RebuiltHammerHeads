@@ -1,0 +1,125 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.99,
+        "y": 0.65
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.24,
+        "y": 0.6500000000000004
+      },
+      "isLocked": false,
+      "linkedName": "Trench Exit Right"
+    },
+    {
+      "anchor": {
+        "x": 7.782777777777778,
+        "y": 1.0824333333333334
+      },
+      "prevControl": {
+        "x": 7.782777777777778,
+        "y": 0.6438250750919603
+      },
+      "nextControl": {
+        "x": 7.782777777777778,
+        "y": 1.3511133077877753
+      },
+      "isLocked": false,
+      "linkedName": "Collect Sideways Right"
+    },
+    {
+      "anchor": {
+        "x": 7.782777777777778,
+        "y": 3.5770111111111103
+      },
+      "prevControl": {
+        "x": 7.782777777777778,
+        "y": 3.3270111111111103
+      },
+      "nextControl": {
+        "x": 7.782777777777778,
+        "y": 3.8270111111111103
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.782777777777778,
+        "y": 1.0824333333333334
+      },
+      "prevControl": {
+        "x": 7.782777777777778,
+        "y": 1.6295125146382738
+      },
+      "nextControl": {
+        "x": 7.782777777777778,
+        "y": 0.7651397974204519
+      },
+      "isLocked": false,
+      "linkedName": "Collect Sideways Right"
+    },
+    {
+      "anchor": {
+        "x": 5.99,
+        "y": 0.65
+      },
+      "prevControl": {
+        "x": 6.49,
+        "y": 0.6500000000000004
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Trench Exit Right"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 3.0,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 3.0,
+      "constraints": {
+        "maxVelocity": 2.0,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 8.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "Collection",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}
