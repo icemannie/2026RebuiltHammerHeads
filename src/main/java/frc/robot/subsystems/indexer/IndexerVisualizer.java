@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
@@ -24,6 +25,7 @@ public class IndexerVisualizer {
 
         Logger.recordOutput(
                 "Indexer/Pose",
-                new Pose2d(new Translation2d(), new Rotation2d(spinAngle).plus(robotRotationSupplier.get())));
+                new Pose3d(
+                        new Pose2d(new Translation2d(), new Rotation2d(spinAngle).plus(robotRotationSupplier.get()))));
     }
 }
