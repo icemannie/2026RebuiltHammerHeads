@@ -13,7 +13,7 @@ import edu.wpi.first.units.measure.Distance;
 
 public class IntakeIOSim implements IntakeIO {
     private ProfiledPIDController rackProfile =
-            new ProfiledPIDController(0, 0, 0, new TrapezoidProfile.Constraints(10, 10));
+            new ProfiledPIDController(0, 0, 0, new TrapezoidProfile.Constraints(60, 30));
 
     /** Creates a new IntakeIOSim. */
     public IntakeIOSim() {}

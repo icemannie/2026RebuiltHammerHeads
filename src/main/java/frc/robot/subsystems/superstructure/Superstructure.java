@@ -4,9 +4,6 @@
 
 package frc.robot.subsystems.superstructure;
 
-import static frc.robot.Constants.TurretConstants.PASSING_SPOT_LEFT;
-import static frc.robot.Constants.TurretConstants.PASSING_SPOT_RIGHT;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -15,8 +12,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.Intake.IntakeGoal;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.util.HubTracker;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -25,6 +26,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 public class Superstructure extends SubsystemBase {
     private final Turret turret;
     private final Intake intake;
+    private final Indexer indexer;
 
     private final Supplier<Pose2d> poseSupplier;
 
@@ -45,9 +47,10 @@ public class Superstructure extends SubsystemBase {
     private final Map<Goal, Command> goalCommands;
 
     /** Creates a new Superstructure. */
-    public Superstructure(Turret turret, Intake intake, Supplier<Pose2d> poseSupplier) {
+    public Superstructure(Turret turret, Intake intake, Indexer indexer, Supplier<Pose2d> poseSupplier) {
         this.turret = turret;
         this.intake = intake;
+        this.indexer = indexer;
         this.poseSupplier = poseSupplier;
 
         onLeftSideTrigger = new Trigger(() -> (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
@@ -58,50 +61,43 @@ public class Superstructure extends SubsystemBase {
         goalCommands = Map.of(
                 Goal.SCORING,
                 Commands.sequence(
-                                this.turret.setTarget(FieldConstants.HUB_BLUE),
-                                this.turret.start(),
-                                this.intake.setAutomaticDeploy(true))
+                                this.turret.setGoal(TurretGoal.SCORING),
+                                this.intake.setGoal(IntakeGoal.AUTOSWITCH),
+                                this.indexer.setGoal(IndexerGoal.ACTIVE))
                         .withName("Start scoring"),
                 Goal.PASSING,
                 Commands.sequence(
-                                this.turret.setTarget(
-                                        onLeftSideTrigger.getAsBoolean() ? PASSING_SPOT_LEFT : PASSING_SPOT_RIGHT),
-                                this.turret.start(),
-                                this.intake.setAutomaticDeploy(true))
+                                this.turret.setGoal(TurretGoal.PASSING),
+                                this.intake.setGoal(IntakeGoal.AUTOSWITCH),
+                                this.indexer.setGoal(IndexerGoal.ACTIVE))
                         .withName("Start passing"),
                 Goal.COLLECTING,
                 Commands.sequence(
-                                this.turret.stop(),
-                                this.intake.setAutomaticDeploy(false),
+                                this.turret.setGoal(TurretGoal.IDLE),
+                                this.intake.setGoal(IntakeGoal.MANUAL),
+                                this.indexer.setGoal(IndexerGoal.OFF),
                                 Commands.either(
                                         this.intake.deployLeft(),
                                         this.intake.deployRight(),
                                         this.intake::travelingLeft))
                         .withName("Start collecting"),
                 Goal.IDLE,
-                Commands.sequence(this.turret.stop(), this.intake.stow()).withName("Idle"));
+                Commands.sequence(
+                                this.turret.setGoal(TurretGoal.IDLE),
+                                this.intake.setGoal(IntakeGoal.STOW),
+                                this.indexer.setGoal(IndexerGoal.OFF))
+                        .withName("Idle"));
 
         inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
         inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
         inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
-
-        onLeftSideTrigger
-                .and(() -> this.goal == Goal.PASSING)
-                .debounce(0.1)
-                .onTrue(this.turret.setTarget(PASSING_SPOT_LEFT));
-        onLeftSideTrigger
-                .negate()
-                .and(() -> this.goal == Goal.PASSING)
-                .debounce(0.1)
-                .onTrue(this.turret.setTarget(PASSING_SPOT_RIGHT));
     }
 
     private boolean inAllianceZone() {
         Pose2d pose = poseSupplier.get();
-        return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
-                        && pose.getMeasureX().lt(FieldConstants.ALLIANCE_ZONE)
-                || DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                        && pose.getMeasureX().gt(FieldConstants.FIELD_LENGTH.minus(FieldConstants.ALLIANCE_ZONE));
+        boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+        return isBlue && pose.getMeasureX().lt(FieldConstants.ALLIANCE_ZONE)
+                || !isBlue && pose.getMeasureX().gt(FieldConstants.FIELD_LENGTH.minus(FieldConstants.ALLIANCE_ZONE));
     }
 
     public Command setGoal(Goal goal) {

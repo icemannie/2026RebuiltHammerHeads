@@ -48,6 +48,8 @@ public interface TurretIO {
 
     public default void setHoodAngle(Angle angle) {}
 
+    public default void setHoodOut(Voltage out) {}
+
     public default void setFlywheelSpeed(AngularVelocity speed) {}
 
     public default void stopTurn() {}
@@ -58,9 +60,11 @@ public interface TurretIO {
 
     public default void resetTurnEncoder() {}
 
+    public default void zeroHoodPosition() {}
+
     public default void setTurnPID(double kP, double kD, double kV, double kS) {}
 
     public default void setHoodPID(double kP, double kD, double kS) {}
 
-    public default void setFlywheelPID(double kP, double kD) {}
+    public default void setFlywheelPID(double kP, double kD, double kV, double kS) {}
 }

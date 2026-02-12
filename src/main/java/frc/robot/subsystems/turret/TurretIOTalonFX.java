@@ -19,6 +19,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -60,6 +61,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     private final PositionVoltage turnPositionRequest = new PositionVoltage(0);
     private final PositionVoltage hoodPositionRequest = new PositionVoltage(0);
+    private final VoltageOut hoodVoltageRequest = new VoltageOut(0);
     private final VelocityTorqueCurrentFOC flywheelVelocityRequest = new VelocityTorqueCurrentFOC(0);
 
     private final Follower followRequest = new Follower(
@@ -79,7 +81,7 @@ public class TurretIOTalonFX implements TurretIO {
                 .withFeedback(new FeedbackConfigs()
                         .withFeedbackRemoteSensorID(ENCODER_ID)
                         .withSensorToMechanismRatio(ENCODER_TO_TURRET_RATIO)
-                        .withRotorToSensorRatio(MOTOR_TO_TURRET_RATIO / ENCODER_TO_TURRET_RATIO)
+                        .withRotorToSensorRatio(TURN_TO_TURRET_RATIO / ENCODER_TO_TURRET_RATIO)
                         .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder))
                 .withSlot0(TURN_GAINS)
                 .withCurrentLimits(TURN_CURRENT_LIMITS)
@@ -95,10 +97,11 @@ public class TurretIOTalonFX implements TurretIO {
                 .withCurrentLimits(HOOD_CURRENT_LIMITS)
                 .withMotorOutput(HOOD_OUTPUT_CONFIGS)
                 .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
-                        .withForwardSoftLimitEnable(true)
+                        .withForwardSoftLimitEnable(false)
                         .withForwardSoftLimitThreshold(MAX_HOOD_ANGLE)
-                        .withReverseSoftLimitEnable(true)
-                        .withReverseSoftLimitThreshold(MIN_HOOD_ANGLE));
+                        .withReverseSoftLimitEnable(false)
+                        .withReverseSoftLimitThreshold(MIN_HOOD_ANGLE))
+                .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(HOOD_MOTOR_RATIO));
 
         flywheelConfig = new TalonFXConfiguration()
                 .withSlot0(FLYWHEEL_GAINS)
@@ -134,12 +137,17 @@ public class TurretIOTalonFX implements TurretIO {
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50,
                 turnPosition,
+                turnVelocity,
                 turnAppliedVolts,
                 turnCurrent,
                 hoodPosition,
+                hoodVelocity,
                 hoodAppliedVolts,
                 hoodCurrent,
                 flywheelSpeed,
+                flywheelAccel,
+                flywheelSetpointSpeed,
+                flywheelSetpointAccel,
                 flywheelAppliedVolts,
                 flywheelCurrent);
         turnMotor.optimizeBusUtilization();
@@ -152,14 +160,16 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        inputs.turnMotorConnected = BaseStatusSignal.refreshAll(turnPosition, turnAppliedVolts, turnCurrent)
+        inputs.turnMotorConnected = BaseStatusSignal.refreshAll(
+                        turnPosition, turnVelocity, turnAppliedVolts, turnCurrent)
                 .isOK();
         inputs.turnPosition = turnPosition.getValue();
         inputs.turnVelocity = turnVelocity.getValue();
         inputs.turnAppliedVolts = turnAppliedVolts.getValue();
         inputs.turnCurrent = turnCurrent.getValue();
 
-        inputs.hoodMotorConnected = BaseStatusSignal.refreshAll(hoodPosition, hoodAppliedVolts, hoodCurrent)
+        inputs.hoodMotorConnected = BaseStatusSignal.refreshAll(
+                        hoodPosition, hoodVelocity, hoodAppliedVolts, hoodCurrent)
                 .isOK();
         inputs.hoodPosition = hoodPosition.getValue();
         inputs.hoodVelocity = hoodVelocity.getValue();
@@ -167,7 +177,12 @@ public class TurretIOTalonFX implements TurretIO {
         inputs.hoodCurrent = hoodCurrent.getValue();
 
         inputs.flywheelMotorConnected = BaseStatusSignal.refreshAll(
-                        flywheelSpeed, flywheelAppliedVolts, flywheelCurrent)
+                        flywheelSpeed,
+                        flywheelAccel,
+                        flywheelSetpointSpeed,
+                        flywheelSetpointAccel,
+                        flywheelAppliedVolts,
+                        flywheelCurrent)
                 .isOK();
         inputs.flywheelSpeed = flywheelSpeed.getValue();
         inputs.flywheelAccel = flywheelAccel.getValue();
@@ -185,6 +200,11 @@ public class TurretIOTalonFX implements TurretIO {
     @Override
     public void setHoodAngle(Angle angle) {
         hoodMotor.setControl(hoodPositionRequest.withPosition(angle));
+    }
+
+    @Override
+    public void setHoodOut(Voltage out) {
+        hoodMotor.setControl(hoodVoltageRequest.withOutput(out));
     }
 
     @Override
@@ -213,6 +233,11 @@ public class TurretIOTalonFX implements TurretIO {
     }
 
     @Override
+    public void zeroHoodPosition() {
+        hoodMotor.setPosition(MIN_HOOD_ANGLE);
+    }
+
+    @Override
     public void setTurnPID(double kP, double kD, double kV, double kS) {
         turnConfig.Slot0.kP = kP;
         turnConfig.Slot0.kD = kD;
@@ -232,9 +257,11 @@ public class TurretIOTalonFX implements TurretIO {
     }
 
     @Override
-    public void setFlywheelPID(double kP, double kD) {
+    public void setFlywheelPID(double kP, double kD, double kV, double kS) {
         flywheelConfig.Slot0.kP = kP;
         flywheelConfig.Slot0.kD = kD;
+        flywheelConfig.Slot0.kV = kV;
+        flywheelConfig.Slot0.kS = kS;
 
         PhoenixUtil.tryUntilOk(5, () -> flywheelMotor.getConfigurator().apply(flywheelConfig.Slot0, 0.25));
     }
