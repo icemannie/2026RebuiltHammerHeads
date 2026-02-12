@@ -402,8 +402,8 @@ public final class Constants {
         public static final Angle MIN_TURN_ANGLE = Rotations.of(-1);
         public static final Angle MAX_TURN_ANGLE = Rotations.of(1);
 
-        public static final Angle MIN_HOOD_ANGLE = Rotations.of(0.13);
-        public static final Angle MAX_HOOD_ANGLE = Rotations.of(0.25);
+        public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
+        public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
 
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
                 Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
