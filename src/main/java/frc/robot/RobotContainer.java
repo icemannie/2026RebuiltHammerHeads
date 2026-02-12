@@ -7,8 +7,10 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -42,6 +44,7 @@ import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
+import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.util.FuelSim;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -71,7 +74,11 @@ public class RobotContainer {
     private final Trigger resetHeadingTrigger = controller.y();
     private final Trigger indexTrigger = controller.a();
     private final Trigger deployIntakeTrigger = controller.b();
-    private final Trigger zeroRackTrigger = controller.x();
+    private final Trigger zeroRackTrigger = controller.povRight();
+    private final Trigger zeroHoodTrigger = controller.povUp();
+    private final Trigger hoodTrigger = controller.rightBumper();
+    private final Trigger flywheelTrigger = controller.leftBumper();
+    private final Trigger flywheelSlowTrigger = controller.leftTrigger();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -98,7 +105,7 @@ public class RobotContainer {
                                 IntakeConstants.FR_RACK_ID, IntakeConstants.BR_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
                 indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
-                turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
+                turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
                 break;
 
             case SIM:
@@ -180,6 +187,18 @@ public class RobotContainer {
 
         zeroRackTrigger.whileTrue(intake.zeroRightSequence());
         zeroRackTrigger.onFalse(intake.stow());
+
+        zeroHoodTrigger.whileTrue(turret.zeroHoodSequence());
+        zeroHoodTrigger.onFalse(turret.stop());
+
+        hoodTrigger.onTrue(turret.setHoodPosition(Degrees.of(35)));
+        hoodTrigger.onFalse(turret.setHoodPosition(Degrees.of(20)));
+
+        flywheelTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(3000)));
+        flywheelTrigger.onFalse(turret.stop());
+
+        flywheelSlowTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(500)));
+        flywheelSlowTrigger.onFalse(turret.stop());
     }
 
     private void configureFuelSim() {
@@ -224,6 +243,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Commands.none(); // autoCreator.buildAuto();
+        return DriveCharacterization.feedforwardCharacterization(drive); // autoCreator.buildAuto();
     }
 }

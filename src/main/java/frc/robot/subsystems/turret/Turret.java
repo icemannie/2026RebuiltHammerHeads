@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static frc.robot.Constants.IntakeConstants.ZEROING_VOLTAGE;
 import static frc.robot.Constants.TurretConstants.*;
 
 import com.pathplanner.lib.util.FlippingUtil;
@@ -19,7 +21,9 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
@@ -42,6 +46,8 @@ public class Turret extends SubsystemBase {
 
     private final TurretVisualizer turretVisualizer;
 
+    private final Trigger hoodStalledTrigger;
+
     private final LoggedTunableNumber turnKP = new LoggedTunableNumber("Turret/Turn/kP", TURN_GAINS.kP);
     private final LoggedTunableNumber turnKD = new LoggedTunableNumber("Turret/Turn/kD", TURN_GAINS.kD);
     private final LoggedTunableNumber turnKV = new LoggedTunableNumber("Turret/Turn/kV", TURN_GAINS.kV);
@@ -51,12 +57,19 @@ public class Turret extends SubsystemBase {
     private final LoggedTunableNumber hoodKS = new LoggedTunableNumber("Turret/Hood/kS", HOOD_GAINS.kS);
     private final LoggedTunableNumber flywheelKP = new LoggedTunableNumber("Turret/Flywheel/kP", FLYWHEEL_GAINS.kP);
     private final LoggedTunableNumber flywheelKD = new LoggedTunableNumber("Turret/Flywheel/kD", FLYWHEEL_GAINS.kD);
+    private final LoggedTunableNumber flywheelKV = new LoggedTunableNumber("Turret/Flywheel/kV", FLYWHEEL_GAINS.kV);
+    private final LoggedTunableNumber flywheelKS = new LoggedTunableNumber("Turret/Flywheel/kS", FLYWHEEL_GAINS.kS);
 
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.io = io;
         this.inputs = new TurretIOInputsAutoLogged();
         this.poseSupplier = poseSupplier;
         this.fieldSpeedsSupplier = fieldSpeedsSupplier;
+
+        io.zeroHoodPosition();
+
+        hoodStalledTrigger = new Trigger(() -> inputs.hoodCurrent.abs(Amps) >= HOOD_STALL_CURRENT.abs(Amps)
+                && inputs.hoodVelocity.abs(RadiansPerSecond) <= HOOD_STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond));
 
         turretVisualizer = new TurretVisualizer(
                 () -> new Pose3d(poseSupplier
@@ -73,6 +86,14 @@ public class Turret extends SubsystemBase {
             io.stopTurn();
             isActive = false;
         });
+    }
+
+    public Command setHoodPosition(Angle angle) {
+        return this.runOnce(() -> io.setHoodAngle(angle));
+    }
+
+    public Command setFlywheelSpeed(AngularVelocity speed) {
+        return this.runOnce(() -> io.setFlywheelSpeed(speed));
     }
 
     public Command start() {
@@ -118,6 +139,19 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/Shot", calculatedShot);
     }
 
+    public Command zeroHoodSequence() {
+        return Commands.sequence(
+                this.runOnce(() -> io.setHoodOut(ZEROING_VOLTAGE)),
+                Commands.waitSeconds(0.1),
+                Commands.waitUntil(hoodStalledTrigger::getAsBoolean),
+                this.runOnce(io::stopHood),
+                Commands.waitSeconds(0.1),
+                this.runOnce(() -> {
+                    io.zeroHoodPosition();
+                    io.setHoodAngle(MIN_HOOD_ANGLE);
+                }));
+    }
+
     private void updateTunables() {
         if (turnKP.hasChanged(hashCode())
                 || turnKD.hasChanged(hashCode())
@@ -130,8 +164,11 @@ public class Turret extends SubsystemBase {
             io.setHoodPID(hoodKP.get(), hoodKD.get(), hoodKS.get());
         }
 
-        if (flywheelKP.hasChanged(hashCode()) || flywheelKD.hasChanged(hashCode())) {
-            io.setFlywheelPID(flywheelKP.get(), flywheelKD.get());
+        if (flywheelKP.hasChanged(hashCode())
+                || flywheelKD.hasChanged(hashCode())
+                || flywheelKV.hasChanged(hashCode())
+                || flywheelKS.hasChanged(hashCode())) {
+            io.setFlywheelPID(flywheelKP.get(), flywheelKD.get(), flywheelKV.get(), flywheelKS.get());
         }
     }
 

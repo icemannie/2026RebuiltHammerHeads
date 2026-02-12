@@ -51,7 +51,6 @@ import edu.wpi.first.networktables.StructArrayTopic;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.util.TunableControls.ControlConstants;
 import frc.robot.util.TunableControls.TunableControlConstants;
 import java.util.function.Supplier;
@@ -110,7 +109,7 @@ public final class Constants {
         public static final LinearVelocity FAST_DRIVE_SPEED = MetersPerSecond.of(4.5);
         public static final AngularVelocity FAST_ROT_SPEED = RotationsPerSecond.of(2);
 
-        public static final LinearAcceleration MAX_TELEOP_ACCEL = MetersPerSecondPerSecond.of(15);
+        public static final LinearAcceleration MAX_TELEOP_ACCEL = MetersPerSecondPerSecond.of(25);
 
         public static final AngularVelocity MAX_MODULE_ROT_SPEED = RotationsPerSecond.of(5);
 
@@ -127,11 +126,11 @@ public final class Constants {
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
         public static final Slot0Configs DRIVE_GAINS = new Slot0Configs()
-                .withKP(0)
+                .withKP(2)
                 .withKI(0.0)
                 .withKD(0.0)
-                .withKS(0.208) // 0.11367, 0.1301, 0.15349, 0.16187 -> 0.140
-                .withKV(0.726) // 0.13879, 0.13555, 0.13894, 0.13109 -> 0.136
+                .withKS(0.237) // 0.11367, 0.1301, 0.15349, 0.16187 -> 0.140
+                .withKV(0.733) // 0.13879, 0.13555, 0.13894, 0.13109 -> 0.136
                 .withKA(0.0); // 0.016363, 0.016268, 0.0085342, 0.011084 -> 0.013
 
         private static final ClosedLoopOutputType STEER_CLOSED_LOOP_OUTPUT = ClosedLoopOutputType.TorqueCurrentFOC;
@@ -142,7 +141,7 @@ public final class Constants {
 
         private static final SteerFeedbackType STEER_FEEDBACK_TYPE = SteerFeedbackType.FusedCANcoder;
 
-        private static final Current SLIP_CURRENT = Amps.of(80.0); // NEEDS TUNING
+        private static final Current SLIP_CURRENT = Amps.of(95); // NEEDS TUNING
 
         private static final TalonFXConfiguration DRIVE_CONFIGS = new TalonFXConfiguration()
                 .withCurrentLimits(new CurrentLimitsConfigs()
@@ -348,36 +347,35 @@ public final class Constants {
     }
 
     public static class TurretConstants {
-        public static final int TURN_ID = 0;
-        public static final int HOOD_ID = 0;
-        public static final int FLYWHEEL_ID = 0;
-        public static final int FLYWHEEL_FOLLOWER_ID = 0;
+        public static final int TURN_ID = 24;
+        public static final int HOOD_ID = 22;
+        public static final int FLYWHEEL_ID = 23;
+        public static final int FLYWHEEL_FOLLOWER_ID = 21;
         public static final int ENCODER_ID = 0;
 
         public static final Slot0Configs TURN_GAINS =
                 new Slot0Configs().withKP(0.0).withKD(0.0).withKS(0.0);
 
         public static final Slot0Configs HOOD_GAINS =
-                new Slot0Configs().withKP(0.0).withKD(0.0).withKS(0.0);
+                new Slot0Configs().withKP(1024).withKD(5).withKS(0.28);
 
         public static final Slot0Configs FLYWHEEL_GAINS =
-                new Slot0Configs().withKP(0.3).withKD(0).withKS(0);
+                new Slot0Configs().withKP(0.0).withKD(0).withKS(17);
 
         public static final CurrentLimitsConfigs TURN_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
         public static final CurrentLimitsConfigs HOOD_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(30);
+                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
-        public static final CurrentLimitsConfigs FLYWHEEL_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(60);
+        public static final CurrentLimitsConfigs FLYWHEEL_CURRENT_LIMITS = new CurrentLimitsConfigs();
 
         public static final MotorOutputConfigs TURN_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake);
 
         public static final MotorOutputConfigs HOOD_OUTPUT_CONFIGS = new MotorOutputConfigs()
-                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake);
 
         public static final MotorOutputConfigs FLYWHEEL_OUTPUT_CONFIGS = new MotorOutputConfigs()
@@ -385,11 +383,13 @@ public final class Constants {
                 .withNeutralMode(NeutralModeValue.Coast);
 
         public static final MotorOutputConfigs FLYWHEEL_FOLLOWER_OUTPUT_CONFIGS = new MotorOutputConfigs()
-                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast);
 
         public static final double ENCODER_TO_TURRET_RATIO = 34.0 / 78;
-        public static final double MOTOR_TO_TURRET_RATIO = 11;
+        public static final double TURN_TO_TURRET_RATIO = 11;
+        public static final double HOOD_MOTOR_RATIO =
+                40.0 / 14 * 2.0 / 1 * 180.0 / 10; // 40:14 gear, 2:1 belt, 180:10 rack
 
         public static final Distance DISTANCE_ABOVE_FUNNEL = Inches.of(20); // how high to clear the funnel
         public static final Distance APEX = Inches.of(130);
@@ -402,8 +402,12 @@ public final class Constants {
         public static final Angle MIN_TURN_ANGLE = Rotations.of(-1);
         public static final Angle MAX_TURN_ANGLE = Rotations.of(1);
 
-        public static final Angle MIN_HOOD_ANGLE = Rotations.of(0.13);
-        public static final Angle MAX_HOOD_ANGLE = Rotations.of(0.25);
+        public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
+        public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
+
+        public static final Current HOOD_STALL_CURRENT = Amps.of(15);
+        public static final AngularVelocity HOOD_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.1);
+        public static final Voltage HOOD_ZEROING_VOLTAGE = Volts.of(-0.5);
 
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
                 Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
@@ -445,11 +449,8 @@ public final class Constants {
                 new CurrentLimitsConfigs().withStatorCurrentLimit(30).withSupplyCurrentLowerLimit(30);
 
         public static final MotionMagicConfigs RACK_MOTION_MAGIC = new MotionMagicConfigs()
-                .withMotionMagicCruiseVelocity(
-                        IntakeIOTalonFX.distanceToRotorAngle(Inches.of(200)).per(Second))
-                .withMotionMagicAcceleration(IntakeIOTalonFX.distanceToRotorAngle(Inches.of(150))
-                        .per(Second)
-                        .per(Second));
+                .withMotionMagicCruiseVelocity(RotationsPerSecond.of(240))
+                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(400));
 
         public static final Distance STOW_POS = Inches.of(0);
         public static final Distance DEPLOY_POS = Inches.of(11.);
