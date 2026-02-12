@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -27,7 +28,7 @@ public class Indexer extends SubsystemBase {
     private final IndexerVisualizer visualizer;
 
     @AutoLogOutput
-    private boolean isActive = false;
+    private IndexerGoal goal = IndexerGoal.OFF;
 
     public Indexer(IndexerIO io, Supplier<Rotation2d> robotRotationSupplier) {
         this.io = io;
@@ -39,7 +40,7 @@ public class Indexer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Indexer", inputs);
 
-        if ((spinVoltage.hasChanged(hashCode()) || feedVoltage.hasChanged(hashCode())) && isActive) {
+        if ((spinVoltage.hasChanged(hashCode()) || feedVoltage.hasChanged(hashCode())) && goal == IndexerGoal.ACTIVE) {
             io.setSpinOutput(Volts.of(spinVoltage.get()));
             io.setFeedOutput(Volts.of(feedVoltage.get()));
         }
@@ -47,11 +48,25 @@ public class Indexer extends SubsystemBase {
         visualizer.update(inputs.spinVelocity);
     }
 
+    public Command setGoal(IndexerGoal goal) {
+        return Commands.defer(
+                () -> {
+                    Command toSchedule = Commands.none();
+                    if (goal == IndexerGoal.ACTIVE && this.goal != IndexerGoal.ACTIVE) {
+                        toSchedule = activate();
+                    } else if (goal == IndexerGoal.OFF) {
+                        toSchedule = stop();
+                    }
+                    this.goal = goal;
+                    return toSchedule;
+                },
+                Set.of(this));
+    }
+
     public Command activate() {
         return this.runOnce(() -> {
                     io.setFeedOutput(Volts.of(-4));
                     io.setSpinOutput(Volts.of(-2));
-                    isActive = true;
                 })
                 .andThen(Commands.waitSeconds(0.1875))
                 .andThen(this.runOnce(() -> {
@@ -67,8 +82,12 @@ public class Indexer extends SubsystemBase {
         return this.runOnce(() -> {
                     io.stopSpin();
                     io.stopFeed();
-                    isActive = false;
                 })
                 .withName("IndexerStop");
+    }
+
+    public enum IndexerGoal {
+        ACTIVE,
+        OFF
     }
 }

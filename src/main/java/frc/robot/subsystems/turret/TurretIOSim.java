@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -84,7 +85,7 @@ public class TurretIOSim implements TurretIO {
 
         fuelSim.launchFuel(
                 TurretCalculator.angularToLinearVelocity(flywheelGoal, FLYWHEEL_RADIUS),
-                hoodAngle,
+                Degrees.of(90).minus(hoodAngle),
                 turnPosition,
                 ROBOT_TO_TURRET_TRANSFORM.getMeasureZ());
     }

@@ -42,7 +42,7 @@ public class Turret extends SubsystemBase {
             ? FieldConstants.HUB_BLUE
             : FieldConstants.HUB_RED;
 
-    private boolean isActive = false;
+    private TurretGoal goal = TurretGoal.OFF;
 
     private final TurretVisualizer turretVisualizer;
 
@@ -79,13 +79,32 @@ public class Turret extends SubsystemBase {
                 fieldSpeedsSupplier);
     }
 
-    public Command stop() {
+    public Command setGoal(TurretGoal goal) {
         return this.runOnce(() -> {
-            io.stopFlywheel();
-            io.stopHood();
-            io.stopTurn();
-            isActive = false;
+            this.goal = goal;
+            switch (goal) {
+                case SCORING:
+                    setTarget(FieldConstants.HUB_BLUE);
+                    break;
+                case PASSING:
+                    setTarget(getPassingTarget(poseSupplier.get()));
+                    break;
+                case IDLE:
+                    io.stopFlywheel();
+                    io.stopHood();
+                    io.stopTurn();
+                    break;
+                case OFF:
+                    io.stopFlywheel();
+                    io.stopHood();
+                    io.stopTurn();
+                    break;
+            }
         });
+    }
+
+    public Command setTurnPosition(Angle position) {
+        return this.runOnce(() -> io.setTurnSetpoint(position, RadiansPerSecond.zero()));
     }
 
     public Command setHoodPosition(Angle angle) {
@@ -96,18 +115,19 @@ public class Turret extends SubsystemBase {
         return this.runOnce(() -> io.setFlywheelSpeed(speed));
     }
 
-    public Command start() {
-        return this.runOnce(() -> isActive = true);
+    public void setTarget(Translation3d target) {
+        currentTarget = target;
+        if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+            Translation2d flipped = FlippingUtil.flipFieldPosition(target.toTranslation2d());
+            currentTarget = new Translation3d(flipped.getX(), flipped.getY(), target.getZ());
+        }
     }
 
-    public Command setTarget(Translation3d target) {
-        return this.runOnce(() -> {
-            currentTarget = target;
-            if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
-                Translation2d flipped = FlippingUtil.flipFieldPosition(target.toTranslation2d());
-                currentTarget = new Translation3d(flipped.getX(), flipped.getY(), target.getZ());
-            }
-        });
+    private Translation3d getPassingTarget(Pose2d pose) {
+        boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+        boolean onBlueLeftSide = poseSupplier.get().getMeasureY().gt(FieldConstants.FIELD_WIDTH.div(2));
+
+        return isBlue == onBlueLeftSide ? PASSING_SPOT_LEFT : PASSING_SPOT_RIGHT;
     }
 
     @Override
@@ -115,21 +135,26 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
 
-        if (isActive) {
-            calculateShot();
+        Pose2d pose = poseSupplier.get();
+
+        if (goal == TurretGoal.SCORING || goal == TurretGoal.PASSING) {
+            calculateShot(pose);
+        }
+
+        if (goal == TurretGoal.PASSING) {
+            setTarget(getPassingTarget(pose));
         }
 
         turretVisualizer.update3dPose(inputs.turnPosition, inputs.hoodPosition);
         updateTunables();
     }
 
-    private void calculateShot() {
-        Pose2d robot = poseSupplier.get();
+    private void calculateShot(Pose2d robotPose) {
         ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
 
         ShotData calculatedShot = TurretCalculator.iterativeMovingShotFromFunnelClearance(
-                robot, fieldSpeeds, currentTarget, LOOKAHEAD_ITERATIONS);
-        Angle azimuthAngle = TurretCalculator.calculateAzimuthAngle(robot, calculatedShot.target());
+                robotPose, fieldSpeeds, currentTarget, LOOKAHEAD_ITERATIONS);
+        Angle azimuthAngle = TurretCalculator.calculateAzimuthAngle(robotPose, calculatedShot.target());
         AngularVelocity azimuthVelocity = RadiansPerSecond.of(-fieldSpeeds.omegaRadiansPerSecond);
         io.setTurnSetpoint(azimuthAngle, azimuthVelocity);
         io.setHoodAngle(calculatedShot.getHoodAngle());
@@ -176,5 +201,12 @@ public class Turret extends SubsystemBase {
     public void simulationPeriodic() {
         turretVisualizer.updateFuel(
                 TurretCalculator.angularToLinearVelocity(inputs.flywheelSpeed, FLYWHEEL_RADIUS), inputs.hoodPosition);
+    }
+
+    public enum TurretGoal {
+        SCORING,
+        PASSING,
+        IDLE,
+        OFF
     }
 }

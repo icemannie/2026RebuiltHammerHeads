@@ -55,7 +55,7 @@ public class TurretCalculator {
     // calculates how long it will take for a projectile to travel a set distance given its initial velocity and angle
     public static Time calculateTimeOfFlight(LinearVelocity exitVelocity, Angle hoodAngle, Distance distance) {
         double vel = exitVelocity.in(MetersPerSecond);
-        double angle = hoodAngle.in(Radians);
+        double angle = Math.PI / 2 - hoodAngle.in(Radians);
         double dist = distance.in(Meters);
         return Seconds.of(dist / (vel * Math.cos(angle)));
     }
@@ -126,7 +126,7 @@ public class TurretCalculator {
             v0 = 0;
             theta = 0;
         }
-        return new ShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
+        return new ShotData(InchesPerSecond.of(v0), Radians.of(Math.PI / 2 - theta), predictedTarget);
     }
 
     // use an iterative lookahead approach to determine shot parameters for a moving robot

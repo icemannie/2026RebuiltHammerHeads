@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static frc.robot.Constants.TurretConstants.ROBOT_TO_TURRET_TRANSFORM;
@@ -46,7 +47,7 @@ public class TurretVisualizer {
     }
 
     public void updateFuel(LinearVelocity vel, Angle angle) {
-        Translation3d trajVel = launchVel(vel, angle);
+        Translation3d trajVel = launchVel(vel, Degrees.of(90).minus(angle));
         for (int i = 0; i < trajectory.length; i++) {
             double t = i * 0.04;
             double x = trajVel.getX() * t + poseSupplier.get().getTranslation().getX();

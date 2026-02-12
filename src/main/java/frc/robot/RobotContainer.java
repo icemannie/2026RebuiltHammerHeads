@@ -38,10 +38,13 @@ import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.Intake.IntakeGoal;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
@@ -62,7 +65,7 @@ public class RobotContainer {
     private final Intake intake;
     private final Turret turret;
     private final Indexer indexer;
-    // private final Superstructure superstructure;
+    private final Superstructure superstructure;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -134,7 +137,7 @@ public class RobotContainer {
                 break;
         }
 
-        // superstructure = new Superstructure(turret, intake, drive::getPose);
+        superstructure = new Superstructure(turret, intake, indexer, drive::getPose);
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Characterizations");
@@ -183,22 +186,22 @@ public class RobotContainer {
         indexTrigger.onFalse(indexer.stop());
 
         deployIntakeTrigger.onTrue(intake.deployRight());
-        deployIntakeTrigger.onFalse(intake.stow());
+        deployIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
         zeroRackTrigger.whileTrue(intake.zeroRightSequence());
-        zeroRackTrigger.onFalse(intake.stow());
+        zeroRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
         zeroHoodTrigger.whileTrue(turret.zeroHoodSequence());
-        zeroHoodTrigger.onFalse(turret.stop());
+        zeroHoodTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
 
         hoodTrigger.onTrue(turret.setHoodPosition(Degrees.of(35)));
         hoodTrigger.onFalse(turret.setHoodPosition(Degrees.of(20)));
 
         flywheelTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(3000)));
-        flywheelTrigger.onFalse(turret.stop());
+        flywheelTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
 
         flywheelSlowTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(500)));
-        flywheelSlowTrigger.onFalse(turret.stop());
+        flywheelSlowTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
     }
 
     private void configureFuelSim() {

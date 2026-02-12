@@ -455,6 +455,7 @@ public final class Constants {
         public static final Distance STOW_POS = Inches.of(0);
         public static final Distance DEPLOY_POS = Inches.of(11.);
         public static final Voltage SPIN_VOLTAGE = Volts.of(12);
+        public static final Distance STOW_TOLERANCE = Inches.of(0.5);
 
         public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.5);
 
@@ -488,7 +489,7 @@ public final class Constants {
         public static final Voltage SPIN_VOLTAGE = Volts.of(4);
         public static final Voltage FEED_VOLTAGE = Volts.of(12);
 
-        public static final AngularVelocity FEED_THRESHOLD = RPM.of(4000);
+        public static final AngularVelocity FEED_THRESHOLD = RPM.of(3000);
     }
 
     public static class ClimberConstants {}

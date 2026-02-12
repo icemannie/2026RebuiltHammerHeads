@@ -29,21 +29,26 @@ public class Intake extends SubsystemBase {
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
     @AutoLogOutput
-    private boolean automaticDeploy = true;
+    private IntakeGoal goal = IntakeGoal.STOW;
 
     private boolean leftDeployed = false;
     private boolean rightDeployed = false;
 
     @AutoLogOutput
-    public Trigger deployLeftTrigger =
-            new Trigger(this::travelingLeft).and(() -> automaticDeploy).debounce(0.2);
+    public Trigger deployLeftTrigger = new Trigger(this::travelingLeft)
+            .and(() -> goal == IntakeGoal.AUTOSWITCH)
+            .debounce(0.08);
 
     @AutoLogOutput
-    public Trigger deployRightTrigger =
-            new Trigger(this::travelingRight).and(() -> automaticDeploy).debounce(0.2);
+    public Trigger deployRightTrigger = new Trigger(this::travelingRight)
+            .and(() -> goal == IntakeGoal.AUTOSWITCH)
+            .debounce(0.08);
 
     @AutoLogOutput
     private Trigger rightRackStallTrigger;
+
+    @AutoLogOutput
+    private Trigger leftRackStallTrigger;
 
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
 
@@ -69,12 +74,13 @@ public class Intake extends SubsystemBase {
 
         this.chassisSpeedsSupplier = chassisSpeedsSupplier;
 
-        // this.deployLeftTrigger.onTrue(deployLeft());
-        // this.deployRightTrigger.onTrue(deployRight());
+        this.deployLeftTrigger.onTrue(deployLeft());
+        this.deployRightTrigger.onTrue(deployRight());
         rightRackStallTrigger = new Trigger(() -> rightIO.rackIsStalled()).debounce(0.1);
+        leftRackStallTrigger = new Trigger(() -> leftIO.rackIsStalled()).debounce(0.1);
         SmartDashboard.putData(deployLeft());
         SmartDashboard.putData(deployRight());
-        SmartDashboard.putData(stow());
+        SmartDashboard.putData(setGoal(IntakeGoal.STOW));
     }
 
     public boolean travelingLeft() {
@@ -85,6 +91,16 @@ public class Intake extends SubsystemBase {
         return chassisSpeedsSupplier.get().vyMetersPerSecond < -MIN_SWITCH_ROBOT_VELOCITY.in(MetersPerSecond);
     }
 
+    @AutoLogOutput
+    public boolean isLeftStowed() {
+        return leftInputs.rackPosition.isNear(STOW_POS, STOW_TOLERANCE);
+    }
+
+    @AutoLogOutput
+    public boolean isRightStowed() {
+        return rightInputs.rackPosition.isNear(STOW_POS, STOW_TOLERANCE);
+    }
+
     public boolean isLeftDeployed() {
         return leftDeployed;
     }
@@ -93,52 +109,53 @@ public class Intake extends SubsystemBase {
         return rightDeployed;
     }
 
-    public Command setAutomaticDeploy(boolean shouldDeployAutomatically) {
-        return this.runOnce(() -> this.automaticDeploy = shouldDeployAutomatically);
-    }
+    public Command setGoal(IntakeGoal goal) {
+        return this.runOnce(() -> {
+            this.goal = goal;
+            switch (goal) {
+                case AUTOSWITCH:
+                    break;
+                case MANUAL:
+                    break;
+                case STOW:
+                    leftIO.setRackPosition(STOW_POS);
+                    rightIO.setRackPosition(STOW_POS);
 
-    public Command deploy() {
-        return this.runOnce(() -> automaticDeploy = true)
-                .andThen(deployLeft().onlyIf(() -> !travelingLeft() && !travelingRight()))
-                .withName("Deploy intake");
+                    leftIO.stopSpin();
+                    rightIO.stopSpin();
+                    break;
+            }
+        });
     }
 
     public Command deployLeft() {
         return this.runOnce(() -> {
-                    leftDeployed = true;
                     rightDeployed = false;
-                    leftIO.setRackPosition(DEPLOY_POS);
                     rightIO.setRackPosition(STOW_POS);
-
-                    leftIO.setSpinOutput(Volts.of(spinVoltage.get()));
                     rightIO.stopSpin();
                 })
+                .andThen(Commands.waitUntil(this::isRightStowed))
+                .andThen(this.runOnce(() -> {
+                    leftDeployed = true;
+                    leftIO.setRackPosition(DEPLOY_POS);
+                    leftIO.setSpinOutput(Volts.of(spinVoltage.get()));
+                }))
                 .withName("Deploy Left Intake");
     }
 
     public Command deployRight() {
         return this.runOnce(() -> {
                     leftDeployed = false;
+                    leftIO.setRackPosition(STOW_POS);
+                    leftIO.stopSpin();
+                })
+                .andThen(Commands.waitUntil(this::isLeftStowed))
+                .andThen(this.runOnce(() -> {
                     rightDeployed = true;
-                    leftIO.setRackPosition(STOW_POS);
                     rightIO.setRackPosition(DEPLOY_POS);
-
-                    leftIO.stopSpin();
                     rightIO.setSpinOutput(Volts.of(spinVoltage.get()));
-                })
+                }))
                 .withName("Deploy Right Intake");
-    }
-
-    public Command stow() {
-        return this.runOnce(() -> {
-                    automaticDeploy = false;
-                    leftIO.setRackPosition(STOW_POS);
-                    rightIO.setRackPosition(STOW_POS);
-
-                    leftIO.stopSpin();
-                    rightIO.stopSpin();
-                })
-                .withName("Stow intakes");
     }
 
     public Command zeroRightSequence() {
@@ -151,6 +168,19 @@ public class Intake extends SubsystemBase {
                 this.runOnce(() -> {
                     rightIO.zeroPosition();
                     rightIO.setRackPosition(STOW_POS);
+                }));
+    }
+
+    public Command zeroLeftSequence() {
+        return Commands.sequence(
+                this.runOnce(() -> leftIO.setRackOutput(ZEROING_VOLTAGE)),
+                Commands.waitSeconds(0.1),
+                Commands.waitUntil(leftRackStallTrigger::getAsBoolean),
+                this.runOnce(leftIO::stopRack),
+                Commands.waitSeconds(0.1),
+                this.runOnce(() -> {
+                    leftIO.zeroPosition();
+                    leftIO.setRackPosition(STOW_POS);
                 }));
     }
 
@@ -202,5 +232,11 @@ public class Intake extends SubsystemBase {
         measuredVisualizer.setRightPosition(rightInputs.rackPosition);
 
         updateTunables();
+    }
+
+    public enum IntakeGoal {
+        AUTOSWITCH,
+        MANUAL,
+        STOW
     }
 }
