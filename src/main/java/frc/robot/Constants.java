@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.MountPoseConfigs;
@@ -360,7 +361,7 @@ public final class Constants {
                 new Slot0Configs().withKP(1024).withKD(5).withKS(0.28);
 
         public static final Slot0Configs FLYWHEEL_GAINS =
-                new Slot0Configs().withKP(0.0).withKD(0).withKS(17);
+                new Slot0Configs().withKP(30).withKD(0.4).withKS(17).withKV(0.4);
 
         public static final CurrentLimitsConfigs TURN_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
@@ -368,7 +369,8 @@ public final class Constants {
         public static final CurrentLimitsConfigs HOOD_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
-        public static final CurrentLimitsConfigs FLYWHEEL_CURRENT_LIMITS = new CurrentLimitsConfigs();
+        public static final CurrentLimitsConfigs FLYWHEEL_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(100);
 
         public static final MotorOutputConfigs TURN_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
@@ -386,10 +388,15 @@ public final class Constants {
                 .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast);
 
+        public static final FeedbackConfigs FLYWHEEL_FEEDBACK_CONFIGS =
+                new FeedbackConfigs().withVelocityFilterTimeConstant(Seconds.of(0.01));
+
         public static final double ENCODER_TO_TURRET_RATIO = 34.0 / 78;
         public static final double TURN_TO_TURRET_RATIO = 11;
         public static final double HOOD_MOTOR_RATIO =
                 40.0 / 14 * 2.0 / 1 * 180.0 / 10; // 40:14 gear, 2:1 belt, 180:10 rack
+
+        public static final Current BANG_BANG_AMPS = Amps.of(100);
 
         public static final Distance DISTANCE_ABOVE_FUNNEL = Inches.of(20); // how high to clear the funnel
         public static final Distance APEX = Inches.of(130);

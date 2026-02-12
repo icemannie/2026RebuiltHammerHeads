@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -18,11 +20,13 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -63,6 +67,7 @@ public class TurretIOTalonFX implements TurretIO {
     private final PositionVoltage hoodPositionRequest = new PositionVoltage(0);
     private final VoltageOut hoodVoltageRequest = new VoltageOut(0);
     private final VelocityTorqueCurrentFOC flywheelVelocityRequest = new VelocityTorqueCurrentFOC(0);
+    private final TorqueCurrentFOC flywheelTorqueRequest = new TorqueCurrentFOC(0);
 
     private final Follower followRequest = new Follower(
             FLYWHEEL_ID,
@@ -70,6 +75,8 @@ public class TurretIOTalonFX implements TurretIO {
                     ? MotorAlignmentValue.Aligned
                     : MotorAlignmentValue.Opposed);
     private final NeutralOut neutralOut = new NeutralOut();
+    private final BangBangController bangBangController =
+            new BangBangController(RPM.of(100).in(RadiansPerSecond));
 
     public TurretIOTalonFX() {
         turnMotor = new TalonFX(TURN_ID, CAN_FD_BUS);
@@ -106,7 +113,8 @@ public class TurretIOTalonFX implements TurretIO {
         flywheelConfig = new TalonFXConfiguration()
                 .withSlot0(FLYWHEEL_GAINS)
                 .withCurrentLimits(FLYWHEEL_CURRENT_LIMITS)
-                .withMotorOutput(FLYWHEEL_OUTPUT_CONFIGS);
+                .withMotorOutput(FLYWHEEL_OUTPUT_CONFIGS)
+                .withFeedback(FLYWHEEL_FEEDBACK_CONFIGS);
 
         flywheelFollowerConfig = new TalonFXConfiguration()
                 .withCurrentLimits(FLYWHEEL_CURRENT_LIMITS)
@@ -160,6 +168,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
+
         inputs.turnMotorConnected = BaseStatusSignal.refreshAll(
                         turnPosition, turnVelocity, turnAppliedVolts, turnCurrent)
                 .isOK();
@@ -190,6 +199,10 @@ public class TurretIOTalonFX implements TurretIO {
         inputs.flywheelSetpointAccel = RotationsPerSecondPerSecond.of(flywheelSetpointAccel.getValueAsDouble());
         inputs.flywheelAppliedVolts = flywheelAppliedVolts.getValue();
         inputs.flywheelCurrent = flywheelCurrent.getValue();
+        if (flywheelMotor.getAppliedControl().getClass() == TorqueCurrentFOC.class) {
+            flywheelMotor.setControl(flywheelTorqueRequest.withOutput(
+                    BANG_BANG_AMPS.times(bangBangController.calculate(inputs.flywheelSpeed.in(RadiansPerSecond)))));
+        }
     }
 
     @Override
@@ -209,7 +222,10 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setFlywheelSpeed(AngularVelocity speed) {
-        flywheelMotor.setControl(flywheelVelocityRequest.withVelocity(speed));
+        // flywheelMotor.setControl(flywheelVelocityRequest.withVelocity(speed));
+        bangBangController.setSetpoint(speed.in(RadiansPerSecond));
+        flywheelMotor.setControl(flywheelTorqueRequest.withOutput(BANG_BANG_AMPS.times(
+                bangBangController.calculate(flywheelSpeed.getValue().in(RadiansPerSecond)))));
     }
 
     @Override
