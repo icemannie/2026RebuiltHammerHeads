@@ -119,7 +119,7 @@ public class Turret extends SubsystemBase {
             calculateShot();
         }
 
-        turretVisualizer.update3dPose(inputs.turnPosition);
+        turretVisualizer.update3dPose(inputs.turnPosition, inputs.hoodPosition);
         updateTunables();
     }
 

@@ -6,6 +6,7 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import static frc.robot.Constants.TurretConstants.ROBOT_TO_TURRET_TRANSFORM;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -60,7 +61,13 @@ public class TurretVisualizer {
         Logger.recordOutput("Turret/Trajectory", trajectory);
     }
 
-    public void update3dPose(Angle azimuthAngle) {
-        Logger.recordOutput("Turret/TurretPose", new Pose3d(0, 0, 0, new Rotation3d(0, 0, azimuthAngle.in(Radians))));
+    public void update3dPose(Angle azimuthAngle, Angle hoodAngle) {
+        Pose3d turretPose = new Pose3d(0, 0, 0, new Rotation3d(0, 0, azimuthAngle.in(Radians)));
+        Logger.recordOutput("Turret/TurretPose", turretPose);
+        Pose3d hoodPose = new Pose3d(0.1, 0, 0, new Rotation3d(0, hoodAngle.in(Radians), 0));
+        hoodPose = hoodPose.rotateAround(new Translation3d(), new Rotation3d(0, 0, azimuthAngle.in(Radians)));
+        hoodPose = new Pose3d(
+                hoodPose.getTranslation().plus(ROBOT_TO_TURRET_TRANSFORM.getTranslation()), hoodPose.getRotation());
+        Logger.recordOutput("Turret/HoodPose", hoodPose);
     }
 }
