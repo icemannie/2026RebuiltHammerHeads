@@ -43,7 +43,7 @@ public class Vision extends SubsystemBase {
         this.disconnectedAlerts = new Alert[io.length];
         for (int i = 0; i < inputs.length; i++) {
             disconnectedAlerts[i] =
-                    new Alert("Vision camera " + Integer.toString(i) + " is disconnected.", AlertType.kWarning);
+                    new Alert("Vision camera " + io[i].getName() + " is disconnected.", AlertType.kWarning);
         }
     }
 
@@ -60,7 +60,7 @@ public class Vision extends SubsystemBase {
     public void periodic() {
         for (int i = 0; i < io.length; i++) {
             io[i].updateInputs(inputs[i]);
-            Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
+            Logger.processInputs("Vision/" + io[i].getName(), inputs[i]);
         }
 
         // Initialize logging values
@@ -127,15 +127,14 @@ public class Vision extends SubsystemBase {
             }
 
             // Log camera metadata
+            Logger.recordOutput("Vision/" + io[cameraIndex].getName() + "/TagPoses", tagPoses.toArray(new Pose3d[0]));
             Logger.recordOutput(
-                    "Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses", tagPoses.toArray(new Pose3d[0]));
+                    "Vision/" + io[cameraIndex].getName() + "/RobotPoses", robotPoses.toArray(new Pose3d[0]));
             Logger.recordOutput(
-                    "Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses", robotPoses.toArray(new Pose3d[0]));
-            Logger.recordOutput(
-                    "Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
+                    "Vision/" + io[cameraIndex].getName() + "/RobotPosesAccepted",
                     robotPosesAccepted.toArray(new Pose3d[0]));
             Logger.recordOutput(
-                    "Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
+                    "Vision/" + io[cameraIndex].getName() + "/RobotPosesRejected",
                     robotPosesRejected.toArray(new Pose3d[0]));
             allTagPoses.addAll(tagPoses);
             allRobotPoses.addAll(robotPoses);

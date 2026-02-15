@@ -39,4 +39,8 @@ public interface VisionIO {
     }
 
     public default void updateInputs(VisionIOInputs inputs) {}
+
+    public default String getName() {
+        return "";
+    }
 }

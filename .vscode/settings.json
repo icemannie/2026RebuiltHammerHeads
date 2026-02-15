@@ -77,5 +77,6 @@
     "java.format.settings.url": "eclipse-formatter.xml",
     "spotlessGradle.diagnostics.enable": true,
     "wpilib.selectDefaultSimulateExtension": true,
-    "wpilib.skipSelectSimulateExtension": false
+    "wpilib.skipSelectSimulateExtension": false,
+    "editor.fontFamily": "'Fira Code', Consolas, 'Courier New', monospace"
 }

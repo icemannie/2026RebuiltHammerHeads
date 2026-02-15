@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.subsystems.superstructure.Superstructure;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ public class AutoCreator {
         TRENCH_LEFT("Trench Left"),
         CLIMB_RIGHT("Climb Right"),
         CLIMB_LEFT("Climb Left"),
+        DUMP_RIGHT("Dump Right"),
+        DUMP_LEFT("Dump Left"),
         BUMP_START_LEFT("Bump Start Left"),
         BUMP_START_RIGHT("Bump Start Right"),
         DEPOT("Depot"),
@@ -51,18 +54,19 @@ public class AutoCreator {
         }
     }
 
-    private static record AutoPath(StartEndPoint start, StartEndPoint end, String name) {
+    private static record AutoPath(StartEndPoint start, StartEndPoint end, String name, boolean collect) {
         private static AutoPath fromString(String s) {
             if (s.startsWith("Collect")) {
                 return fromCollectString(s);
             }
+
             String[] parts = s.split(" to ");
             if (parts.length != 2) {
                 throw new IllegalArgumentException("Invalid auto path: " + s);
             }
             StartEndPoint start = StartEndPoint.fromString(parts[0]);
             StartEndPoint end = StartEndPoint.fromString(parts[1]);
-            return new AutoPath(start, end, s);
+            return new AutoPath(start, end, s, false);
         }
 
         private static AutoPath fromCollectString(String s) {
@@ -70,10 +74,18 @@ public class AutoCreator {
             if (parts.length != 4) {
                 throw new IllegalArgumentException("Invalid collect auto path: " + s);
             }
+
+            boolean collect = false;
+
+            if (s.endsWith("!")) {
+                collect = true;
+                s = s.substring(0, s.length() - 1);
+            }
+
             StartEndPoint startEnd =
                     parts[3].equalsIgnoreCase("Left") ? StartEndPoint.TRENCH_LEFT : StartEndPoint.TRENCH_RIGHT;
 
-            return new AutoPath(startEnd, startEnd, s);
+            return new AutoPath(startEnd, startEnd, s, collect);
         }
 
         private PathPlannerPath getPathPlannerPath() {
@@ -111,7 +123,8 @@ public class AutoCreator {
     private final DoublePublisher timestampPub = AutoConstants.TIMESTAMP.publish();
 
     public void loadPathplannerPaths() {
-        File pathplannerDir = new File(Filesystem.getDeployDirectory(), "pathplanner\\paths");
+        File pathplannerDir = new File(Filesystem.getDeployDirectory(), "pathplanner/paths");
+        for (String s : pathplannerDir.list()) System.out.println(s);
         if (!pathplannerDir.exists()) {
             throw new RuntimeException("Pathplanner directory does not exist");
         }
@@ -236,10 +249,14 @@ public class AutoCreator {
         return timestamps;
     }
 
-    public Command buildAuto() {
+    public Command buildAuto(Superstructure superstructure) {
         ArrayList<Command> commands = new ArrayList<>();
         for (AutoPath path : selectedAutoPaths) {
-            commands.add(AutoBuilder.followPath(path.getPathPlannerPath()));
+            Command toAdd = AutoBuilder.followPath(path.getPathPlannerPath());
+            if (path.collect) {
+                toAdd = toAdd.beforeStarting(superstructure.startCollecting()).andThen(superstructure.stopCollecting());
+            }
+            commands.add(toAdd);
         }
 
         return Commands.sequence(commands.toArray(Command[]::new));

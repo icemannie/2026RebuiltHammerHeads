@@ -3,9 +3,10 @@
     "robotLength": 0.84,
     "holonomicMode": true,
     "pathFolders": [
+        "Climbs",
         "Collection",
         "Inside Zone",
-        "Climbs",
+        "Dumping",
         "Starts"
     ],
     "autoFolders": [],

@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -48,6 +49,8 @@ public class Robot extends LoggedRobot {
                 // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new WPILOGWriter());
                 Logger.addDataReceiver(new NT4Publisher());
+                PortForwarder.add(5800, "photonvisionfront.local", 5800);
+                PortForwarder.add(5800, "photonvisionback.local", 5800);
                 break;
 
             case SIM:
@@ -97,7 +100,7 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically when disabled. */
     @Override
     public void disabledPeriodic() {
-        // robotContainer.autoCreator.updateNT();
+        robotContainer.autoCreator.updateNT();
     }
 
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */

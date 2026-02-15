@@ -88,9 +88,9 @@ public class Superstructure extends SubsystemBase {
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Idle"));
 
-        inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
-        inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
-        inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
+        // inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
+        // inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
+        // inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
     }
 
     private boolean inAllianceZone() {

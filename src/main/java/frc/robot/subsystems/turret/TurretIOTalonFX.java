@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.turret;
 
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -23,10 +21,9 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -40,6 +37,8 @@ public class TurretIOTalonFX implements TurretIO {
     private final TalonFX hoodMotor;
     private final TalonFX flywheelMotor;
     private final TalonFX flywheelFollowerMotor;
+
+    private final CANcoder encoder;
 
     private final TalonFXConfiguration turnConfig;
     private final TalonFXConfiguration hoodConfig;
@@ -75,21 +74,18 @@ public class TurretIOTalonFX implements TurretIO {
                     ? MotorAlignmentValue.Aligned
                     : MotorAlignmentValue.Opposed);
     private final NeutralOut neutralOut = new NeutralOut();
-    private final BangBangController bangBangController =
-            new BangBangController(RPM.of(100).in(RadiansPerSecond));
+    // private final BangBangController bangBangController =
+    //         new BangBangController(RPM.of(100).in(RadiansPerSecond));
 
     public TurretIOTalonFX() {
         turnMotor = new TalonFX(TURN_ID, CAN_FD_BUS);
         hoodMotor = new TalonFX(HOOD_ID, CAN_FD_BUS);
         flywheelMotor = new TalonFX(FLYWHEEL_ID, CAN_FD_BUS);
         flywheelFollowerMotor = new TalonFX(FLYWHEEL_FOLLOWER_ID, CAN_FD_BUS);
+        encoder = new CANcoder(ENCODER_ID, CAN_FD_BUS);
 
         turnConfig = new TalonFXConfiguration()
-                .withFeedback(new FeedbackConfigs()
-                        .withFeedbackRemoteSensorID(ENCODER_ID)
-                        .withSensorToMechanismRatio(ENCODER_TO_TURRET_RATIO)
-                        .withRotorToSensorRatio(TURN_TO_TURRET_RATIO / ENCODER_TO_TURRET_RATIO)
-                        .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder))
+                .withFeedback(TURN_FEEDBACK_CONFIGS)
                 .withSlot0(TURN_GAINS)
                 .withCurrentLimits(TURN_CURRENT_LIMITS)
                 .withMotorOutput(TURN_OUTPUT_CONFIGS)
@@ -124,6 +120,7 @@ public class TurretIOTalonFX implements TurretIO {
         PhoenixUtil.tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(hoodConfig, 0.25));
         PhoenixUtil.tryUntilOk(5, () -> flywheelMotor.getConfigurator().apply(flywheelConfig, 0.25));
         PhoenixUtil.tryUntilOk(5, () -> flywheelFollowerMotor.getConfigurator().apply(flywheelFollowerConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> encoder.getConfigurator().apply(ENCODER_CONFIGS));
 
         turnPosition = turnMotor.getPosition();
         turnVelocity = turnMotor.getVelocity();
@@ -199,10 +196,10 @@ public class TurretIOTalonFX implements TurretIO {
         inputs.flywheelSetpointAccel = RotationsPerSecondPerSecond.of(flywheelSetpointAccel.getValueAsDouble());
         inputs.flywheelAppliedVolts = flywheelAppliedVolts.getValue();
         inputs.flywheelCurrent = flywheelCurrent.getValue();
-        if (flywheelMotor.getAppliedControl().getClass() == TorqueCurrentFOC.class) {
-            flywheelMotor.setControl(flywheelTorqueRequest.withOutput(
-                    BANG_BANG_AMPS.times(bangBangController.calculate(inputs.flywheelSpeed.in(RadiansPerSecond)))));
-        }
+        // if (flywheelMotor.getAppliedControl().getClass() == TorqueCurrentFOC.class) {
+        //     flywheelMotor.setControl(flywheelTorqueRequest.withOutput(
+        //             BANG_BANG_AMPS.times(bangBangController.calculate(inputs.flywheelSpeed.in(RadiansPerSecond)))));
+        // }
     }
 
     @Override
@@ -222,10 +219,10 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setFlywheelSpeed(AngularVelocity speed) {
-        // flywheelMotor.setControl(flywheelVelocityRequest.withVelocity(speed));
-        bangBangController.setSetpoint(speed.in(RadiansPerSecond));
-        flywheelMotor.setControl(flywheelTorqueRequest.withOutput(BANG_BANG_AMPS.times(
-                bangBangController.calculate(flywheelSpeed.getValue().in(RadiansPerSecond)))));
+        flywheelMotor.setControl(flywheelVelocityRequest.withVelocity(speed));
+        // bangBangController.setSetpoint(speed.in(RadiansPerSecond));
+        // flywheelMotor.setControl(flywheelTorqueRequest.withOutput(BANG_BANG_AMPS.times(
+        //         bangBangController.calculate(flywheelSpeed.getValue().in(RadiansPerSecond)))));
     }
 
     @Override

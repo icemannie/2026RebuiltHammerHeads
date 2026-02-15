@@ -5,8 +5,9 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static frc.robot.Constants.IntakeConstants.ZEROING_VOLTAGE;
 import static frc.robot.Constants.TurretConstants.*;
 
 import com.pathplanner.lib.util.FlippingUtil;
@@ -60,6 +61,10 @@ public class Turret extends SubsystemBase {
     private final LoggedTunableNumber flywheelKV = new LoggedTunableNumber("Turret/Flywheel/kV", FLYWHEEL_GAINS.kV);
     private final LoggedTunableNumber flywheelKS = new LoggedTunableNumber("Turret/Flywheel/kS", FLYWHEEL_GAINS.kS);
 
+    private final LoggedTunableNumber tuningFlywheelSpeed = new LoggedTunableNumber("Turret/Tuning/FlywheelRPM", 0);
+    private final LoggedTunableNumber tuningHoodAngle =
+            new LoggedTunableNumber("Turret/Tuning/HoodAngleDegrees", MIN_HOOD_ANGLE.in(Degrees));
+
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.io = io;
         this.inputs = new TurretIOInputsAutoLogged();
@@ -93,6 +98,8 @@ public class Turret extends SubsystemBase {
                     io.stopFlywheel();
                     io.stopHood();
                     io.stopTurn();
+                    break;
+                case TUNING:
                     break;
                 case OFF:
                     io.stopFlywheel();
@@ -145,6 +152,14 @@ public class Turret extends SubsystemBase {
             setTarget(getPassingTarget(pose));
         }
 
+        if (goal == TurretGoal.TUNING) {
+            io.setFlywheelSpeed(RPM.of(tuningFlywheelSpeed.get()));
+            io.setHoodAngle(Degrees.of(tuningHoodAngle.get()));
+            io.setTurnSetpoint(TurretCalculator.calculateAzimuthAngle(pose, currentTarget), RPM.zero());
+        }
+
+        Logger.recordOutput("Turret/Distance To Target", TurretCalculator.getDistanceToTarget(pose, currentTarget));
+
         turretVisualizer.update3dPose(inputs.turnPosition, inputs.hoodPosition);
         updateTunables();
     }
@@ -166,7 +181,7 @@ public class Turret extends SubsystemBase {
 
     public Command zeroHoodSequence() {
         return Commands.sequence(
-                this.runOnce(() -> io.setHoodOut(ZEROING_VOLTAGE)),
+                this.runOnce(() -> io.setHoodOut(HOOD_ZEROING_VOLTAGE)),
                 Commands.waitSeconds(0.1),
                 Commands.waitUntil(hoodStalledTrigger::getAsBoolean),
                 this.runOnce(io::stopHood),
@@ -207,6 +222,7 @@ public class Turret extends SubsystemBase {
         SCORING,
         PASSING,
         IDLE,
+        TUNING,
         OFF
     }
 }

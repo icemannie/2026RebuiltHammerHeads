@@ -12,8 +12,13 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,9 +27,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.drive.Drive;
@@ -48,6 +56,10 @@ import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.FuelSim;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -66,6 +78,7 @@ public class RobotContainer {
     private final Turret turret;
     private final Indexer indexer;
     private final Superstructure superstructure;
+    private final Vision vision;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -76,17 +89,21 @@ public class RobotContainer {
     // Bindings
     private final Trigger resetHeadingTrigger = controller.y();
     private final Trigger indexTrigger = controller.a();
-    private final Trigger deployIntakeTrigger = controller.b();
-    private final Trigger zeroRackTrigger = controller.povRight();
+    private final Trigger deployRightIntakeTrigger = controller.b();
+    private final Trigger deployLeftIntakeTrigger = controller.x();
+    private final Trigger zeroRightRackTrigger = controller.povRight();
+    private final Trigger zeroLeftRackTrigger = controller.povLeft();
     private final Trigger zeroHoodTrigger = controller.povUp();
     private final Trigger hoodTrigger = controller.rightBumper();
+    private final Trigger turnTrigger = controller.rightTrigger();
     private final Trigger flywheelTrigger = controller.leftBumper();
     private final Trigger flywheelSlowTrigger = controller.leftTrigger();
+    private final Trigger turretTuningTrigger = controller.start();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
-    //     public final AutoCreator autoCreator;
+    public final AutoCreator autoCreator;
 
     public FuelSim fuelSim;
 
@@ -109,6 +126,15 @@ public class RobotContainer {
                         drive::getChassisSpeeds);
                 indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
+                vision = new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0]),
+                        new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[1], VisionConstants.CAMERA_TRANSFORMS[1]),
+                        new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[2], VisionConstants.CAMERA_TRANSFORMS[2]),
+                        new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[3], VisionConstants.CAMERA_TRANSFORMS[3]),
+                        new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[4], VisionConstants.CAMERA_TRANSFORMS[4]),
+                        new VisionIOPhotonVision(
+                                VisionConstants.CAMERA_NAMES[5], VisionConstants.CAMERA_TRANSFORMS[5]));
                 break;
 
             case SIM:
@@ -123,6 +149,20 @@ public class RobotContainer {
                 intake = new Intake(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
+                vision = new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0], drive::getPose),
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAMERA_NAMES[1], VisionConstants.CAMERA_TRANSFORMS[1], drive::getPose),
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAMERA_NAMES[2], VisionConstants.CAMERA_TRANSFORMS[2], drive::getPose),
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAMERA_NAMES[3], VisionConstants.CAMERA_TRANSFORMS[3], drive::getPose),
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAMERA_NAMES[4], VisionConstants.CAMERA_TRANSFORMS[4], drive::getPose),
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAMERA_NAMES[5], VisionConstants.CAMERA_TRANSFORMS[5], drive::getPose));
 
                 configureFuelSimRobot(turretSim::canIntake, turretSim::intakeFuel);
                 break;
@@ -134,6 +174,14 @@ public class RobotContainer {
                 intake = new Intake(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
+                vision = new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {});
                 break;
         }
 
@@ -154,16 +202,16 @@ public class RobotContainer {
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        // autoCreator = new AutoCreator();
-        // AutoBuilder.configure(
-        //         drive::getPose,
-        //         drive::setPose,
-        //         drive::getChassisSpeeds,
-        //         (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
-        //         new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
-        //         AutoConstants.PP_CONFIG,
-        //         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        //         drive);
+        autoCreator = new AutoCreator();
+        AutoBuilder.configure(
+                drive::getPose,
+                drive::setPose,
+                drive::getChassisSpeeds,
+                (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
+                new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
+                AutoConstants.PP_CONFIG,
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                drive);
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
@@ -185,11 +233,17 @@ public class RobotContainer {
         indexTrigger.onTrue(indexer.activate());
         indexTrigger.onFalse(indexer.stop());
 
-        deployIntakeTrigger.onTrue(intake.deployRight());
-        deployIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        deployRightIntakeTrigger.onTrue(intake.deployRight());
+        deployRightIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
-        zeroRackTrigger.whileTrue(intake.zeroRightSequence());
-        zeroRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        deployLeftIntakeTrigger.onTrue(intake.deployLeft());
+        deployLeftIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+
+        zeroRightRackTrigger.whileTrue(intake.zeroRightSequence());
+        zeroRightRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+
+        zeroLeftRackTrigger.whileTrue(intake.zeroLeftSequence());
+        zeroLeftRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
         zeroHoodTrigger.whileTrue(turret.zeroHoodSequence());
         zeroHoodTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
@@ -197,11 +251,17 @@ public class RobotContainer {
         hoodTrigger.onTrue(turret.setHoodPosition(Degrees.of(35)));
         hoodTrigger.onFalse(turret.setHoodPosition(Degrees.of(20)));
 
+        turnTrigger.onTrue(turret.setTurnPosition(Degrees.of(20)));
+        turnTrigger.onFalse(turret.setTurnPosition(Degrees.of(0)));
+
         flywheelTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(3000)));
         flywheelTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
 
         flywheelSlowTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(500)));
         flywheelSlowTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
+
+        turretTuningTrigger.toggleOnTrue(
+                Commands.sequence(turret.setGoal(TurretGoal.TUNING), Commands.idle(), turret.setGoal(TurretGoal.OFF)));
     }
 
     private void configureFuelSim() {

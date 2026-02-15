@@ -13,14 +13,17 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.MountPoseConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -348,14 +351,19 @@ public final class Constants {
     }
 
     public static class TurretConstants {
-        public static final int TURN_ID = 24;
+        public static final int TURN_ID = 25;
         public static final int HOOD_ID = 22;
         public static final int FLYWHEEL_ID = 23;
         public static final int FLYWHEEL_FOLLOWER_ID = 21;
-        public static final int ENCODER_ID = 0;
+        public static final int ENCODER_ID = 24;
+
+        public static final double ENCODER_TO_TURRET_RATIO = 11.0 / 23;
+        public static final double TURN_TO_TURRET_RATIO = 11 * 41.0 / 15;
+        public static final double HOOD_MOTOR_RATIO =
+                40.0 / 14 * 2.0 / 1 * 180.0 / 10; // 40:14 gear, 2:1 belt, 180:10 rack
 
         public static final Slot0Configs TURN_GAINS =
-                new Slot0Configs().withKP(0.0).withKD(0.0).withKS(0.0);
+                new Slot0Configs().withKP(200).withKD(2).withKS(1);
 
         public static final Slot0Configs HOOD_GAINS =
                 new Slot0Configs().withKP(1024).withKD(5).withKS(0.28);
@@ -376,6 +384,13 @@ public final class Constants {
                 .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake);
 
+        public static final FeedbackConfigs TURN_FEEDBACK_CONFIGS = new FeedbackConfigs()
+                .withFeedbackRemoteSensorID(ENCODER_ID)
+                .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+                .withSensorToMechanismRatio(ENCODER_TO_TURRET_RATIO)
+                .withRotorToSensorRatio(TURN_TO_TURRET_RATIO / ENCODER_TO_TURRET_RATIO)
+                .withVelocityFilterTimeConstant(0.01);
+
         public static final MotorOutputConfigs HOOD_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake);
@@ -388,13 +403,13 @@ public final class Constants {
                 .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast);
 
+        public static final MagnetSensorConfigs ENCODER_CONFIGS = new MagnetSensorConfigs()
+                .withMagnetOffset(-0.0185546875)
+                .withAbsoluteSensorDiscontinuityPoint(0.5)
+                .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);
+
         public static final FeedbackConfigs FLYWHEEL_FEEDBACK_CONFIGS =
                 new FeedbackConfigs().withVelocityFilterTimeConstant(Seconds.of(0.01));
-
-        public static final double ENCODER_TO_TURRET_RATIO = 34.0 / 78;
-        public static final double TURN_TO_TURRET_RATIO = 11;
-        public static final double HOOD_MOTOR_RATIO =
-                40.0 / 14 * 2.0 / 1 * 180.0 / 10; // 40:14 gear, 2:1 belt, 180:10 rack
 
         public static final Current BANG_BANG_AMPS = Amps.of(100);
 
@@ -412,9 +427,9 @@ public final class Constants {
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
 
-        public static final Current HOOD_STALL_CURRENT = Amps.of(15);
+        public static final Current HOOD_STALL_CURRENT = Amps.of(6);
         public static final AngularVelocity HOOD_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.1);
-        public static final Voltage HOOD_ZEROING_VOLTAGE = Volts.of(-0.5);
+        public static final Voltage HOOD_ZEROING_VOLTAGE = Volts.of(-1);
 
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
                 Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
@@ -425,11 +440,11 @@ public final class Constants {
     }
 
     public static class IntakeConstants {
-        public static final int LEFT_RACK_ID = 0;
+        public static final int LEFT_RACK_ID = 26;
         public static final int FR_RACK_ID = 12;
         public static final int BR_RACK_ID = 2;
-        public static final int LEFT_SPIN_ID = 0;
-        public static final int RIGHT_SPIN_ID = 26;
+        public static final int LEFT_SPIN_ID = 27;
+        public static final int RIGHT_SPIN_ID = 28;
 
         public static final double ROTOR_TO_PINION_RATIO = 2.0 / 1;
         public static final Distance PINION_PITCH_RADIUS = Inches.of(0.5);
@@ -507,8 +522,9 @@ public final class Constants {
         public static final double ANGULAR_STD_DEV_BASELINE = 1.0; // Radians
 
         public static final String[] CAMERA_NAMES = {
-            "Arducam_OV9281_FL01", "Arducam_OV9281_FR01",
-            "Arducam_OV9281_BL01", "Arducam_OV9281_BR01"
+            "Arducam_OV9281_Front_Left", "Arducam_OV9281_Front_Right",
+            "Arducam_OV9281_Front_Center", "Arducam_OV9281_Back_Left",
+            "Arducam_OV9281_Back_Right", "Arducam_OV9281_Back_Center"
         };
 
         public static final double MAX_AMBIGUITY = 0.3;
@@ -519,10 +535,23 @@ public final class Constants {
         // Transforms from robot to cameras, (x forward, y left, z up), (roll, pitch,
         // yaw)
         public static final Transform3d[] CAMERA_TRANSFORMS = {
-            new Transform3d(new Translation3d(), new Rotation3d()),
-            new Transform3d(new Translation3d(), new Rotation3d()),
-            new Transform3d(new Translation3d(), new Rotation3d()),
-            new Transform3d(new Translation3d(), new Rotation3d())
+            new Transform3d(
+                    new Translation3d(0.307, 0.299, 0.529),
+                    new Rotation3d(Degrees.zero(), Degrees.of(-21), Degrees.of(65))),
+            new Transform3d(
+                    new Translation3d(0.307, -0.299, 0.529),
+                    new Rotation3d(Degrees.zero(), Degrees.of(-21), Degrees.of(-65))),
+            new Transform3d(
+                    new Translation3d(0.352, 0, 0.529), new Rotation3d(Degrees.zero(), Degrees.of(-21), Degrees.of(0))),
+            new Transform3d(
+                    new Translation3d(-0.305, 0.299, 0.529),
+                    new Rotation3d(Degrees.zero(), Degrees.of(-21), Degrees.of(90))),
+            new Transform3d(
+                    new Translation3d(-0.305, -0.299, 0.529),
+                    new Rotation3d(Degrees.zero(), Degrees.of(-21), Degrees.of(-90))),
+            new Transform3d(
+                    new Translation3d(-0.352, 0, 0.529),
+                    new Rotation3d(Degrees.zero(), Degrees.of(-21), Degrees.of(180)))
         };
     }
 

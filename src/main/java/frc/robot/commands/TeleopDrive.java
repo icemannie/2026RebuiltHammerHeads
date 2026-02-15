@@ -66,9 +66,9 @@ public class TeleopDrive extends Command {
         this.omegaSupplier = () -> -controller.getRightX();
         this.driveLimiter = new SlewRateLimiter2d(SwerveConstants.MAX_TELEOP_ACCEL.in(MetersPerSecondPerSecond));
 
-        inTrenchZoneTrigger.onTrue(updateDriveMode(DriveMode.TRENCH_LOCK));
-        inBumpZoneTrigger.onTrue(updateDriveMode(DriveMode.BUMP_LOCK));
-        inTrenchZoneTrigger.or(inBumpZoneTrigger).onFalse(updateDriveMode(DriveMode.NORMAL));
+        // inTrenchZoneTrigger.onTrue(updateDriveMode(DriveMode.TRENCH_LOCK));
+        // inBumpZoneTrigger.onTrue(updateDriveMode(DriveMode.BUMP_LOCK));
+        // inTrenchZoneTrigger.or(inBumpZoneTrigger).onFalse(updateDriveMode(DriveMode.NORMAL));
         for (int i = 0; i < 4; i++) {
             Logger.recordOutput("Trench" + i, FieldConstants.TRENCH_ZONES[i]);
             Logger.recordOutput("Bump" + i, FieldConstants.BUMP_ZONES[i]);
