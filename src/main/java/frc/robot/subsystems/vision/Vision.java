@@ -7,6 +7,7 @@
 
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.VisionConstants.*;
 
 import edu.wpi.first.math.Matrix;
@@ -94,7 +95,7 @@ public class Vision extends SubsystemBase {
                 boolean rejectPose = observation.tagCount() == 0 // Must have at least one tag
                         || (observation.tagCount() == 1
                                 && observation.ambiguity() > MAX_AMBIGUITY) // Cannot be high ambiguity
-
+                        || observation.pose().getZ() > MAX_Z_HEIGHT.in(Meters)
                         // Must be within the field boundaries
                         || observation.pose().getX() < 0.0
                         || observation.pose().getX() > APRIL_TAGS.getFieldLength()

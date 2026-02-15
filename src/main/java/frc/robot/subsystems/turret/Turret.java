@@ -43,6 +43,7 @@ public class Turret extends SubsystemBase {
             ? FieldConstants.HUB_BLUE
             : FieldConstants.HUB_RED;
 
+    @AutoLogOutput
     private TurretGoal goal = TurretGoal.OFF;
 
     private final TurretVisualizer turretVisualizer;
@@ -100,6 +101,7 @@ public class Turret extends SubsystemBase {
                     io.stopTurn();
                     break;
                 case TUNING:
+                    setTarget(FieldConstants.HUB_BLUE);
                     break;
                 case OFF:
                     io.stopFlywheel();
@@ -108,6 +110,10 @@ public class Turret extends SubsystemBase {
                     break;
             }
         });
+    }
+
+    public TurretGoal getGoal() {
+        return goal;
     }
 
     public Command setTurnPosition(Angle position) {
@@ -155,7 +161,8 @@ public class Turret extends SubsystemBase {
         if (goal == TurretGoal.TUNING) {
             io.setFlywheelSpeed(RPM.of(tuningFlywheelSpeed.get()));
             io.setHoodAngle(Degrees.of(tuningHoodAngle.get()));
-            io.setTurnSetpoint(TurretCalculator.calculateAzimuthAngle(pose, currentTarget), RPM.zero());
+            io.setTurnSetpoint(
+                    TurretCalculator.calculateAzimuthAngle(pose, currentTarget, inputs.turnPosition), RPM.zero());
         }
 
         Logger.recordOutput("Turret/Distance To Target", TurretCalculator.getDistanceToTarget(pose, currentTarget));
@@ -167,9 +174,10 @@ public class Turret extends SubsystemBase {
     private void calculateShot(Pose2d robotPose) {
         ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
 
-        ShotData calculatedShot = TurretCalculator.iterativeMovingShotFromFunnelClearance(
+        ShotData calculatedShot = TurretCalculator.iterativeMovingShotFromMap(
                 robotPose, fieldSpeeds, currentTarget, LOOKAHEAD_ITERATIONS);
-        Angle azimuthAngle = TurretCalculator.calculateAzimuthAngle(robotPose, calculatedShot.target());
+        Angle azimuthAngle =
+                TurretCalculator.calculateAzimuthAngle(robotPose, calculatedShot.target(), inputs.turnPosition);
         AngularVelocity azimuthVelocity = RadiansPerSecond.of(-fieldSpeeds.omegaRadiansPerSecond);
         io.setTurnSetpoint(azimuthAngle, azimuthVelocity);
         io.setHoodAngle(calculatedShot.getHoodAngle());
@@ -185,7 +193,7 @@ public class Turret extends SubsystemBase {
                 Commands.waitSeconds(0.1),
                 Commands.waitUntil(hoodStalledTrigger::getAsBoolean),
                 this.runOnce(io::stopHood),
-                Commands.waitSeconds(0.1),
+                Commands.waitSeconds(0.2),
                 this.runOnce(() -> {
                     io.zeroHoodPosition();
                     io.setHoodAngle(MIN_HOOD_ANGLE);

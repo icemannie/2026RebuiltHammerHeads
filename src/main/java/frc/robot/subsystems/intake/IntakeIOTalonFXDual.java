@@ -10,9 +10,11 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Second;
+import static frc.robot.Constants.CAN_FD_BUS;
 import static frc.robot.Constants.IntakeConstants.DEPLOY_POS;
 import static frc.robot.Constants.IntakeConstants.PINION_PITCH_RADIUS;
 import static frc.robot.Constants.IntakeConstants.RACK_CURRENT_LIMITS;
+import static frc.robot.Constants.IntakeConstants.RACK_DIFF_GAINS;
 import static frc.robot.Constants.IntakeConstants.RACK_GAINS;
 import static frc.robot.Constants.IntakeConstants.RACK_MOTION_MAGIC;
 import static frc.robot.Constants.IntakeConstants.RACK_OUTPUT_CONFIGS;
@@ -29,10 +31,15 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.DifferentialMotionMagicVoltage;
+import com.ctre.phoenix6.controls.DifferentialVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.mechanisms.DifferentialMotorConstants;
+import com.ctre.phoenix6.mechanisms.SimpleDifferentialMechanism;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -42,12 +49,13 @@ import frc.robot.Constants;
 import frc.robot.util.PhoenixUtil;
 
 /** Add your docs here. */
-public class IntakeIOTalonFX implements IntakeIO {
-    private final TalonFX rackMotor;
+public class IntakeIOTalonFXDual implements IntakeIO {
     private final TalonFX spinMotor;
+    private final SimpleDifferentialMechanism<TalonFX> diffMech;
 
     private final TalonFXConfiguration rackConfig;
     private final TalonFXConfiguration spinConfig;
+    private final DifferentialMotorConstants<TalonFXConfiguration> diffConfig;
 
     private final StatusSignal<Angle> rackPosition;
     private final StatusSignal<AngularVelocity> rackVelocity;
@@ -60,18 +68,19 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Current> spinCurrent;
     private final StatusSignal<Voltage> spinAppliedVolts;
 
-    private final MotionMagicVoltage rackPositionRequest = new MotionMagicVoltage(0);
-    private final VoltageOut rackVoltageRequest = new VoltageOut(0);
+    private final DifferentialMotionMagicVoltage rackPositionRequest = new DifferentialMotionMagicVoltage(0, 0);
+    private final PositionVoltage rackDiffRequest = new PositionVoltage(0);
+    private final DifferentialVoltage rackVoltageRequest = new DifferentialVoltage(0, 0);
     private final VoltageOut spinVoltageRequest = new VoltageOut(0).withEnableFOC(false);
 
     private final NeutralOut neutralOut = new NeutralOut();
 
-    public IntakeIOTalonFX(int rackID, int spinID) {
-        this.rackMotor = new TalonFX(rackID, Constants.CAN_FD_BUS);
+    public IntakeIOTalonFXDual(int rackFrontID, int rackBackID, int spinID) {
         this.spinMotor = new TalonFX(spinID, Constants.CAN_FD_BUS);
 
         rackConfig = new TalonFXConfiguration()
                 .withSlot0(RACK_GAINS)
+                .withSlot1(RACK_DIFF_GAINS)
                 .withMotorOutput(RACK_OUTPUT_CONFIGS)
                 .withCurrentLimits(RACK_CURRENT_LIMITS)
                 .withMotionMagic(RACK_MOTION_MAGIC)
@@ -84,21 +93,31 @@ public class IntakeIOTalonFX implements IntakeIO {
                         .withRotorToSensorRatio(1)
                         .withSensorToMechanismRatio(ROTOR_TO_PINION_RATIO));
 
+        diffConfig = new DifferentialMotorConstants<TalonFXConfiguration>()
+                .withCANBusName(CAN_FD_BUS.getName())
+                .withLeaderId(rackBackID)
+                .withFollowerId(rackFrontID)
+                .withSensorToDifferentialRatio(1)
+                .withAlignment(MotorAlignmentValue.Opposed)
+                .withLeaderInitialConfigs(rackConfig)
+                .withFollowerInitialConfigs(new TalonFXConfiguration().withFeedback(rackConfig.Feedback))
+                .withFollowerUsesCommonLeaderConfigs(true);
+
         spinConfig = new TalonFXConfiguration()
                 .withCurrentLimits(SPIN_CURRENT_LIMITS)
                 .withMotorOutput(SPIN_OUTPUT_CONFIGS);
 
-        PhoenixUtil.tryUntilOk(5, () -> rackMotor.getConfigurator().apply(rackConfig, 0.25));
         PhoenixUtil.tryUntilOk(5, () -> spinMotor.getConfigurator().apply(spinConfig, 0.25));
+        diffMech = new SimpleDifferentialMechanism<TalonFX>(TalonFX::new, diffConfig);
 
-        rackMotor.setPosition(0);
+        diffMech.setPosition(0, 0);
 
-        this.rackPosition = rackMotor.getPosition();
-        this.rackVelocity = rackMotor.getVelocity();
-        this.rackSetpoint = rackMotor.getClosedLoopReference();
-        this.rackSetpointVelocity = rackMotor.getClosedLoopReferenceSlope();
-        this.rackCurrent = rackMotor.getTorqueCurrent();
-        this.rackAppliedVolts = rackMotor.getMotorVoltage();
+        this.rackPosition = diffMech.getAveragePosition();
+        this.rackVelocity = diffMech.getAverageVelocity();
+        this.rackSetpoint = diffMech.getAverageClosedLoopReference();
+        this.rackSetpointVelocity = diffMech.getAverageClosedLoopReferenceSlope();
+        this.rackCurrent = diffMech.getLeader().getTorqueCurrent();
+        this.rackAppliedVolts = diffMech.getLeader().getMotorVoltage();
 
         this.spinVelocity = spinMotor.getVelocity();
         this.spinCurrent = spinMotor.getStatorCurrent();
@@ -115,7 +134,8 @@ public class IntakeIOTalonFX implements IntakeIO {
                 spinVelocity,
                 spinCurrent,
                 spinAppliedVolts);
-        rackMotor.optimizeBusUtilization();
+        // diffMech.getLeader().optimizeBusUtilization();
+        // diffMech.getFollower().optimizeBusUtilization();
         spinMotor.optimizeBusUtilization();
     }
 
@@ -151,12 +171,12 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     @Override
     public void setRackPosition(Distance position) {
-        rackMotor.setControl(rackPositionRequest.withPosition(distanceToRotorAngle(position)));
+        diffMech.setControl(rackPositionRequest.withAveragePosition(distanceToRotorAngle(position)));
     }
 
     @Override
     public void setRackOutput(Voltage out) {
-        rackMotor.setControl(rackVoltageRequest.withOutput(out));
+        diffMech.setControl(rackVoltageRequest.withAverageOutput(out));
     }
 
     @Override
@@ -166,7 +186,7 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     @Override
     public void stopRack() {
-        rackMotor.setControl(neutralOut);
+        diffMech.setCoastOut();
     }
 
     @Override
@@ -182,7 +202,7 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     @Override
     public void zeroPosition() {
-        rackMotor.setPosition(0);
+        diffMech.setPosition(0, 0);
     }
 
     @Override
@@ -195,6 +215,6 @@ public class IntakeIOTalonFX implements IntakeIO {
         rackConfig.MotionMagic.MotionMagicCruiseVelocity = maxVel;
         rackConfig.MotionMagic.MotionMagicAcceleration = maxAcc;
 
-        tryUntilOk(5, () -> rackMotor.getConfigurator().apply(rackConfig));
+        tryUntilOk(5, () -> diffMech.getLeader().getConfigurator().apply(rackConfig));
     }
 }

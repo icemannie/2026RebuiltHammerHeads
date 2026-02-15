@@ -19,6 +19,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.MountPoseConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -44,6 +45,9 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -54,10 +58,14 @@ import edu.wpi.first.networktables.StringArrayTopic;
 import edu.wpi.first.networktables.StructArrayTopic;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.TunableControls.ControlConstants;
 import frc.robot.util.TunableControls.TunableControlConstants;
+import java.io.IOException;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkString;
 
 /**
@@ -352,9 +360,9 @@ public final class Constants {
 
     public static class TurretConstants {
         public static final int TURN_ID = 25;
-        public static final int HOOD_ID = 22;
+        public static final int HOOD_ID = 21;
         public static final int FLYWHEEL_ID = 23;
-        public static final int FLYWHEEL_FOLLOWER_ID = 21;
+        public static final int FLYWHEEL_FOLLOWER_ID = 22;
         public static final int ENCODER_ID = 24;
 
         public static final double ENCODER_TO_TURRET_RATIO = 11.0 / 23;
@@ -363,13 +371,13 @@ public final class Constants {
                 40.0 / 14 * 2.0 / 1 * 180.0 / 10; // 40:14 gear, 2:1 belt, 180:10 rack
 
         public static final Slot0Configs TURN_GAINS =
-                new Slot0Configs().withKP(200).withKD(2).withKS(1);
+                new Slot0Configs().withKP(200).withKD(0.1).withKS(2);
 
         public static final Slot0Configs HOOD_GAINS =
                 new Slot0Configs().withKP(1024).withKD(5).withKS(0.28);
 
         public static final Slot0Configs FLYWHEEL_GAINS =
-                new Slot0Configs().withKP(30).withKD(0.4).withKS(17).withKV(0.4);
+                new Slot0Configs().withKP(50).withKD(0.5).withKS(10).withKV(0.3);
 
         public static final CurrentLimitsConfigs TURN_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
@@ -389,6 +397,7 @@ public final class Constants {
                 .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
                 .withSensorToMechanismRatio(ENCODER_TO_TURRET_RATIO)
                 .withRotorToSensorRatio(TURN_TO_TURRET_RATIO / ENCODER_TO_TURRET_RATIO)
+                .withFeedbackRotorOffset(-0.4)
                 .withVelocityFilterTimeConstant(0.01);
 
         public static final MotorOutputConfigs HOOD_OUTPUT_CONFIGS = new MotorOutputConfigs()
@@ -404,12 +413,12 @@ public final class Constants {
                 .withNeutralMode(NeutralModeValue.Coast);
 
         public static final MagnetSensorConfigs ENCODER_CONFIGS = new MagnetSensorConfigs()
-                .withMagnetOffset(-0.0185546875)
+                .withMagnetOffset(-0.497314453125)
                 .withAbsoluteSensorDiscontinuityPoint(0.5)
                 .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);
 
         public static final FeedbackConfigs FLYWHEEL_FEEDBACK_CONFIGS =
-                new FeedbackConfigs().withVelocityFilterTimeConstant(Seconds.of(0.01));
+                new FeedbackConfigs().withVelocityFilterTimeConstant(Seconds.of(0.02));
 
         public static final Current BANG_BANG_AMPS = Amps.of(100);
 
@@ -419,15 +428,15 @@ public final class Constants {
                 new Transform3d(new Translation3d(Inches.zero(), Inches.zero(), Inches.of(18)), Rotation3d.kZero);
         public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
         public static final Distance SHOOT_RADIUS = Inches.of(1);
-        public static final int LOOKAHEAD_ITERATIONS = 3;
+        public static final int LOOKAHEAD_ITERATIONS = 2;
 
-        public static final Angle MIN_TURN_ANGLE = Rotations.of(-1);
-        public static final Angle MAX_TURN_ANGLE = Rotations.of(1);
+        public static final Angle MIN_TURN_ANGLE = Rotations.of(-0.55);
+        public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
 
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
 
-        public static final Current HOOD_STALL_CURRENT = Amps.of(6);
+        public static final Current HOOD_STALL_CURRENT = Amps.of(20);
         public static final AngularVelocity HOOD_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.1);
         public static final Voltage HOOD_ZEROING_VOLTAGE = Volts.of(-1);
 
@@ -437,6 +446,34 @@ public final class Constants {
                 new Translation3d(Inches.of(90), FieldConstants.FIELD_WIDTH.div(2), Inches.zero());
         public static final Translation3d PASSING_SPOT_RIGHT = new Translation3d(
                 Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(85)), Inches.zero());
+
+        public static final InterpolatingTreeMap<Double, ShotData> SHOT_MAP =
+                new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotData::interpolate);
+
+        public static final InterpolatingDoubleTreeMap TOF_MAP = new InterpolatingDoubleTreeMap();
+
+        static {
+            SHOT_MAP.put(4.97, new ShotData(RPM.of(2850), Degrees.of(27)));
+            TOF_MAP.put(4.97, 1.41);
+
+            SHOT_MAP.put(4.20, new ShotData(RPM.of(2750), Degrees.of(26)));
+            TOF_MAP.put(4.20, 1.44);
+
+            SHOT_MAP.put(3.56, new ShotData(RPM.of(2700), Degrees.of(24)));
+            TOF_MAP.put(3.56, 1.38);
+
+            SHOT_MAP.put(3.13, new ShotData(RPM.of(2600), Degrees.of(22)));
+            TOF_MAP.put(3.13, 1.39);
+
+            SHOT_MAP.put(2.44, new ShotData(RPM.of(2500), Degrees.of(20)));
+            TOF_MAP.put(2.44, 1.26);
+
+            SHOT_MAP.put(1.74, new ShotData(RPM.of(2400), Degrees.of(17)));
+            TOF_MAP.put(1.74, 1.25);
+
+            SHOT_MAP.put(1.26, new ShotData(RPM.of(2000), Degrees.of(15.5)));
+            TOF_MAP.put(1.26, 0.91);
+        }
     }
 
     public static class IntakeConstants {
@@ -456,9 +493,11 @@ public final class Constants {
                 .withKV(0.23)
                 .withKS(0.4);
 
+        public static final Slot1Configs RACK_DIFF_GAINS = new Slot1Configs().withKP(0.5);
+
         public static final MotorOutputConfigs RACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
-                .withInverted(InvertedValue.CounterClockwise_Positive);
+                .withInverted(InvertedValue.Clockwise_Positive);
 
         public static final MotorOutputConfigs SPIN_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Coast)
@@ -476,8 +515,9 @@ public final class Constants {
 
         public static final Distance STOW_POS = Inches.of(0);
         public static final Distance DEPLOY_POS = Inches.of(11.);
-        public static final Voltage SPIN_VOLTAGE = Volts.of(12);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(8);
         public static final Distance STOW_TOLERANCE = Inches.of(0.5);
+        public static final Distance DECOUPLE_DISTANCE = Inches.of(3);
 
         public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.5);
 
@@ -508,7 +548,7 @@ public final class Constants {
         public static final CurrentLimitsConfigs FEED_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
 
-        public static final Voltage SPIN_VOLTAGE = Volts.of(4);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(3);
         public static final Voltage FEED_VOLTAGE = Volts.of(12);
 
         public static final AngularVelocity FEED_THRESHOLD = RPM.of(3000);
@@ -528,9 +568,22 @@ public final class Constants {
         };
 
         public static final double MAX_AMBIGUITY = 0.3;
+        public static final Distance MAX_Z_HEIGHT = Meters.of(0.5);
 
-        public static final AprilTagFieldLayout APRIL_TAGS =
-                AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+        public static final AprilTagFieldLayout APRIL_TAGS;
+
+        static {
+            AprilTagFieldLayout tryAprilTags;
+            try {
+                tryAprilTags =
+                        new AprilTagFieldLayout(Filesystem.getDeployDirectory().toPath() + "/apriltags.json");
+                Logger.recordOutput("AprilTagLayoutType", "Custom");
+            } catch (IOException e) {
+                tryAprilTags = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+                Logger.recordOutput("AprilTagLayoutType", "Andymark");
+            }
+            APRIL_TAGS = tryAprilTags;
+        }
 
         // Transforms from robot to cameras, (x forward, y left, z up), (roll, pitch,
         // yaw)

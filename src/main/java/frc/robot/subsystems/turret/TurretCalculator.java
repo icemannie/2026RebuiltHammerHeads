@@ -12,12 +12,18 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.Constants.IntakeConstants.BASE_VEL;
 import static frc.robot.Constants.IntakeConstants.VEL_MULTIPLIER;
 import static frc.robot.Constants.IntakeConstants.VEL_POWER;
 import static frc.robot.Constants.TurretConstants.DISTANCE_ABOVE_FUNNEL;
+import static frc.robot.Constants.TurretConstants.FLYWHEEL_RADIUS;
+import static frc.robot.Constants.TurretConstants.MAX_TURN_ANGLE;
+import static frc.robot.Constants.TurretConstants.MIN_TURN_ANGLE;
 import static frc.robot.Constants.TurretConstants.ROBOT_TO_TURRET_TRANSFORM;
+import static frc.robot.Constants.TurretConstants.SHOT_MAP;
+import static frc.robot.Constants.TurretConstants.TOF_MAP;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -31,6 +37,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.Constants.FieldConstants;
+import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
 public class TurretCalculator {
@@ -69,16 +76,20 @@ public class TurretCalculator {
     }
 
     // calculates the angle of a turret relative to the robot to hit a target
-    public static Angle calculateAzimuthAngle(Pose2d robot, Translation3d target) {
+    public static Angle calculateAzimuthAngle(Pose2d robot, Translation3d target, Angle currentAngle) {
         Translation2d turretTranslation = new Pose3d(robot)
                 .transformBy(ROBOT_TO_TURRET_TRANSFORM)
                 .toPose2d()
                 .getTranslation();
 
         Translation2d direction = target.toTranslation2d().minus(turretTranslation);
-
-        return Radians.of(MathUtil.inputModulus(
-                direction.getAngle().minus(robot.getRotation()).getRadians(), 0, 2 * Math.PI));
+        double angle = MathUtil.inputModulus(
+                direction.getAngle().minus(robot.getRotation()).getRotations(), -0.5, 0.5);
+        double current = currentAngle.in(Rotations);
+        if (current > 0 && angle + 1 <= MAX_TURN_ANGLE.in(Rotations)) angle += 1;
+        if (current < 0 && angle - 1 >= MIN_TURN_ANGLE.in(Rotations)) angle -= 1;
+        Logger.recordOutput("Turret/DesiredAzimuthRad", angle);
+        return Rotations.of(angle);
     }
 
     // Move a target a set time in the future along a velocity defined by fieldSpeeds
@@ -126,7 +137,10 @@ public class TurretCalculator {
             v0 = 0;
             theta = 0;
         }
-        return new ShotData(InchesPerSecond.of(v0), Radians.of(Math.PI / 2 - theta), predictedTarget);
+        return new ShotData(
+                linearToAngularVelocity(InchesPerSecond.of(v0), FLYWHEEL_RADIUS),
+                Radians.of(Math.PI / 2 - theta),
+                predictedTarget);
     }
 
     // use an iterative lookahead approach to determine shot parameters for a moving robot
@@ -149,13 +163,41 @@ public class TurretCalculator {
         return shot;
     }
 
+    public static ShotData iterativeMovingShotFromMap(
+            Pose2d robot, ChassisSpeeds fieldSpeeds, Translation3d target, int iterations) {
+        double distance = getDistanceToTarget(robot, target).in(Meters);
+        ShotData shot = SHOT_MAP.get(distance);
+        shot = new ShotData(shot.exitVelocity, shot.hoodAngle, target);
+        Time timeOfFlight = Seconds.of(TOF_MAP.get(distance));
+        Translation3d predictedTarget = target;
+
+        // Iterate the process, getting better time of flight estimations and updating the predicted target accordingly
+        for (int i = 0; i < iterations; i++) {
+            predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
+            distance = getDistanceToTarget(robot, predictedTarget).in(Meters);
+            shot = SHOT_MAP.get(distance);
+            shot = new ShotData(shot.exitVelocity, shot.hoodAngle, predictedTarget);
+            timeOfFlight = Seconds.of(TOF_MAP.get(distance));
+        }
+
+        return shot;
+    }
+
     public record ShotData(double exitVelocity, double hoodAngle, Translation3d target) {
-        public ShotData(LinearVelocity exitVelocity, Angle hoodAngle, Translation3d target) {
-            this(exitVelocity.in(MetersPerSecond), hoodAngle.in(Radians), target);
+        public ShotData(AngularVelocity exitVelocity, Angle hoodAngle, Translation3d target) {
+            this(exitVelocity.in(RadiansPerSecond), hoodAngle.in(Radians), target);
+        }
+
+        public ShotData(AngularVelocity exitVelocity, Angle hoodAngle) {
+            this(exitVelocity, hoodAngle, FieldConstants.HUB_BLUE);
+        }
+
+        public ShotData(double exitVelocity, double hoodAngle) {
+            this(exitVelocity, hoodAngle, FieldConstants.HUB_BLUE);
         }
 
         public LinearVelocity getExitVelocity() {
-            return MetersPerSecond.of(this.exitVelocity);
+            return angularToLinearVelocity(RadiansPerSecond.of(this.exitVelocity), FLYWHEEL_RADIUS);
         }
 
         public Angle getHoodAngle() {
@@ -164,6 +206,13 @@ public class TurretCalculator {
 
         public Translation3d getTarget() {
             return this.target;
+        }
+
+        public static ShotData interpolate(ShotData start, ShotData end, double t) {
+            return new ShotData(
+                    MathUtil.interpolate(start.exitVelocity, end.exitVelocity, t),
+                    MathUtil.interpolate(start.hoodAngle, end.hoodAngle, t),
+                    end.target);
         }
     }
 }

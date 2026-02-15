@@ -49,7 +49,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeGoal;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.intake.IntakeIOTalonFXDual;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
@@ -99,6 +99,7 @@ public class RobotContainer {
     private final Trigger flywheelTrigger = controller.leftBumper();
     private final Trigger flywheelSlowTrigger = controller.leftTrigger();
     private final Trigger turretTuningTrigger = controller.start();
+    private final Trigger turretScoringTrigger = controller.back();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -121,7 +122,7 @@ public class RobotContainer {
                 intake = new Intake(
                         new IntakeIO() {},
                         // new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
-                        new IntakeIOTalonFX(
+                        new IntakeIOTalonFXDual(
                                 IntakeConstants.FR_RACK_ID, IntakeConstants.BR_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
                 indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
@@ -260,8 +261,15 @@ public class RobotContainer {
         flywheelSlowTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(500)));
         flywheelSlowTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
 
-        turretTuningTrigger.toggleOnTrue(
-                Commands.sequence(turret.setGoal(TurretGoal.TUNING), Commands.idle(), turret.setGoal(TurretGoal.OFF)));
+        turretTuningTrigger.onTrue(Commands.either(
+                turret.setGoal(TurretGoal.OFF),
+                turret.setGoal(TurretGoal.TUNING),
+                () -> turret.getGoal() == TurretGoal.TUNING));
+
+        turretScoringTrigger.onTrue(Commands.either(
+                turret.setGoal(TurretGoal.OFF),
+                turret.setGoal(TurretGoal.SCORING),
+                () -> turret.getGoal() == TurretGoal.SCORING));
     }
 
     private void configureFuelSim() {
