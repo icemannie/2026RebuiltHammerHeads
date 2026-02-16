@@ -30,7 +30,6 @@ import frc.robot.util.SlewRateLimiter2d;
 import frc.robot.util.TunableControls.TunablePIDController;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 
 /** Default drive command to run that drives based on controller input */
 public class TeleopDrive extends Command {
@@ -69,10 +68,10 @@ public class TeleopDrive extends Command {
         // inTrenchZoneTrigger.onTrue(updateDriveMode(DriveMode.TRENCH_LOCK));
         // inBumpZoneTrigger.onTrue(updateDriveMode(DriveMode.BUMP_LOCK));
         // inTrenchZoneTrigger.or(inBumpZoneTrigger).onFalse(updateDriveMode(DriveMode.NORMAL));
-        for (int i = 0; i < 4; i++) {
-            Logger.recordOutput("Trench" + i, FieldConstants.TRENCH_ZONES[i]);
-            Logger.recordOutput("Bump" + i, FieldConstants.BUMP_ZONES[i]);
-        }
+        // for (int i = 0; i < 4; i++) {
+        //     Logger.recordOutput("Trench" + i, FieldConstants.TRENCH_ZONES[i]);
+        //     Logger.recordOutput("Bump" + i, FieldConstants.BUMP_ZONES[i]);
+        // }
         addRequirements(drive);
     }
 

@@ -453,26 +453,41 @@ public final class Constants {
         public static final InterpolatingDoubleTreeMap TOF_MAP = new InterpolatingDoubleTreeMap();
 
         static {
-            SHOT_MAP.put(4.97, new ShotData(RPM.of(2810), Degrees.of(27)));
-            TOF_MAP.put(4.97, 1.41);
+            SHOT_MAP.put(5.34, new ShotData(RPM.of(2900), Degrees.of(27)));
+            TOF_MAP.put(5.34, 1.30);
 
-            SHOT_MAP.put(4.20, new ShotData(RPM.of(2710), Degrees.of(26)));
-            TOF_MAP.put(4.20, 1.44);
+            SHOT_MAP.put(4.90, new ShotData(RPM.of(2700), Degrees.of(26)));
+            TOF_MAP.put(4.90, 1.42);
 
-            SHOT_MAP.put(3.56, new ShotData(RPM.of(2660), Degrees.of(24)));
-            TOF_MAP.put(3.56, 1.38);
+            SHOT_MAP.put(4.44, new ShotData(RPM.of(2820), Degrees.of(25.5)));
+            TOF_MAP.put(4.44, 1.34);
 
-            SHOT_MAP.put(3.13, new ShotData(RPM.of(2560), Degrees.of(22)));
-            TOF_MAP.put(3.13, 1.39);
+            SHOT_MAP.put(4.05, new ShotData(RPM.of(2800), Degrees.of(25)));
+            TOF_MAP.put(4.05, 1.36);
 
-            SHOT_MAP.put(2.44, new ShotData(RPM.of(2460), Degrees.of(20)));
-            TOF_MAP.put(2.44, 1.26);
+            SHOT_MAP.put(3.74, new ShotData(RPM.of(2750), Degrees.of(24)));
+            TOF_MAP.put(3.74, 1.21);
 
-            SHOT_MAP.put(1.74, new ShotData(RPM.of(2360), Degrees.of(17)));
-            TOF_MAP.put(1.74, 1.25);
+            SHOT_MAP.put(3.42, new ShotData(RPM.of(2700), Degrees.of(23)));
+            TOF_MAP.put(3.42, 1.40);
 
-            SHOT_MAP.put(1.26, new ShotData(RPM.of(1960), Degrees.of(15.5)));
-            TOF_MAP.put(1.26, 0.91);
+            SHOT_MAP.put(3.06, new ShotData(RPM.of(2610), Degrees.of(22)));
+            TOF_MAP.put(3.06, 1.38);
+
+            SHOT_MAP.put(2.73, new ShotData(RPM.of(2500), Degrees.of(20.5)));
+            TOF_MAP.put(2.73, 1.34);
+
+            SHOT_MAP.put(2.45, new ShotData(RPM.of(2450), Degrees.of(19.5)));
+            TOF_MAP.put(2.45, 1.28);
+
+            SHOT_MAP.put(2.14, new ShotData(RPM.of(2400), Degrees.of(18)));
+            TOF_MAP.put(2.14, 1.31);
+
+            SHOT_MAP.put(1.86, new ShotData(RPM.of(2350), Degrees.of(17)));
+            TOF_MAP.put(1.86, 1.24);
+
+            SHOT_MAP.put(1.55, new ShotData(RPM.of(2275), Degrees.of(15)));
+            TOF_MAP.put(1.55, 1.23);
         }
     }
 

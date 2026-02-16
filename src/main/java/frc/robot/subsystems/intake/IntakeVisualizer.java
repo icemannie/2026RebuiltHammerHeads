@@ -25,7 +25,7 @@ public class IntakeVisualizer {
     private final LoggedMechanismRoot2d rightRoot;
     private final LoggedMechanismLigament2d rightIntake;
 
-    @AutoLogOutput(key = "Intake/Mechanism2d")
+    @AutoLogOutput(key = "Intakes/Mechanism2d")
     private final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 0.75);
 
     private final LoggedMechanismRoot2d leftRoot;
@@ -43,7 +43,7 @@ public class IntakeVisualizer {
     public void setRightPosition(Distance pos) {
         rightIntake.setLength(pos.plus(Inches.of(19.1)));
         Logger.recordOutput(
-                "Intake/Right Pose",
+                "Intakes/Right Pose",
                 new Pose3d(
                         0,
                         pos.in(Meters)
@@ -56,7 +56,7 @@ public class IntakeVisualizer {
     public void setLeftPosition(Distance pos) {
         leftIntake.setLength(pos.plus(Inches.of(19.1)));
         Logger.recordOutput(
-                "Intake/Left Pose",
+                "Intakes/Left Pose",
                 new Pose3d(
                         0,
                         pos.in(Meters)

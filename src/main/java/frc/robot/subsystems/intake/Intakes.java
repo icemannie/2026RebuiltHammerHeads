@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.intake.Intake.IntakeGoal;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
@@ -55,6 +56,7 @@ public class Intakes extends SubsystemBase {
         SmartDashboard.putData("Intakes/Stow Right", right.stow());
         SmartDashboard.putData("Intakes/Autoswitch", setGoal(IntakesGoal.AUTOSWITCH));
         SmartDashboard.putData("Intakes/Stow All", setGoal(IntakesGoal.STOW));
+        SmartDashboard.putData("Intakes/Disable", setGoal(IntakesGoal.OFF));
     }
 
     public boolean travelingLeft() {
@@ -67,7 +69,17 @@ public class Intakes extends SubsystemBase {
 
     public Command setGoal(IntakesGoal goal) {
         return Commands.runOnce(() -> this.goal = goal)
-                .andThen(Commands.parallel(left.stow(), right.stow()).onlyIf(() -> goal == IntakesGoal.STOW));
+                .andThen(Commands.select(
+                        Map.of(
+                                IntakesGoal.AUTOSWITCH,
+                                Commands.none(),
+                                IntakesGoal.MANUAL,
+                                Commands.none(),
+                                IntakesGoal.OFF,
+                                left.off().alongWith(right.off()),
+                                IntakesGoal.STOW,
+                                left.stow().alongWith(right.stow())),
+                        () -> goal));
     }
 
     public IntakesGoal getGoal() {
@@ -98,7 +110,8 @@ public class Intakes extends SubsystemBase {
     public enum IntakesGoal {
         AUTOSWITCH,
         MANUAL,
-        STOW
+        STOW,
+        OFF
     }
 
     public enum IntakeSide {

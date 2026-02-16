@@ -83,10 +83,17 @@ public class Intake extends SubsystemBase {
 
         spinStallTrigger = new Trigger(this::spinStalled).debounce(0.1);
         rackStallTrigger = new Trigger(this::rackStalled).debounce(0.1);
-        deployedTrigger = new Trigger(this::deployed).debounce(0.05);
-        stowedTrigger = new Trigger(this::stowed).debounce(0.05);
+        deployedTrigger = new Trigger(this::deployed)
+                .and(() -> this.goal == IntakeGoal.DEPLOYING || this.goal == IntakeGoal.DEPLOYED)
+                .debounce(0.05);
+        stowedTrigger = new Trigger(this::stowed)
+                .and(() -> this.goal == IntakeGoal.STOWING || this.goal == IntakeGoal.STOWED)
+                .debounce(0.05);
 
-        spinStallTrigger.or(rackStallTrigger).onTrue(unjam());
+        spinStallTrigger
+                .or(rackStallTrigger)
+                .and(() -> this.goal != IntakeGoal.ZEROING && this.goal != IntakeGoal.OFF)
+                .onTrue(unjam());
         deployedTrigger.onTrue(setGoal(IntakeGoal.DEPLOYED));
         stowedTrigger.onTrue(setGoal(IntakeGoal.STOWED));
     }
@@ -111,6 +118,7 @@ public class Intake extends SubsystemBase {
 
     public Command zeroSequence() {
         return Commands.sequence(
+                this.setGoal(IntakeGoal.ZEROING),
                 this.runOnce(() -> io.setRackOutput(ZEROING_VOLTAGE)),
                 Commands.waitSeconds(0.1),
                 Commands.waitUntil(rackStallTrigger::getAsBoolean),
@@ -119,7 +127,8 @@ public class Intake extends SubsystemBase {
                 this.runOnce(() -> {
                     io.zeroPosition();
                     io.setRackPosition(STOW_POS);
-                }));
+                }),
+                this.setGoal(IntakeGoal.STOWED));
     }
 
     public Command deploy() {
@@ -128,6 +137,10 @@ public class Intake extends SubsystemBase {
 
     public Command stow() {
         return this.setGoal(IntakeGoal.STOWING).withName("Stow " + name);
+    }
+
+    public Command off() {
+        return this.setGoal(IntakeGoal.OFF);
     }
 
     private Command unjam() {
@@ -176,6 +189,9 @@ public class Intake extends SubsystemBase {
                     break;
                 case STOWING:
                     io.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
+                    io.setRackPosition(STOW_POS);
+                    break;
+                case ZEROING:
                     break;
             }
         });
@@ -232,6 +248,7 @@ public class Intake extends SubsystemBase {
         DEPLOYING,
         STOWED,
         STOWING,
+        ZEROING,
         OFF
     }
 }
