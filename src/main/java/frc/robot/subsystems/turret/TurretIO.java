@@ -22,24 +22,26 @@ public interface TurretIO {
     @AutoLog
     public static class TurretIOInputs {
         public boolean turnMotorConnected = false;
-        public Voltage turnAppliedVolts = Volts.zero();
-        public Current turnCurrent = Amps.zero();
-        public Angle turnPosition = Radians.zero();
-        public AngularVelocity turnVelocity = RadiansPerSecond.zero();
+        public Voltage turnAppliedVolts = Volts.of(0.0);
+        public Current turnCurrent = Amps.of(0.0);
+        public Angle turnPosition = Radians.of(0.0);
+        public Angle turnSetpoint = Radians.of(0.0);
+        public AngularVelocity turnVelocity = RadiansPerSecond.of(0.0);
 
         public boolean hoodMotorConnected = false;
-        public Voltage hoodAppliedVolts = Volts.zero();
-        public Current hoodCurrent = Amps.zero();
-        public Angle hoodPosition = Radians.zero();
-        public AngularVelocity hoodVelocity = RadiansPerSecond.zero();
+        public Voltage hoodAppliedVolts = Volts.of(0.0);
+        public Current hoodCurrent = Amps.of(0.0);
+        public Angle hoodPosition = Radians.of(0.0);
+        public Angle hoodSetpoint = Radians.of(0.0);
+        public AngularVelocity hoodVelocity = RadiansPerSecond.of(0.0);
 
         public boolean flywheelMotorConnected = false;
-        public Voltage flywheelAppliedVolts = Volts.zero();
-        public Current flywheelCurrent = Amps.zero();
-        public AngularVelocity flywheelSpeed = RadiansPerSecond.zero();
-        public AngularAcceleration flywheelAccel = RadiansPerSecondPerSecond.zero();
-        public AngularVelocity flywheelSetpointSpeed = RadiansPerSecond.zero();
-        public AngularAcceleration flywheelSetpointAccel = RadiansPerSecondPerSecond.zero();
+        public Voltage flywheelAppliedVolts = Volts.of(0.0);
+        public Current flywheelCurrent = Amps.of(0.0);
+        public AngularVelocity flywheelSpeed = RadiansPerSecond.of(0.0);
+        public AngularAcceleration flywheelAccel = RadiansPerSecondPerSecond.of(0.0);
+        public AngularVelocity flywheelSetpointSpeed = RadiansPerSecond.of(0.0);
+        public AngularAcceleration flywheelSetpointAccel = RadiansPerSecondPerSecond.of(0.0);
     }
 
     public default void updateInputs(TurretIOInputs inputs) {}

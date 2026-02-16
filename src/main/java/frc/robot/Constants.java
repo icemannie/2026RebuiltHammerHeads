@@ -486,25 +486,39 @@ public final class Constants {
         public static final double ROTOR_TO_PINION_RATIO = 2.0 / 1;
         public static final Distance PINION_PITCH_RADIUS = Inches.of(0.5);
 
-        public static final Slot0Configs RACK_GAINS = new Slot0Configs()
+        public static final Slot0Configs RIGHT_RACK_GAINS = new Slot0Configs()
                 .withKP(3.0)
                 .withKD(0.1)
                 .withKA(0.0)
                 .withKV(0.23)
                 .withKS(0.4);
 
+        public static final Slot0Configs LEFT_RACK_GAINS = new Slot0Configs()
+                .withKP(6.0)
+                .withKD(0.2)
+                .withKA(0.0)
+                .withKV(0.46)
+                .withKS(0.8);
+
         public static final Slot1Configs RACK_DIFF_GAINS = new Slot1Configs().withKP(0.5);
 
-        public static final MotorOutputConfigs RACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
-                .withNeutralMode(NeutralModeValue.Brake)
+        public static final MotorOutputConfigs RIGHT_RACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Coast)
                 .withInverted(InvertedValue.Clockwise_Positive);
+
+        public static final MotorOutputConfigs LEFT_RACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Coast)
+                .withInverted(InvertedValue.CounterClockwise_Positive);
 
         public static final MotorOutputConfigs SPIN_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Coast)
                 .withInverted(InvertedValue.CounterClockwise_Positive);
 
-        public static final CurrentLimitsConfigs RACK_CURRENT_LIMITS =
+        public static final CurrentLimitsConfigs RIGHT_RACK_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withStatorCurrentLimit(50).withSupplyCurrentLowerLimit(30);
+
+        public static final CurrentLimitsConfigs LEFT_RACK_CURRENT_LIMITS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(100).withSupplyCurrentLowerLimit(30);
 
         public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withStatorCurrentLimit(30).withSupplyCurrentLowerLimit(30);
@@ -521,13 +535,9 @@ public final class Constants {
 
         public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.5);
 
-        public static final double VEL_MULTIPLIER = 70.0; // multiplies goal velocity for targetting
-        public static final double VEL_POWER = 0.3; // raises goal velocity to power
-        public static final LinearVelocity BASE_VEL = InchesPerSecond.of(50); // added to final velocity
-
-        public static final Current STALL_CURRENT = Amps.of(40);
+        public static final Current STALL_CURRENT = Amps.of(50);
         public static final AngularVelocity STALL_ANGULAR_VEL = RadiansPerSecond.of(0.1);
-        public static final Voltage ZEROING_VOLTAGE = Volts.of(-3);
+        public static final Voltage ZEROING_VOLTAGE = Volts.of(-5);
     }
 
     public static class IndexerConstants {

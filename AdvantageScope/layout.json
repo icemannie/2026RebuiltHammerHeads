@@ -3,84 +3,64 @@
         {
             "x": -8,
             "y": -8,
-            "width": 2576,
-            "height": 1408,
+            "width": 1520,
+            "height": 1018,
             "state": {
                 "sidebar": {
-                    "width": 452,
+                    "width": 302,
                     "expanded": [
                         "/AdvantageKit",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/LeftMechanism/dims",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/LeftMechanism/Intake/Measured Left",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/LeftMechanism/Intake/Measured Left/Intake",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/LeftMechanism/Intake/Measured Left/Intake/Measured Left Intake",
-                        "/Tuning/Intake",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/Mechanism/Setpoint Left",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/Mechanism/Measured Left",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/Mechanism/Measured Left/Left Intake",
-                        "/AdvantageKit/RealOutputs/IntakeVisualizer/Mechanism/Setpoint Left/Left Intake",
-                        "/Tuning",
+                        "/AdvantageKit/RealOutputs/SwerveStates",
+                        "/AdvantageKit/RealOutputs/SwerveChassisSpeeds",
                         "/Tuning/Turret",
+                        "/RealOutputs",
+                        "/AdvantageKit/RealOutputs/Turret",
+                        "/AdvantageKit/RealOutputs/Odometry",
                         "/AdvantageKit/RealOutputs",
-                        "/AdvantageKit/Turret",
-                        "/AdvantageKit/RealOutputs/Turret/TurnController/Setpoint",
-                        "/AdvantageKit/RealOutputs/Mechanism3d"
+                        "/Tuning/Turret/Turn",
+                        "/Tuning/Turret/Tuning",
+                        "/AdvantageKit/RealOutputs/Vision",
+                        "/AdvantageKit/RealOutputs/Vision/Summary",
+                        "/Tuning/Turret/Flywheel",
+                        "/AdvantageKit/RealOutputs/Vision/Arducam_OV9281_Back_Right",
+                        "/Tuning/Indexer",
+                        "/AdvantageKit/RealOutputs/Turret/Shot",
+                        "/AdvantageKit/RealOutputs/Intake",
+                        "/NetworkInputs",
+                        "/Vision/Arducam_OV9281_Front_Left",
+                        "/RealOutputs/SwerveChassisSpeeds",
+                        "/RealOutputs/Odometry"
                     ]
                 },
                 "tabs": {
-                    "selected": 3,
+                    "selected": 5,
                     "tabs": [
                         {
                             "type": 0,
                             "title": "",
                             "controller": null,
-                            "controllerUUID": "yhpnmioudo41w2ts3yi1iaf5y3pmnjdb",
-                            "renderer": "",
+                            "controllerUUID": "sqokl7ol7ak2goh644qw0taqcydiuj0t",
+                            "renderer": "#/",
                             "controlsHeight": 0
                         },
                         {
-                            "type": 1,
-                            "title": "Line Graph",
-                            "controller": {
-                                "leftSources": [
-                                    {
-                                        "type": "stepped",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/Azimuth Angle",
-                                        "logType": "Number",
-                                        "visible": true,
-                                        "options": {
-                                            "color": "#2b66a2",
-                                            "size": "normal"
-                                        }
-                                    }
-                                ],
-                                "rightSources": [],
-                                "discreteSources": [],
-                                "leftLockedRange": null,
-                                "rightLockedRange": null,
-                                "leftUnitConversion": {
-                                    "autoTarget": null,
-                                    "preset": null
-                                },
-                                "rightUnitConversion": {
-                                    "autoTarget": null,
-                                    "preset": null
-                                },
-                                "leftFilter": 0,
-                                "rightFilter": 0
+                            "type": 5,
+                            "title": "",
+                            "controller": "/RealOutputs/Console",
+                            "controllerUUID": "b9h1avwuk5gjcpmjzm7e1gmj0ldevez0",
+                            "renderer": {
+                                "highlight": true
                             },
-                            "controllerUUID": "y67u5uknl4p7ynazz6rn4dq5g91jgdva",
-                            "renderer": null,
-                            "controlsHeight": 200
+                            "controlsHeight": 0
                         },
                         {
                             "type": 2,
-                            "title": "2D Field",
+                            "title": "2D",
                             "controller": {
                                 "sources": [
                                     {
                                         "type": "robot",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Odometry/Robot",
+                                        "logKey": "/RealOutputs/Odometry/Robot",
                                         "logType": "Pose2d",
                                         "visible": true,
                                         "options": {
@@ -88,42 +68,41 @@
                                         }
                                     },
                                     {
-                                        "type": "swerveStates",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/SwerveStates/Measured",
-                                        "logType": "SwerveModuleState[]",
+                                        "type": "vision",
+                                        "logKey": "/RealOutputs/Vision/Summary/TagPoses",
+                                        "logType": "Pose3d[]",
                                         "visible": true,
                                         "options": {
-                                            "color": "#ffff00",
-                                            "arrangement": "0,1,2,3"
+                                            "color": "#00ff00",
+                                            "size": "normal"
                                         }
                                     },
                                     {
-                                        "type": "swerveStates",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/SwerveStates/SetpointsOptimized",
-                                        "logType": "SwerveModuleState[]",
+                                        "type": "ghost",
+                                        "logKey": "/RealOutputs/Vision/Summary/RobotPosesAccepted",
+                                        "logType": "Pose3d[]",
                                         "visible": true,
                                         "options": {
-                                            "color": "#0000ff",
-                                            "arrangement": "0,1,2,3"
+                                            "color": "#00ff00"
                                         }
                                     }
                                 ],
                                 "field": "FRC:2026 Field",
-                                "orientation": 2,
-                                "size": "medium"
+                                "orientation": 0,
+                                "size": "large"
                             },
-                            "controllerUUID": "n8cogtjkespce49ij7o7qrvx5dmmx2kd",
+                            "controllerUUID": "oxh76jmjcjyoic3bctnezmgl0v2g4m9z",
                             "renderer": null,
                             "controlsHeight": 200
                         },
                         {
                             "type": 3,
-                            "title": "3D Field",
+                            "title": "3D",
                             "controller": {
                                 "sources": [
                                     {
                                         "type": "robot",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Odometry/Robot",
+                                        "logKey": "/RealOutputs/Odometry/Robot",
                                         "logType": "Pose2d",
                                         "visible": true,
                                         "options": {
@@ -131,115 +110,136 @@
                                         }
                                     },
                                     {
-                                        "type": "mechanism",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/IntakeVisualizer/Mechanism",
-                                        "logType": "Mechanism2d",
-                                        "visible": false,
-                                        "options": {
-                                            "plane": "yz"
-                                        }
-                                    },
-                                    {
                                         "type": "component",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Intake/Right Pose",
+                                        "logKey": "/RealOutputs/Turret/TurretPose",
                                         "logType": "Pose3d",
                                         "visible": true,
                                         "options": {}
                                     },
                                     {
                                         "type": "component",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Intake/Left Pose",
+                                        "logKey": "/RealOutputs/Turret/HoodPose",
                                         "logType": "Pose3d",
                                         "visible": true,
                                         "options": {}
                                     },
                                     {
                                         "type": "component",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/TurretPose",
+                                        "logKey": "/RealOutputs/Indexer/Pose",
                                         "logType": "Pose3d",
                                         "visible": true,
                                         "options": {}
                                     },
                                     {
-                                        "type": "gamePiece",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Mechanism3d/Fuel",
-                                        "logType": "Translation3d[]",
+                                        "type": "component",
+                                        "logKey": "/RealOutputs/Intake/Left Pose",
+                                        "logType": "Pose3d",
                                         "visible": true,
-                                        "options": {
-                                            "variant": "Fuel"
-                                        }
+                                        "options": {}
                                     },
                                     {
-                                        "type": "trajectory",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/Trajectory",
-                                        "logType": "Translation3d[]",
+                                        "type": "component",
+                                        "logKey": "/RealOutputs/Intake/Right Pose",
+                                        "logType": "Pose3d",
+                                        "visible": true,
+                                        "options": {}
+                                    },
+                                    {
+                                        "type": "vision",
+                                        "logKey": "/RealOutputs/Vision/Summary/TagPoses",
+                                        "logType": "Pose3d[]",
                                         "visible": true,
                                         "options": {
-                                            "color": "#ffff00",
+                                            "color": "#00ff00",
                                             "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "ghost",
+                                        "logKey": "/RealOutputs/Vision/Summary/RobotPosesAccepted",
+                                        "logType": "Pose3d[]",
+                                        "visible": true,
+                                        "options": {
+                                            "model": "2026CompBot",
+                                            "color": "#00ff00"
                                         }
                                     }
                                 ],
                                 "game": "FRC:2026 Field"
                             },
-                            "controllerUUID": "gw72q771q1z0rcymjrwghy59zdmgcphl",
+                            "controllerUUID": "0dtcpif9db4bjmpjafth6gywwxemz2cg",
                             "renderer": {
                                 "cameraIndex": -1,
                                 "orbitFov": 50,
                                 "cameraPosition": [
-                                    -9.337043526743525,
-                                    9.722451241456094,
-                                    -5.857661720438316
+                                    7.908763605639782,
+                                    1.2464709803860101,
+                                    2.20325593441906
                                 ],
                                 "cameraTarget": [
-                                    -5.57893971081269,
-                                    0.5000000767830068,
-                                    0.11346703242581303
+                                    6.157351897046872,
+                                    0.37698876975818285,
+                                    0.7859778134038988
                                 ]
                             },
-                            "controlsHeight": 326
+                            "controlsHeight": 250
+                        },
+                        {
+                            "type": 8,
+                            "title": "",
+                            "controller": [
+                                "Xbox Controller (Blue)",
+                                "None",
+                                "None",
+                                "None",
+                                "None",
+                                "None"
+                            ],
+                            "controllerUUID": "tgfsz9c9l2bv4vkppd1nn60f4dcbt4cm",
+                            "renderer": null,
+                            "controlsHeight": 85
                         },
                         {
                             "type": 9,
-                            "title": "Swerve",
+                            "title": "",
                             "controller": {
                                 "sources": [
                                     {
-                                        "type": "chassisSpeeds",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/SwerveChassisSpeeds/Measured",
-                                        "logType": "ChassisSpeeds",
-                                        "visible": true,
-                                        "options": {
-                                            "color": "#ffff00"
-                                        }
-                                    },
-                                    {
-                                        "type": "chassisSpeeds",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/SwerveChassisSpeeds/Setpoints",
-                                        "logType": "ChassisSpeeds",
-                                        "visible": true,
-                                        "options": {
-                                            "color": "#0000ff"
-                                        }
-                                    },
-                                    {
                                         "type": "states",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/SwerveStates/Measured",
+                                        "logKey": "/RealOutputs/SwerveStates/Measured",
                                         "logType": "SwerveModuleState[]",
                                         "visible": true,
                                         "options": {
-                                            "color": "#ffff00",
+                                            "color": "#ff0000",
                                             "arrangement": "0,1,2,3"
                                         }
                                     },
                                     {
                                         "type": "states",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/SwerveStates/SetpointsOptimized",
+                                        "logKey": "/RealOutputs/SwerveStates/SetpointsOptimized",
                                         "logType": "SwerveModuleState[]",
                                         "visible": true,
                                         "options": {
                                             "color": "#0000ff",
                                             "arrangement": "0,1,2,3"
+                                        }
+                                    },
+                                    {
+                                        "type": "chassisSpeeds",
+                                        "logKey": "/RealOutputs/SwerveChassisSpeeds/Measured",
+                                        "logType": "ChassisSpeeds",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#ff0000"
+                                        }
+                                    },
+                                    {
+                                        "type": "chassisSpeeds",
+                                        "logKey": "/RealOutputs/SwerveChassisSpeeds/Setpoints",
+                                        "logType": "ChassisSpeeds",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#0000ff"
                                         }
                                     }
                                 ],
@@ -248,28 +248,18 @@
                                 "sizeY": 0.65,
                                 "orientation": 1
                             },
-                            "controllerUUID": "jwn6n4tb7s8q8lk631hlkc3iqaib01mp",
+                            "controllerUUID": "j2qtgboubb6ehc2fyktjxj31yo0idu16",
                             "renderer": null,
                             "controlsHeight": 200
                         },
                         {
                             "type": 1,
-                            "title": "Flywheel",
+                            "title": "Flywheels",
                             "controller": {
                                 "leftSources": [
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/Turret/FlywheelSpeed",
-                                        "logType": "Number",
-                                        "visible": true,
-                                        "options": {
-                                            "color": "#e5b31b",
-                                            "size": "normal"
-                                        }
-                                    },
-                                    {
-                                        "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/FlywheelController/Goal",
+                                        "logKey": "/Turret/FlywheelSpeed",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
@@ -279,7 +269,7 @@
                                     },
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/FlywheelController/Setpoint/position",
+                                        "logKey": "/Turret/FlywheelSetpointSpeed",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
@@ -291,19 +281,39 @@
                                 "rightSources": [
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/Flywheel Voltage",
+                                        "logKey": "/Turret/FlywheelCurrent",
                                         "logType": "Number",
-                                        "visible": false,
+                                        "visible": true,
                                         "options": {
                                             "color": "#e5b31b",
                                             "size": "normal"
                                         }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Turret/FlywheelAppliedVolts",
+                                        "logType": "Number",
+                                        "visible": false,
+                                        "options": {
+                                            "color": "#80588e",
+                                            "size": "normal"
+                                        }
                                     }
                                 ],
-                                "discreteSources": [],
+                                "discreteSources": [
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Turret/Goal",
+                                        "logType": "String",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2"
+                                        }
+                                    }
+                                ],
                                 "leftLockedRange": [
                                     0,
-                                    3000
+                                    6000
                                 ],
                                 "rightLockedRange": null,
                                 "leftUnitConversion": {
@@ -322,28 +332,18 @@
                                 "leftFilter": 0,
                                 "rightFilter": 0
                             },
-                            "controllerUUID": "vkwcbmqyzw5fwy9b7ct8jrg1m04k38zv",
+                            "controllerUUID": "ktvj19abim1bhu5unetnjcmiblyzluuk",
                             "renderer": null,
                             "controlsHeight": 200
                         },
                         {
                             "type": 1,
-                            "title": "Hood",
+                            "title": "Turn",
                             "controller": {
                                 "leftSources": [
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/HoodController/Setpoint/position",
-                                        "logType": "Number",
-                                        "visible": true,
-                                        "options": {
-                                            "color": "#2b66a2",
-                                            "size": "normal"
-                                        }
-                                    },
-                                    {
-                                        "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/HoodController/Goal",
+                                        "logKey": "/Turret/TurnPosition",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
@@ -353,31 +353,51 @@
                                     },
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/Turret/HoodPosition",
+                                        "logKey": "/Turret/TurnSetpoint",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
-                                            "color": "#e5b31b",
+                                            "color": "#2b66a2",
                                             "size": "normal"
                                         }
                                     }
                                 ],
                                 "rightSources": [
                                     {
-                                        "type": "stepped",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/Hood Voltage",
+                                        "type": "smooth",
+                                        "logKey": "/Turret/TurnAppliedVolts",
                                         "logType": "Number",
-                                        "visible": false,
+                                        "visible": true,
                                         "options": {
                                             "color": "#e5b31b",
                                             "size": "normal"
                                         }
+                                    },
+                                    {
+                                        "type": "stepped",
+                                        "logKey": "/Turret/TurnCurrent",
+                                        "logType": "Number",
+                                        "visible": false,
+                                        "options": {
+                                            "color": "#80588e",
+                                            "size": "normal"
+                                        }
                                     }
                                 ],
-                                "discreteSources": [],
+                                "discreteSources": [
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Turret/Goal",
+                                        "logType": "String",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2"
+                                        }
+                                    }
+                                ],
                                 "leftLockedRange": [
-                                    30,
-                                    90
+                                    -200,
+                                    200
                                 ],
                                 "rightLockedRange": null,
                                 "leftUnitConversion": {
@@ -396,18 +416,18 @@
                                 "leftFilter": 0,
                                 "rightFilter": 0
                             },
-                            "controllerUUID": "2ofwd9lk38f9nn848y2bj4tmvq9e7tpl",
+                            "controllerUUID": "tmhz657tyrwpy8uzkv5ggf9oakysvjzc",
                             "renderer": null,
                             "controlsHeight": 200
                         },
                         {
                             "type": 1,
-                            "title": "Azimuth",
+                            "title": "Hood",
                             "controller": {
                                 "leftSources": [
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/TurnController/Setpoint/position",
+                                        "logKey": "/Turret/HoodPosition",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
@@ -417,7 +437,91 @@
                                     },
                                     {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/RealOutputs/Turret/TurnController/Goal",
+                                        "logKey": "/Turret/HoodSetpoint",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#af2437",
+                                            "size": "normal"
+                                        }
+                                    }
+                                ],
+                                "rightSources": [
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Turret/HoodAppliedVolts",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#e5b31b",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Turret/HoodCurrent",
+                                        "logType": "Number",
+                                        "visible": false,
+                                        "options": {
+                                            "color": "#80588e",
+                                            "size": "normal"
+                                        }
+                                    }
+                                ],
+                                "discreteSources": [
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Turret/Goal",
+                                        "logType": "String",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2"
+                                        }
+                                    }
+                                ],
+                                "leftLockedRange": [
+                                    10,
+                                    50
+                                ],
+                                "rightLockedRange": null,
+                                "leftUnitConversion": {
+                                    "autoTarget": null,
+                                    "preset": {
+                                        "type": "angle",
+                                        "factor": 1,
+                                        "from": "radians",
+                                        "to": "degrees"
+                                    }
+                                },
+                                "rightUnitConversion": {
+                                    "autoTarget": null,
+                                    "preset": null
+                                },
+                                "leftFilter": 0,
+                                "rightFilter": 0
+                            },
+                            "controllerUUID": "t9mz6dd76goxh9tgjw8yfa85t8twovag",
+                            "renderer": null,
+                            "controlsHeight": 200
+                        },
+                        {
+                            "type": 1,
+                            "title": "Intakes",
+                            "controller": {
+                                "leftSources": [
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Left Intake/RackPosition",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Left Intake/RackSetpoint",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
@@ -426,8 +530,40 @@
                                         }
                                     },
                                     {
+                                        "type": "stepped",
+                                        "logKey": "/Right Intake/RackPosition",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "stepped",
+                                        "logKey": "/Right Intake/RackSetpoint",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#af2437",
+                                            "size": "normal"
+                                        }
+                                    }
+                                ],
+                                "rightSources": [
+                                    {
                                         "type": "smooth",
-                                        "logKey": "NT:/AdvantageKit/Turret/TurnPosition",
+                                        "logKey": "/Left Intake/RackAppliedVolts",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#e5b31b",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Right Intake/RackAppliedVolts",
                                         "logType": "Number",
                                         "visible": true,
                                         "options": {
@@ -436,15 +572,75 @@
                                         }
                                     }
                                 ],
-                                "rightSources": [],
-                                "discreteSources": [],
-                                "leftLockedRange": [
-                                    0,
-                                    6.28
+                                "discreteSources": [
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/Goal",
+                                        "logType": "String",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2"
+                                        }
+                                    },
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/DeployLeftTrigger",
+                                        "logType": "Boolean",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#e5b31b"
+                                        }
+                                    },
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/DeployRightTrigger",
+                                        "logType": "Boolean",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#e5b31b"
+                                        }
+                                    },
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/IsLeftStowed",
+                                        "logType": "Boolean",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#80588e"
+                                        }
+                                    },
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/IsRightStowed",
+                                        "logType": "Boolean",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#80588e"
+                                        }
+                                    },
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/LeftRackStallTrigger",
+                                        "logType": "Boolean",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#af2437"
+                                        }
+                                    },
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Intake/RightRackStallTrigger",
+                                        "logType": "Boolean",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#af2437"
+                                        }
+                                    }
                                 ],
+                                "leftLockedRange": null,
                                 "rightLockedRange": null,
                                 "leftUnitConversion": {
-                                    "autoTarget": null,
+                                    "autoTarget": "inches",
                                     "preset": null
                                 },
                                 "rightUnitConversion": {
@@ -454,9 +650,119 @@
                                 "leftFilter": 0,
                                 "rightFilter": 0
                             },
-                            "controllerUUID": "rg9oc83nzu56lrkeoqgu38rdi47zv61m",
+                            "controllerUUID": "juzdw0wheyfsjfdzobx76grvkozco92v",
                             "renderer": null,
                             "controlsHeight": 200
+                        },
+                        {
+                            "type": 1,
+                            "title": "Indexer",
+                            "controller": {
+                                "leftSources": [
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Indexer/FeedVelocity",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#af2437",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Indexer/SpinVelocity",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#80588e",
+                                            "size": "normal"
+                                        }
+                                    }
+                                ],
+                                "rightSources": [
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Indexer/FeedAppliedVolts",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#e5b31b",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Indexer/FeedCurrent",
+                                        "logType": "Number",
+                                        "visible": false,
+                                        "options": {
+                                            "color": "#af2437",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Indexer/SpinAppliedVolts",
+                                        "logType": "Number",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#d993aa",
+                                            "size": "normal"
+                                        }
+                                    },
+                                    {
+                                        "type": "smooth",
+                                        "logKey": "/Indexer/SpinCurrent",
+                                        "logType": "Number",
+                                        "visible": false,
+                                        "options": {
+                                            "color": "#80588e",
+                                            "size": "normal"
+                                        }
+                                    }
+                                ],
+                                "discreteSources": [
+                                    {
+                                        "type": "stripes",
+                                        "logKey": "/RealOutputs/Indexer/Goal",
+                                        "logType": "String",
+                                        "visible": true,
+                                        "options": {
+                                            "color": "#2b66a2"
+                                        }
+                                    }
+                                ],
+                                "leftLockedRange": null,
+                                "rightLockedRange": null,
+                                "leftUnitConversion": {
+                                    "autoTarget": "rotations/minute",
+                                    "preset": null
+                                },
+                                "rightUnitConversion": {
+                                    "autoTarget": null,
+                                    "preset": null
+                                },
+                                "leftFilter": 0,
+                                "rightFilter": 0
+                            },
+                            "controllerUUID": "mgdsvnwatfik6lva54q0uz54ovluff32",
+                            "renderer": null,
+                            "controlsHeight": 200
+                        },
+                        {
+                            "type": 4,
+                            "title": "Goals",
+                            "controller": [
+                                "/RealOutputs/Superstructure/Goal",
+                                "/RealOutputs/Turret/Goal",
+                                "/RealOutputs/Intake/Goal",
+                                "/RealOutputs/Indexer/Goal",
+                                "/RealOutputs/TeleopDrive/CurrentDriveMode"
+                            ],
+                            "controllerUUID": "m913xapjmk4xjksxq9bmsaxyadr7gd6s",
+                            "renderer": null,
+                            "controlsHeight": 0
                         }
                     ]
                 }

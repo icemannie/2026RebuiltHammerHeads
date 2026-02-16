@@ -23,13 +23,13 @@ import org.littletonrobotics.junction.Logger;
 public class Intake extends SubsystemBase {
     private final IntakeIO leftIO;
     private final IntakeIO rightIO;
-    private final IntakeIOInputsAutoLogged leftInputs;
+    private final IntakeIOInputsAUtoLogged leftInputs;
     private final IntakeIOInputsAutoLogged rightInputs;
 
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
     @AutoLogOutput
-    private IntakeGoal goal = IntakeGoal.STOW;
+    private IntakeGoal goal = IntakeGoal.AUTOSWITCH;
 
     private boolean leftDeployed = false;
     private boolean rightDeployed = false;
@@ -52,11 +52,11 @@ public class Intake extends SubsystemBase {
 
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
 
-    private final LoggedTunableNumber rackKP = new LoggedTunableNumber("Intake/kP", RACK_GAINS.kP);
-    private final LoggedTunableNumber rackKD = new LoggedTunableNumber("Intake/kD", RACK_GAINS.kD);
-    private final LoggedTunableNumber rackKV = new LoggedTunableNumber("Intake/kV", RACK_GAINS.kV);
-    private final LoggedTunableNumber rackKA = new LoggedTunableNumber("Intake/kA", RACK_GAINS.kA);
-    private final LoggedTunableNumber rackKS = new LoggedTunableNumber("Intake/kS", RACK_GAINS.kS);
+    private final LoggedTunableNumber rackKP = new LoggedTunableNumber("Intake/kP", LEFT_RACK_GAINS.kP);
+    private final LoggedTunableNumber rackKD = new LoggedTunableNumber("Intake/kD", LEFT_RACK_GAINS.kD);
+    private final LoggedTunableNumber rackKV = new LoggedTunableNumber("Intake/kV", LEFT_RACK_GAINS.kV);
+    private final LoggedTunableNumber rackKA = new LoggedTunableNumber("Intake/kA", LEFT_RACK_GAINS.kA);
+    private final LoggedTunableNumber rackKS = new LoggedTunableNumber("Intake/kS", LEFT_RACK_GAINS.kS);
     private final LoggedTunableNumber rackMaxVel =
             new LoggedTunableNumber("Intake/maxVelRotPerSec", RACK_MOTION_MAGIC.MotionMagicCruiseVelocity);
     private final LoggedTunableNumber rackMaxAcc =
@@ -126,6 +126,10 @@ public class Intake extends SubsystemBase {
                     break;
             }
         });
+    }
+
+    public IntakeGoal getGoal() {
+        return goal;
     }
 
     public Command deployLeft() {
@@ -200,14 +204,14 @@ public class Intake extends SubsystemBase {
                     rackKS.get(),
                     rackMaxVel.get(),
                     rackMaxAcc.get());
-            rightIO.setRackPID(
-                    rackKP.get(),
-                    rackKD.get(),
-                    rackKV.get(),
-                    rackKA.get(),
-                    rackKS.get(),
-                    rackMaxVel.get(),
-                    rackMaxAcc.get());
+            // rightIO.setRackPID(
+            //         rackKP.get(),
+            //         rackKD.get(),
+            //         rackKV.get(),
+            //         rackKA.get(),
+            //         rackKS.get(),
+            //         rackMaxVel.get(),
+            //         rackMaxAcc.get());
         }
 
         if (spinVoltage.hasChanged(hashCode())) {

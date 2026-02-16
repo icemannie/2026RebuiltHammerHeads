@@ -11,11 +11,11 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Second;
 import static frc.robot.Constants.IntakeConstants.DEPLOY_POS;
+import static frc.robot.Constants.IntakeConstants.LEFT_RACK_CURRENT_LIMITS;
+import static frc.robot.Constants.IntakeConstants.LEFT_RACK_GAINS;
+import static frc.robot.Constants.IntakeConstants.LEFT_RACK_OUTPUT_CONFIGS;
 import static frc.robot.Constants.IntakeConstants.PINION_PITCH_RADIUS;
-import static frc.robot.Constants.IntakeConstants.RACK_CURRENT_LIMITS;
-import static frc.robot.Constants.IntakeConstants.RACK_GAINS;
 import static frc.robot.Constants.IntakeConstants.RACK_MOTION_MAGIC;
-import static frc.robot.Constants.IntakeConstants.RACK_OUTPUT_CONFIGS;
 import static frc.robot.Constants.IntakeConstants.ROTOR_TO_PINION_RATIO;
 import static frc.robot.Constants.IntakeConstants.SPIN_CURRENT_LIMITS;
 import static frc.robot.Constants.IntakeConstants.SPIN_OUTPUT_CONFIGS;
@@ -71,9 +71,9 @@ public class IntakeIOTalonFX implements IntakeIO {
         this.spinMotor = new TalonFX(spinID, Constants.CAN_FD_BUS);
 
         rackConfig = new TalonFXConfiguration()
-                .withSlot0(RACK_GAINS)
-                .withMotorOutput(RACK_OUTPUT_CONFIGS)
-                .withCurrentLimits(RACK_CURRENT_LIMITS)
+                .withSlot0(LEFT_RACK_GAINS)
+                .withMotorOutput(LEFT_RACK_OUTPUT_CONFIGS)
+                .withCurrentLimits(LEFT_RACK_CURRENT_LIMITS)
                 .withMotionMagic(RACK_MOTION_MAGIC)
                 .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
                         .withForwardSoftLimitEnable(false)

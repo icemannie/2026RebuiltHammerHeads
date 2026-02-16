@@ -49,6 +49,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeGoal;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.intake.IntakeIOTalonFXDual;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.turret.Turret;
@@ -120,8 +121,8 @@ public class RobotContainer {
                         new ModuleIOTalonFX(SwerveConstants.BackLeft.MODULE_CONSTANTS),
                         new ModuleIOTalonFX(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intake = new Intake(
-                        new IntakeIO() {},
-                        // new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
+                        // new IntakeIO() {},
+                        new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
                         new IntakeIOTalonFXDual(
                                 IntakeConstants.FR_RACK_ID, IntakeConstants.BR_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
@@ -234,11 +235,14 @@ public class RobotContainer {
         indexTrigger.onTrue(indexer.activate());
         indexTrigger.onFalse(indexer.stop());
 
-        deployRightIntakeTrigger.onTrue(intake.deployRight());
+        deployRightIntakeTrigger.onTrue(intake.deployLeft());
         deployRightIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
-        deployLeftIntakeTrigger.onTrue(intake.deployLeft());
-        deployLeftIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        deployLeftIntakeTrigger.onTrue(Commands.either(
+                intake.setGoal(IntakeGoal.STOW),
+                intake.setGoal(IntakeGoal.AUTOSWITCH),
+                () -> intake.getGoal() == IntakeGoal.AUTOSWITCH));
+        // deployLeftIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
         zeroRightRackTrigger.whileTrue(intake.zeroRightSequence());
         zeroRightRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));

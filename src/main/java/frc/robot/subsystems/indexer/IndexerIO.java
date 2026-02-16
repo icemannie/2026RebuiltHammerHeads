@@ -11,14 +11,14 @@ public interface IndexerIO {
     @AutoLog
     public static class IndexerIOInputs {
         public boolean spinMotorConnected = false;
-        public AngularVelocity spinVelocity = RadiansPerSecond.zero();
-        public Current spinCurrent = Amps.zero();
-        public Voltage spinAppliedVolts = Volts.zero();
+        public AngularVelocity spinVelocity = RadiansPerSecond.of(0.0);
+        public Current spinCurrent = Amps.of(0.0);
+        public Voltage spinAppliedVolts = Volts.of(0.0);
 
         public boolean feedMotorConnected = false;
-        public AngularVelocity feedVelocity = RadiansPerSecond.zero();
-        public Current feedCurrent = Amps.zero();
-        public Voltage feedAppliedVolts = Volts.zero();
+        public AngularVelocity feedVelocity = RadiansPerSecond.of(0.0);
+        public Current feedCurrent = Amps.of(0.0);
+        public Voltage feedAppliedVolts = Volts.of(0.0);
     }
 
     public default void updateInputs(IndexerIOInputs inputs) {}

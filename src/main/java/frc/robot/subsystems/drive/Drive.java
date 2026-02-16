@@ -31,6 +31,8 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -74,6 +76,7 @@ public class Drive extends SubsystemBase {
             };
     private SwerveDrivePoseEstimator poseEstimator =
             new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
+    private Field2d field = new Field2d();
 
     private LoggedTunableNumber driveKP = new LoggedTunableNumber("Swerve/Drive/kP", SwerveConstants.DRIVE_GAINS.kP);
     private LoggedTunableNumber driveKD = new LoggedTunableNumber("Swerve/Drive/kD", SwerveConstants.DRIVE_GAINS.kD);
@@ -102,6 +105,8 @@ public class Drive extends SubsystemBase {
                 new SysIdRoutine.Config(
                         null, null, null, (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
                 new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage), null, this));
+
+        SmartDashboard.putData("Field", field);
     }
 
     @Override
@@ -109,6 +114,7 @@ public class Drive extends SubsystemBase {
         odometryLock.lock(); // Prevents odometry updates while reading data
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("Drive/Gyro", gyroInputs);
+        field.setRobotPose(getPose());
         for (var module : modules) {
             module.periodic();
         }

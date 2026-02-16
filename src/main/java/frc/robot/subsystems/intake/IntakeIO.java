@@ -22,17 +22,17 @@ public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
         public boolean rackMotorConnected = false;
-        public Distance rackPosition = Meters.zero();
-        public LinearVelocity rackVelocity = MetersPerSecond.zero();
-        public Distance rackSetpoint = Meters.zero();
-        public LinearVelocity rackSetpointVelocity = MetersPerSecond.zero();
-        public Current rackCurrent = Amps.zero();
-        public Voltage rackAppliedVolts = Volts.zero();
+        public Distance rackPosition = Meters.of(0.0);
+        public LinearVelocity rackVelocity = MetersPerSecond.of(0.0);
+        public Distance rackSetpoint = Meters.of(0.0);
+        public LinearVelocity rackSetpointVelocity = MetersPerSecond.of(0.0);
+        public Current rackCurrent = Amps.of(0.0);
+        public Voltage rackAppliedVolts = Volts.of(0.0);
 
         public boolean spinMotorConnected = false;
-        public AngularVelocity spinVelocity = RadiansPerSecond.zero();
-        public Current spinCurrent = Amps.zero();
-        public Voltage spinAppliedVolts = Volts.zero();
+        public AngularVelocity spinVelocity = RadiansPerSecond.of(0.0);
+        public Current spinCurrent = Amps.of(0.0);
+        public Voltage spinAppliedVolts = Volts.of(0.0);
     }
 
     public default void updateInputs(IntakeIOInputs inputs) {}
