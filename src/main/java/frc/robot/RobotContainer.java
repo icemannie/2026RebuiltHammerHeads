@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -87,6 +88,12 @@ public class RobotContainer {
 
     // Commands
     private final TeleopDrive teleopDrive;
+    private final Command rumbleLeft = Commands.startEnd(
+            () -> controller.setRumble(RumbleType.kLeftRumble, 0.3),
+            () -> controller.setRumble(RumbleType.kLeftRumble, 0));
+    private final Command rumbleRight = Commands.startEnd(
+            () -> controller.setRumble(RumbleType.kRightRumble, 0.3),
+            () -> controller.setRumble(RumbleType.kRightRumble, 0));
 
     // Bindings
     private final Trigger resetHeadingTrigger = controller.y();
@@ -218,6 +225,11 @@ public class RobotContainer {
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
+
+        // Turret turnaround danger zone controller rumble
+        turret.turnaroundZoneMaxTrigger.whileTrue(rumbleLeft);
+        turret.turnaroundZoneMinTrigger.whileTrue(rumbleRight);
+
         // Configure the button bindings
         configureButtonBindings();
     }

@@ -66,6 +66,9 @@ public class Turret extends SubsystemBase {
     private final LoggedTunableNumber tuningHoodAngle =
             new LoggedTunableNumber("Turret/Tuning/HoodAngleDegrees", MIN_HOOD_ANGLE.in(Degrees));
 
+    public final Trigger turnaroundZoneMaxTrigger = new Trigger(this::inTurnaroundZoneMax).debounce(0.05);
+    public final Trigger turnaroundZoneMinTrigger = new Trigger(this::inTurnaroundZoneMin).debounce(0.05);
+
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.io = io;
         this.inputs = new TurretIOInputsAutoLogged();
@@ -141,6 +144,14 @@ public class Turret extends SubsystemBase {
         boolean onBlueLeftSide = poseSupplier.get().getMeasureY().gt(FieldConstants.FIELD_WIDTH.div(2));
 
         return isBlue == onBlueLeftSide ? PASSING_SPOT_LEFT : PASSING_SPOT_RIGHT;
+    }
+
+    private boolean inTurnaroundZoneMax() {
+        return inputs.turnPosition.isNear(MAX_TURN_ANGLE, TURNAROUND_ZONE);
+    }
+
+    private boolean inTurnaroundZoneMin() {
+        return inputs.turnPosition.isNear(MIN_TURN_ANGLE, TURNAROUND_ZONE);
     }
 
     @Override

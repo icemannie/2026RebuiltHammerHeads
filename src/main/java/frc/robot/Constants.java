@@ -432,6 +432,7 @@ public final class Constants {
 
         public static final Angle MIN_TURN_ANGLE = Rotations.of(-0.55);
         public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
+        public static final Angle TURNAROUND_ZONE = Degrees.of(30);
 
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
