@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.Intake.IntakeGoal;
+import frc.robot.subsystems.intake.Intakes;
+import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.util.HubTracker;
@@ -25,7 +25,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 
 public class Superstructure extends SubsystemBase {
     private final Turret turret;
-    private final Intake intake;
+    private final Intakes intake;
     private final Indexer indexer;
 
     private final Supplier<Pose2d> poseSupplier;
@@ -47,7 +47,7 @@ public class Superstructure extends SubsystemBase {
     private final Map<Goal, Command> goalCommands;
 
     /** Creates a new Superstructure. */
-    public Superstructure(Turret turret, Intake intake, Indexer indexer, Supplier<Pose2d> poseSupplier) {
+    public Superstructure(Turret turret, Intakes intake, Indexer indexer, Supplier<Pose2d> poseSupplier) {
         this.turret = turret;
         this.intake = intake;
         this.indexer = indexer;
@@ -62,19 +62,19 @@ public class Superstructure extends SubsystemBase {
                 Goal.SCORING,
                 Commands.sequence(
                                 this.turret.setGoal(TurretGoal.SCORING),
-                                this.intake.setGoal(IntakeGoal.AUTOSWITCH),
+                                this.intake.setGoal(IntakesGoal.AUTOSWITCH),
                                 this.indexer.setGoal(IndexerGoal.ACTIVE))
                         .withName("Start scoring"),
                 Goal.PASSING,
                 Commands.sequence(
                                 this.turret.setGoal(TurretGoal.PASSING),
-                                this.intake.setGoal(IntakeGoal.AUTOSWITCH),
+                                this.intake.setGoal(IntakesGoal.AUTOSWITCH),
                                 this.indexer.setGoal(IndexerGoal.ACTIVE))
                         .withName("Start passing"),
                 Goal.COLLECTING,
                 Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
-                                this.intake.setGoal(IntakeGoal.MANUAL),
+                                this.intake.setGoal(IntakesGoal.MANUAL),
                                 this.indexer.setGoal(IndexerGoal.OFF),
                                 Commands.either(
                                         this.intake.deployLeft(),
@@ -84,7 +84,7 @@ public class Superstructure extends SubsystemBase {
                 Goal.IDLE,
                 Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
-                                this.intake.setGoal(IntakeGoal.STOW),
+                                this.intake.setGoal(IntakesGoal.STOW),
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Idle"));
 

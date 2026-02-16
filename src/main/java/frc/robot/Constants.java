@@ -377,7 +377,7 @@ public final class Constants {
                 new Slot0Configs().withKP(1024).withKD(5).withKS(0.28);
 
         public static final Slot0Configs FLYWHEEL_GAINS =
-                new Slot0Configs().withKP(50).withKD(0.5).withKS(10).withKV(0.3);
+                new Slot0Configs().withKP(40).withKD(0.4).withKS(10).withKV(0.3);
 
         public static final CurrentLimitsConfigs TURN_CURRENT_LIMITS =
                 new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
@@ -418,7 +418,7 @@ public final class Constants {
                 .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);
 
         public static final FeedbackConfigs FLYWHEEL_FEEDBACK_CONFIGS =
-                new FeedbackConfigs().withVelocityFilterTimeConstant(Seconds.of(0.02));
+                new FeedbackConfigs().withVelocityFilterTimeConstant(Seconds.of(0.01));
 
         public static final Current BANG_BANG_AMPS = Amps.of(100);
 
@@ -453,25 +453,25 @@ public final class Constants {
         public static final InterpolatingDoubleTreeMap TOF_MAP = new InterpolatingDoubleTreeMap();
 
         static {
-            SHOT_MAP.put(4.97, new ShotData(RPM.of(2850), Degrees.of(27)));
+            SHOT_MAP.put(4.97, new ShotData(RPM.of(2810), Degrees.of(27)));
             TOF_MAP.put(4.97, 1.41);
 
-            SHOT_MAP.put(4.20, new ShotData(RPM.of(2750), Degrees.of(26)));
+            SHOT_MAP.put(4.20, new ShotData(RPM.of(2710), Degrees.of(26)));
             TOF_MAP.put(4.20, 1.44);
 
-            SHOT_MAP.put(3.56, new ShotData(RPM.of(2700), Degrees.of(24)));
+            SHOT_MAP.put(3.56, new ShotData(RPM.of(2660), Degrees.of(24)));
             TOF_MAP.put(3.56, 1.38);
 
-            SHOT_MAP.put(3.13, new ShotData(RPM.of(2600), Degrees.of(22)));
+            SHOT_MAP.put(3.13, new ShotData(RPM.of(2560), Degrees.of(22)));
             TOF_MAP.put(3.13, 1.39);
 
-            SHOT_MAP.put(2.44, new ShotData(RPM.of(2500), Degrees.of(20)));
+            SHOT_MAP.put(2.44, new ShotData(RPM.of(2460), Degrees.of(20)));
             TOF_MAP.put(2.44, 1.26);
 
-            SHOT_MAP.put(1.74, new ShotData(RPM.of(2400), Degrees.of(17)));
+            SHOT_MAP.put(1.74, new ShotData(RPM.of(2360), Degrees.of(17)));
             TOF_MAP.put(1.74, 1.25);
 
-            SHOT_MAP.put(1.26, new ShotData(RPM.of(2000), Degrees.of(15.5)));
+            SHOT_MAP.put(1.26, new ShotData(RPM.of(1960), Degrees.of(15.5)));
             TOF_MAP.put(1.26, 0.91);
         }
     }
@@ -531,13 +531,15 @@ public final class Constants {
         public static final Distance DEPLOY_POS = Inches.of(11.125);
         public static final Voltage SPIN_VOLTAGE = Volts.of(12);
         public static final Voltage REVERSE_SPIN_VOLTAGE = Volts.of(-5);
+        public static final Voltage UNJAM_SPIN_VOLTAGE = Volts.of(10);
         public static final Distance STOW_TOLERANCE = Inches.of(0.5);
+        public static final Distance DEPLOY_TOLERANCE = Inches.of(1);
         public static final Distance DECOUPLE_DISTANCE = Inches.of(3);
 
-        public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.5);
+        public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.2);
 
         public static final Current RACK_STALL_CURRENT = Amps.of(40);
-        public static final AngularVelocity RACK_STALL_ANGULAR_VEL = RadiansPerSecond.of(0.1);
+        public static final LinearVelocity RACK_STALL_VEL = InchesPerSecond.of(1);
         public static final Voltage ZEROING_VOLTAGE = Volts.of(-5);
 
         public static final Current SPIN_STALL_CURRENT = Amps.of(20);

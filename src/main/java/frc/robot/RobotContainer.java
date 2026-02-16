@@ -46,12 +46,12 @@ import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.Intake.IntakeGoal;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.intake.IntakeIOTalonFXDual;
+import frc.robot.subsystems.intake.Intakes;
+import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
@@ -76,7 +76,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
     // Subsystems
     private final Drive drive;
-    private final Intake intake;
+    private final Intakes intakes;
     private final Turret turret;
     private final Indexer indexer;
     private final Superstructure superstructure;
@@ -121,7 +121,7 @@ public class RobotContainer {
                         new ModuleIOTalonFX(SwerveConstants.FrontRight.MODULE_CONSTANTS),
                         new ModuleIOTalonFX(SwerveConstants.BackLeft.MODULE_CONSTANTS),
                         new ModuleIOTalonFX(SwerveConstants.BackRight.MODULE_CONSTANTS));
-                intake = new Intake(
+                intakes = new Intakes(
                         // new IntakeIO() {},
                         new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
                         new IntakeIOTalonFXDual(
@@ -149,7 +149,7 @@ public class RobotContainer {
                         new ModuleIOSim(SwerveConstants.FrontRight.MODULE_CONSTANTS),
                         new ModuleIOSim(SwerveConstants.BackLeft.MODULE_CONSTANTS),
                         new ModuleIOSim(SwerveConstants.BackRight.MODULE_CONSTANTS));
-                intake = new Intake(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
+                intakes = new Intakes(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
                 vision = new Vision(
@@ -174,7 +174,7 @@ public class RobotContainer {
                 // Replayed robot, disable IO implementations
                 drive = new Drive(
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
-                intake = new Intake(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
+                intakes = new Intakes(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 vision = new Vision(
@@ -188,7 +188,7 @@ public class RobotContainer {
                 break;
         }
 
-        superstructure = new Superstructure(turret, intake, indexer, drive::getPose);
+        superstructure = new Superstructure(turret, intakes, indexer, drive::getPose);
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Characterizations");
@@ -238,20 +238,20 @@ public class RobotContainer {
                 indexer.setGoal(IndexerGoal.OFF),
                 () -> indexer.getGoal() == IndexerGoal.OFF));
 
-        deployLeftIntakeTrigger.onTrue(intake.deployLeft());
-        deployLeftIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        deployLeftIntakeTrigger.onTrue(intakes.deployLeft());
+        deployLeftIntakeTrigger.onFalse(intakes.setGoal(IntakesGoal.STOW));
 
         intakeAutoSwitchTrigger.onTrue(Commands.either(
-                intake.setGoal(IntakeGoal.STOW),
-                intake.setGoal(IntakeGoal.AUTOSWITCH),
-                () -> intake.getGoal() == IntakeGoal.AUTOSWITCH));
+                intakes.setGoal(IntakesGoal.STOW),
+                intakes.setGoal(IntakesGoal.AUTOSWITCH),
+                () -> intakes.getGoal() == IntakesGoal.AUTOSWITCH));
         // deployLeftIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
-        zeroRightRackTrigger.whileTrue(intake.zeroRightSequence());
-        zeroRightRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        zeroRightRackTrigger.whileTrue(intakes.right.zeroSequence());
+        zeroRightRackTrigger.onFalse(intakes.setGoal(IntakesGoal.STOW));
 
-        zeroLeftRackTrigger.whileTrue(intake.zeroLeftSequence());
-        zeroLeftRackTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        zeroLeftRackTrigger.whileTrue(intakes.left.zeroSequence());
+        zeroLeftRackTrigger.onFalse(intakes.setGoal(IntakesGoal.STOW));
 
         zeroHoodTrigger.whileTrue(turret.zeroHoodSequence());
         zeroHoodTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
@@ -304,14 +304,14 @@ public class RobotContainer {
                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                 -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
                 -Dimensions.FULL_WIDTH.div(2).in(Meters),
-                () -> intake.isRightDeployed() && ableToIntake.getAsBoolean(),
+                intakes.right.deployedTrigger.and(ableToIntake),
                 intakeCallback);
         fuelSim.registerIntake(
                 -Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                 Dimensions.FULL_WIDTH.div(2).in(Meters),
                 Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
-                () -> intake.isLeftDeployed() && ableToIntake.getAsBoolean(),
+                intakes.left.deployedTrigger.and(ableToIntake),
                 intakeCallback);
     }
 

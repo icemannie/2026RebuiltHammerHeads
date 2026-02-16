@@ -49,10 +49,6 @@ public interface IntakeIO {
 
     public default void zeroPosition() {}
 
-    public default boolean rackIsStalled() {
-        return false;
-    }
-
     public default void setRackPID(
             double kP, double kD, double kV, double kA, double kS, double maxVel, double maxAcc) {}
 }

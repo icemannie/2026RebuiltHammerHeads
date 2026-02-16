@@ -1,70 +1,64 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.Constants.IntakeConstants.*;
+import static frc.robot.Constants.IntakeConstants.DEPLOY_POS;
+import static frc.robot.Constants.IntakeConstants.DEPLOY_TOLERANCE;
+import static frc.robot.Constants.IntakeConstants.LEFT_RACK_GAINS;
+import static frc.robot.Constants.IntakeConstants.RACK_MOTION_MAGIC;
+import static frc.robot.Constants.IntakeConstants.RACK_STALL_CURRENT;
+import static frc.robot.Constants.IntakeConstants.RACK_STALL_VEL;
+import static frc.robot.Constants.IntakeConstants.REVERSE_SPIN_VOLTAGE;
+import static frc.robot.Constants.IntakeConstants.RIGHT_RACK_GAINS;
+import static frc.robot.Constants.IntakeConstants.SPIN_STALL_ANGULAR_VELOCITY;
+import static frc.robot.Constants.IntakeConstants.SPIN_STALL_CURRENT;
+import static frc.robot.Constants.IntakeConstants.SPIN_VOLTAGE;
+import static frc.robot.Constants.IntakeConstants.STOW_POS;
+import static frc.robot.Constants.IntakeConstants.STOW_TOLERANCE;
+import static frc.robot.Constants.IntakeConstants.UNJAM_SPIN_VOLTAGE;
+import static frc.robot.Constants.IntakeConstants.ZEROING_VOLTAGE;
 
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.intake.Intakes.IntakeSide;
 import frc.robot.util.LoggedTunableNumber;
-import java.util.function.Supplier;
+import java.util.Map;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
-    private final IntakeIO leftIO;
-    private final IntakeIO rightIO;
-    private final IntakeIOInputsAutoLogged leftInputs;
-    private final IntakeIOInputsAutoLogged rightInputs;
+    private final IntakeIO io;
+    private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-    private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
+    private final IntakeSide side;
+    private final String name;
 
-    @AutoLogOutput
-    private IntakeGoal goal = IntakeGoal.AUTOSWITCH;
+    @AutoLogOutput(key = "Intakes/{name}/Goal")
+    private IntakeGoal goal = IntakeGoal.STOWED;
 
-    private boolean leftDeployed = false;
-    private boolean rightDeployed = false;
+    @AutoLogOutput(key = "Intakes/{name}/Rack Stalled")
+    public final Trigger rackStallTrigger;
 
-    @AutoLogOutput
-    public Trigger deployLeftTrigger = new Trigger(this::travelingLeft)
-            .and(() -> goal == IntakeGoal.AUTOSWITCH)
-            .debounce(0.08);
+    @AutoLogOutput(key = "Intakes/{name}/Spin Stalled")
+    public final Trigger spinStallTrigger;
 
-    @AutoLogOutput
-    public Trigger deployRightTrigger = new Trigger(this::travelingRight)
-            .and(() -> goal == IntakeGoal.AUTOSWITCH)
-            .debounce(0.08);
+    @AutoLogOutput(key = "Intakes/{name}/Stowed")
+    public final Trigger stowedTrigger;
 
-    @AutoLogOutput
-    private Trigger rightRackStallTrigger;
+    @AutoLogOutput(key = "Intakes/{name}/Deployed")
+    public final Trigger deployedTrigger;
 
-    @AutoLogOutput
-    private Trigger leftRackStallTrigger;
-
-    @AutoLogOutput
-    private Trigger rightSpinStallTrigger;
-
-    @AutoLogOutput
-    private Trigger leftSpinStallTrigger;
-
-    private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
-
-    private final LoggedTunableNumber rackKP = new LoggedTunableNumber("Intake/kP", LEFT_RACK_GAINS.kP);
-    private final LoggedTunableNumber rackKD = new LoggedTunableNumber("Intake/kD", LEFT_RACK_GAINS.kD);
-    private final LoggedTunableNumber rackKV = new LoggedTunableNumber("Intake/kV", LEFT_RACK_GAINS.kV);
-    private final LoggedTunableNumber rackKA = new LoggedTunableNumber("Intake/kA", LEFT_RACK_GAINS.kA);
-    private final LoggedTunableNumber rackKS = new LoggedTunableNumber("Intake/kS", LEFT_RACK_GAINS.kS);
+    private final LoggedTunableNumber rackKP;
+    private final LoggedTunableNumber rackKD;
+    private final LoggedTunableNumber rackKV;
+    private final LoggedTunableNumber rackKA;
+    private final LoggedTunableNumber rackKS;
     private final LoggedTunableNumber rackMaxVel =
             new LoggedTunableNumber("Intake/maxVelRotPerSec", RACK_MOTION_MAGIC.MotionMagicCruiseVelocity);
     private final LoggedTunableNumber rackMaxAcc =
@@ -74,73 +68,114 @@ public class Intake extends SubsystemBase {
     private final LoggedTunableNumber reverseSpinVoltage =
             new LoggedTunableNumber("Intake/Reverse Spin Voltage", REVERSE_SPIN_VOLTAGE.in(Volts));
 
-    /** Creates a new Intake. */
-    public Intake(IntakeIO leftIO, IntakeIO rightIO, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
-        this.leftIO = leftIO;
-        this.rightIO = rightIO;
+    public Intake(IntakeIO io, IntakeSide side) {
+        this.io = io;
+        this.side = side;
+        this.name = side.toString();
 
-        this.leftInputs = new IntakeIOInputsAutoLogged();
-        this.rightInputs = new IntakeIOInputsAutoLogged();
+        Slot0Configs gains = side == IntakeSide.LEFT ? LEFT_RACK_GAINS : RIGHT_RACK_GAINS;
 
-        this.chassisSpeedsSupplier = chassisSpeedsSupplier;
+        rackKP = new LoggedTunableNumber("Intakes/" + name + "/kP", gains.kP);
+        rackKD = new LoggedTunableNumber("Intakes/" + name + "/kD", gains.kD);
+        rackKV = new LoggedTunableNumber("Intakes/" + name + "/kV", gains.kV);
+        rackKA = new LoggedTunableNumber("Intakes/" + name + "/kA", gains.kA);
+        rackKS = new LoggedTunableNumber("Intakes/" + name + "/kS", gains.kS);
 
-        this.deployLeftTrigger.onTrue(deployLeft());
-        this.deployRightTrigger.onTrue(deployRight());
+        spinStallTrigger = new Trigger(this::spinStalled).debounce(0.1);
+        rackStallTrigger = new Trigger(this::rackStalled).debounce(0.1);
+        deployedTrigger = new Trigger(this::deployed).debounce(0.05);
+        stowedTrigger = new Trigger(this::stowed).debounce(0.05);
 
-        rightRackStallTrigger = new Trigger(() -> rightIO.rackIsStalled()).debounce(0.1);
-        leftRackStallTrigger = new Trigger(() -> leftIO.rackIsStalled()).debounce(0.1);
-
-        rightSpinStallTrigger = new Trigger(this::rightSpinStalled).debounce(0.1);
-        leftSpinStallTrigger = new Trigger(this::leftSpinStalled).debounce(0.1);
-
-        rightSpinStallTrigger.onTrue(unjamRight());
-        leftSpinStallTrigger.onTrue(unjamLeft());
-
-        SmartDashboard.putData(deployLeft());
-        SmartDashboard.putData(deployRight());
-        SmartDashboard.putData(setGoal(IntakeGoal.STOW));
+        spinStallTrigger.or(rackStallTrigger).onTrue(unjam());
+        deployedTrigger.onTrue(setGoal(IntakeGoal.DEPLOYED));
+        stowedTrigger.onTrue(setGoal(IntakeGoal.STOWED));
     }
 
-    public boolean travelingLeft() {
-        return chassisSpeedsSupplier.get().vyMetersPerSecond > MIN_SWITCH_ROBOT_VELOCITY.in(MetersPerSecond);
+    private boolean spinStalled() {
+        return inputs.spinCurrent.abs(Amps) >= SPIN_STALL_CURRENT.in(Amps)
+                && inputs.spinVelocity.abs(RadiansPerSecond) < SPIN_STALL_ANGULAR_VELOCITY.in(RadiansPerSecond);
     }
 
-    public boolean travelingRight() {
-        return chassisSpeedsSupplier.get().vyMetersPerSecond < -MIN_SWITCH_ROBOT_VELOCITY.in(MetersPerSecond);
+    private boolean rackStalled() {
+        return inputs.rackCurrent.abs(Amps) >= RACK_STALL_CURRENT.in(Amps)
+                && inputs.rackVelocity.abs(MetersPerSecond) < RACK_STALL_VEL.in(MetersPerSecond);
     }
 
-    @AutoLogOutput
-    public boolean isLeftStowed() {
-        return leftInputs.rackPosition.isNear(STOW_POS, STOW_TOLERANCE);
+    private boolean deployed() {
+        return inputs.rackPosition.isNear(DEPLOY_POS, DEPLOY_TOLERANCE);
     }
 
-    @AutoLogOutput
-    public boolean isRightStowed() {
-        return rightInputs.rackPosition.isNear(STOW_POS, STOW_TOLERANCE);
+    private boolean stowed() {
+        return inputs.rackPosition.isNear(STOW_POS, STOW_TOLERANCE);
     }
 
-    public boolean isLeftDeployed() {
-        return leftDeployed;
+    public Command zeroSequence() {
+        return Commands.sequence(
+                this.runOnce(() -> io.setRackOutput(ZEROING_VOLTAGE)),
+                Commands.waitSeconds(0.1),
+                Commands.waitUntil(rackStallTrigger::getAsBoolean),
+                this.runOnce(io::stopRack),
+                Commands.waitSeconds(0.1),
+                this.runOnce(() -> {
+                    io.zeroPosition();
+                    io.setRackPosition(STOW_POS);
+                }));
     }
 
-    public boolean isRightDeployed() {
-        return rightDeployed;
+    public Command deploy() {
+        return this.setGoal(IntakeGoal.DEPLOYING).withName("Deploy " + name);
     }
 
-    public Command setGoal(IntakeGoal goal) {
-        return this.runOnce(() -> {
+    public Command stow() {
+        return this.setGoal(IntakeGoal.STOWING).withName("Stow " + name);
+    }
+
+    private Command unjam() {
+        return Commands.select(
+                Map.of(
+                        IntakeGoal.STOWING, // extend intake and reverse rollers
+                        Commands.sequence(
+                                Commands.runOnce(() -> io.setRackPosition(DEPLOY_POS)),
+                                Commands.waitUntil(
+                                        rackStallTrigger.or(spinStallTrigger).negate()),
+                                Commands.runOnce(() -> io.setRackPosition(STOW_POS))),
+                        IntakeGoal.DEPLOYED, // reverse rollers
+                        Commands.sequence(
+                                Commands.runOnce(() -> io.setSpinOutput(UNJAM_SPIN_VOLTAGE.unaryMinus())),
+                                Commands.waitUntil(spinStallTrigger.negate()),
+                                Commands.runOnce(() -> io.setSpinOutput(Volts.of(spinVoltage.get())))),
+                        IntakeGoal.STOWED, // unreverse rollers
+                        Commands.sequence(
+                                Commands.runOnce(() -> io.setSpinOutput(UNJAM_SPIN_VOLTAGE)),
+                                Commands.waitUntil(spinStallTrigger.negate()),
+                                Commands.runOnce(() -> io.setSpinOutput(Volts.of(reverseSpinVoltage.get())))),
+                        IntakeGoal.DEPLOYING, // stow intake
+                        Commands.sequence(
+                                Commands.runOnce(() -> io.setRackPosition(STOW_POS)),
+                                Commands.waitUntil(rackStallTrigger.negate()),
+                                Commands.runOnce(() -> io.setRackPosition(DEPLOY_POS)))),
+                () -> this.goal);
+    }
+
+    private Command setGoal(IntakeGoal goal) {
+        return Commands.runOnce(() -> {
             this.goal = goal;
             switch (goal) {
-                case AUTOSWITCH:
+                case DEPLOYED:
+                    io.stopRack();
                     break;
-                case MANUAL:
+                case DEPLOYING:
+                    io.setSpinOutput(Volts.of(spinVoltage.get()));
+                    io.setRackPosition(DEPLOY_POS);
                     break;
-                case STOW:
-                    leftIO.setRackPosition(STOW_POS);
-                    rightIO.setRackPosition(STOW_POS);
-
-                    leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
-                    rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
+                case OFF:
+                    io.stopRack();
+                    io.stopSpin();
+                    break;
+                case STOWED:
+                    break;
+                case STOWING:
+                    io.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
                     break;
             }
         });
@@ -148,90 +183,6 @@ public class Intake extends SubsystemBase {
 
     public IntakeGoal getGoal() {
         return goal;
-    }
-
-    public Command deployLeft() {
-        return this.runOnce(() -> {
-                    rightDeployed = false;
-                    rightIO.setRackPosition(STOW_POS);
-                    rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
-                })
-                .andThen(Commands.waitUntil(this::isRightStowed))
-                .andThen(this.runOnce(() -> {
-                    leftDeployed = true;
-                    leftIO.setRackPosition(DEPLOY_POS);
-                    leftIO.setSpinOutput(Volts.of(spinVoltage.get()));
-                }))
-                .withName("Deploy Left Intake");
-    }
-
-    public Command deployRight() {
-        return this.runOnce(() -> {
-                    leftDeployed = false;
-                    leftIO.setRackPosition(STOW_POS);
-                    leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
-                })
-                .andThen(Commands.waitUntil(this::isLeftStowed))
-                .andThen(this.runOnce(() -> {
-                    rightDeployed = true;
-                    rightIO.setRackPosition(DEPLOY_POS);
-                    rightIO.setSpinOutput(Volts.of(spinVoltage.get()));
-                }))
-                .withName("Deploy Right Intake");
-    }
-
-    public Command zeroRightSequence() {
-        return Commands.sequence(
-                this.runOnce(() -> rightIO.setRackOutput(ZEROING_VOLTAGE)),
-                Commands.waitSeconds(0.1),
-                Commands.waitUntil(rightRackStallTrigger::getAsBoolean),
-                this.runOnce(rightIO::stopRack),
-                Commands.waitSeconds(0.1),
-                this.runOnce(() -> {
-                    rightIO.zeroPosition();
-                    rightIO.setRackPosition(STOW_POS);
-                }));
-    }
-
-    private Command unjamLeft() {
-        return Commands.sequence(
-                Commands.runOnce(() -> leftIO.setRackPosition(DEPLOY_POS)).onlyIf(() -> !leftDeployed),
-                Commands.runOnce(() -> leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()))),
-                Commands.waitUntil(leftSpinStallTrigger.negate()),
-                Commands.runOnce(() -> leftIO.setRackPosition(STOW_POS)).onlyIf(() -> !leftDeployed),
-                Commands.runOnce(() -> leftIO.setSpinOutput(Volts.of(spinVoltage.get()))));
-    }
-
-    private Command unjamRight() {
-        return Commands.sequence(
-                Commands.runOnce(() -> rightIO.setRackPosition(DEPLOY_POS)).onlyIf(() -> !rightDeployed),
-                Commands.runOnce(() -> rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()))),
-                Commands.waitUntil(rightSpinStallTrigger.negate()),
-                Commands.runOnce(() -> rightIO.setRackPosition(STOW_POS)).onlyIf(() -> !rightDeployed),
-                Commands.runOnce(() -> rightIO.setSpinOutput(Volts.of(spinVoltage.get()))));
-    }
-
-    private boolean leftSpinStalled() {
-        return leftInputs.spinCurrent.abs(Amps) >= SPIN_STALL_CURRENT.in(Amps)
-                && leftInputs.spinVelocity.abs(RadiansPerSecond) < SPIN_STALL_ANGULAR_VELOCITY.in(RadiansPerSecond);
-    }
-
-    private boolean rightSpinStalled() {
-        return rightInputs.spinCurrent.abs(Amps) >= SPIN_STALL_CURRENT.in(Amps)
-                && rightInputs.spinVelocity.abs(RadiansPerSecond) < SPIN_STALL_ANGULAR_VELOCITY.in(RadiansPerSecond);
-    }
-
-    public Command zeroLeftSequence() {
-        return Commands.sequence(
-                this.runOnce(() -> leftIO.setRackOutput(ZEROING_VOLTAGE)),
-                Commands.waitSeconds(0.1),
-                Commands.waitUntil(leftRackStallTrigger::getAsBoolean),
-                this.runOnce(leftIO::stopRack),
-                Commands.waitSeconds(0.1),
-                this.runOnce(() -> {
-                    leftIO.zeroPosition();
-                    leftIO.setRackPosition(STOW_POS);
-                }));
     }
 
     private void updateTunables() {
@@ -242,7 +193,7 @@ public class Intake extends SubsystemBase {
                 || rackKS.hasChanged(hashCode())
                 || rackMaxVel.hasChanged(hashCode())
                 || rackMaxAcc.hasChanged(hashCode())) {
-            leftIO.setRackPID(
+            io.setRackPID(
                     rackKP.get(),
                     rackKD.get(),
                     rackKV.get(),
@@ -250,52 +201,37 @@ public class Intake extends SubsystemBase {
                     rackKS.get(),
                     rackMaxVel.get(),
                     rackMaxAcc.get());
-            // rightIO.setRackPID(
-            //         rackKP.get(),
-            //         rackKD.get(),
-            //         rackKV.get(),
-            //         rackKA.get(),
-            //         rackKS.get(),
-            //         rackMaxVel.get(),
-            //         rackMaxAcc.get());
         }
 
         if (spinVoltage.hasChanged(hashCode())) {
-            if (leftDeployed) {
-                leftIO.setSpinOutput(Volts.of(spinVoltage.get()));
-            }
-            if (rightDeployed) {
-                rightIO.setSpinOutput(Volts.of(spinVoltage.get()));
+            if (goal == IntakeGoal.DEPLOYED || goal == IntakeGoal.DEPLOYING) {
+                io.setSpinOutput(Volts.of(spinVoltage.get()));
             }
         }
 
         if (reverseSpinVoltage.hasChanged(hashCode())) {
-            if (!leftDeployed) {
-                leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
-            }
-            if (!rightDeployed) {
-                rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
+            if (goal == IntakeGoal.STOWED || goal == IntakeGoal.STOWING) {
+                io.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
             }
         }
     }
 
+    public Distance getPosition() {
+        return inputs.rackPosition;
+    }
+
     @Override
     public void periodic() {
-        leftIO.updateInputs(leftInputs);
-        rightIO.updateInputs(rightInputs);
-
-        Logger.processInputs("Left Intake", leftInputs);
-        Logger.processInputs("Right Intake", rightInputs);
-
-        measuredVisualizer.setLeftPosition(leftInputs.rackPosition);
-        measuredVisualizer.setRightPosition(rightInputs.rackPosition);
-
+        io.updateInputs(inputs);
+        Logger.processInputs("Intakes/" + name, inputs);
         updateTunables();
     }
 
     public enum IntakeGoal {
-        AUTOSWITCH,
-        MANUAL,
-        STOW
+        DEPLOYED,
+        DEPLOYING,
+        STOWED,
+        STOWING,
+        OFF
     }
 }
