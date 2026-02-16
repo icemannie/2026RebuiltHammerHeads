@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.IntakeConstants.*;
 
@@ -23,7 +25,7 @@ import org.littletonrobotics.junction.Logger;
 public class Intake extends SubsystemBase {
     private final IntakeIO leftIO;
     private final IntakeIO rightIO;
-    private final IntakeIOInputsAUtoLogged leftInputs;
+    private final IntakeIOInputsAutoLogged leftInputs;
     private final IntakeIOInputsAutoLogged rightInputs;
 
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
@@ -50,6 +52,12 @@ public class Intake extends SubsystemBase {
     @AutoLogOutput
     private Trigger leftRackStallTrigger;
 
+    @AutoLogOutput
+    private Trigger rightSpinStallTrigger;
+
+    @AutoLogOutput
+    private Trigger leftSpinStallTrigger;
+
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);
 
     private final LoggedTunableNumber rackKP = new LoggedTunableNumber("Intake/kP", LEFT_RACK_GAINS.kP);
@@ -63,6 +71,8 @@ public class Intake extends SubsystemBase {
             new LoggedTunableNumber("Intake/maxAccRotPerSecPerSec", RACK_MOTION_MAGIC.MotionMagicAcceleration);
     private final LoggedTunableNumber spinVoltage =
             new LoggedTunableNumber("Intake/Spin Voltage", SPIN_VOLTAGE.in(Volts));
+    private final LoggedTunableNumber reverseSpinVoltage =
+            new LoggedTunableNumber("Intake/Reverse Spin Voltage", REVERSE_SPIN_VOLTAGE.in(Volts));
 
     /** Creates a new Intake. */
     public Intake(IntakeIO leftIO, IntakeIO rightIO, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
@@ -76,8 +86,16 @@ public class Intake extends SubsystemBase {
 
         this.deployLeftTrigger.onTrue(deployLeft());
         this.deployRightTrigger.onTrue(deployRight());
+
         rightRackStallTrigger = new Trigger(() -> rightIO.rackIsStalled()).debounce(0.1);
         leftRackStallTrigger = new Trigger(() -> leftIO.rackIsStalled()).debounce(0.1);
+
+        rightSpinStallTrigger = new Trigger(this::rightSpinStalled).debounce(0.1);
+        leftSpinStallTrigger = new Trigger(this::leftSpinStalled).debounce(0.1);
+
+        rightSpinStallTrigger.onTrue(unjamRight());
+        leftSpinStallTrigger.onTrue(unjamLeft());
+
         SmartDashboard.putData(deployLeft());
         SmartDashboard.putData(deployRight());
         SmartDashboard.putData(setGoal(IntakeGoal.STOW));
@@ -121,8 +139,8 @@ public class Intake extends SubsystemBase {
                     leftIO.setRackPosition(STOW_POS);
                     rightIO.setRackPosition(STOW_POS);
 
-                    leftIO.stopSpin();
-                    rightIO.stopSpin();
+                    leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
+                    rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
                     break;
             }
         });
@@ -136,7 +154,7 @@ public class Intake extends SubsystemBase {
         return this.runOnce(() -> {
                     rightDeployed = false;
                     rightIO.setRackPosition(STOW_POS);
-                    rightIO.stopSpin();
+                    rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
                 })
                 .andThen(Commands.waitUntil(this::isRightStowed))
                 .andThen(this.runOnce(() -> {
@@ -151,7 +169,7 @@ public class Intake extends SubsystemBase {
         return this.runOnce(() -> {
                     leftDeployed = false;
                     leftIO.setRackPosition(STOW_POS);
-                    leftIO.stopSpin();
+                    leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
                 })
                 .andThen(Commands.waitUntil(this::isLeftStowed))
                 .andThen(this.runOnce(() -> {
@@ -173,6 +191,34 @@ public class Intake extends SubsystemBase {
                     rightIO.zeroPosition();
                     rightIO.setRackPosition(STOW_POS);
                 }));
+    }
+
+    private Command unjamLeft() {
+        return Commands.sequence(
+                Commands.runOnce(() -> leftIO.setRackPosition(DEPLOY_POS)).onlyIf(() -> !leftDeployed),
+                Commands.runOnce(() -> leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()))),
+                Commands.waitUntil(leftSpinStallTrigger.negate()),
+                Commands.runOnce(() -> leftIO.setRackPosition(STOW_POS)).onlyIf(() -> !leftDeployed),
+                Commands.runOnce(() -> leftIO.setSpinOutput(Volts.of(spinVoltage.get()))));
+    }
+
+    private Command unjamRight() {
+        return Commands.sequence(
+                Commands.runOnce(() -> rightIO.setRackPosition(DEPLOY_POS)).onlyIf(() -> !rightDeployed),
+                Commands.runOnce(() -> rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()))),
+                Commands.waitUntil(rightSpinStallTrigger.negate()),
+                Commands.runOnce(() -> rightIO.setRackPosition(STOW_POS)).onlyIf(() -> !rightDeployed),
+                Commands.runOnce(() -> rightIO.setSpinOutput(Volts.of(spinVoltage.get()))));
+    }
+
+    private boolean leftSpinStalled() {
+        return leftInputs.spinCurrent.abs(Amps) >= SPIN_STALL_CURRENT.in(Amps)
+                && leftInputs.spinVelocity.abs(RadiansPerSecond) < SPIN_STALL_ANGULAR_VELOCITY.in(RadiansPerSecond);
+    }
+
+    private boolean rightSpinStalled() {
+        return rightInputs.spinCurrent.abs(Amps) >= SPIN_STALL_CURRENT.in(Amps)
+                && rightInputs.spinVelocity.abs(RadiansPerSecond) < SPIN_STALL_ANGULAR_VELOCITY.in(RadiansPerSecond);
     }
 
     public Command zeroLeftSequence() {
@@ -220,6 +266,15 @@ public class Intake extends SubsystemBase {
             }
             if (rightDeployed) {
                 rightIO.setSpinOutput(Volts.of(spinVoltage.get()));
+            }
+        }
+
+        if (reverseSpinVoltage.hasChanged(hashCode())) {
+            if (!leftDeployed) {
+                leftIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
+            }
+            if (!rightDeployed) {
+                rightIO.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
             }
         }
     }

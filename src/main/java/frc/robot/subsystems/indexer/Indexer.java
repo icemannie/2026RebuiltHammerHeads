@@ -63,6 +63,10 @@ public class Indexer extends SubsystemBase {
                 Set.of(this));
     }
 
+    public IndexerGoal getGoal() {
+        return goal;
+    }
+
     public Command activate() {
         return this.runOnce(() -> {
                     io.setFeedOutput(Volts.of(-4));

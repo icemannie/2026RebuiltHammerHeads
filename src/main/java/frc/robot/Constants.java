@@ -494,11 +494,11 @@ public final class Constants {
                 .withKS(0.4);
 
         public static final Slot0Configs LEFT_RACK_GAINS = new Slot0Configs()
-                .withKP(6.0)
-                .withKD(0.2)
+                .withKP(15.0)
+                .withKD(0.1)
                 .withKA(0.0)
-                .withKV(0.46)
-                .withKS(0.8);
+                .withKV(2.0)
+                .withKS(1.2);
 
         public static final Slot1Configs RACK_DIFF_GAINS = new Slot1Configs().withKP(0.5);
 
@@ -528,16 +528,20 @@ public final class Constants {
                 .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(400));
 
         public static final Distance STOW_POS = Inches.of(0);
-        public static final Distance DEPLOY_POS = Inches.of(11.);
-        public static final Voltage SPIN_VOLTAGE = Volts.of(8);
+        public static final Distance DEPLOY_POS = Inches.of(11.125);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(12);
+        public static final Voltage REVERSE_SPIN_VOLTAGE = Volts.of(-5);
         public static final Distance STOW_TOLERANCE = Inches.of(0.5);
         public static final Distance DECOUPLE_DISTANCE = Inches.of(3);
 
         public static final LinearVelocity MIN_SWITCH_ROBOT_VELOCITY = MetersPerSecond.of(0.5);
 
-        public static final Current STALL_CURRENT = Amps.of(50);
-        public static final AngularVelocity STALL_ANGULAR_VEL = RadiansPerSecond.of(0.1);
+        public static final Current RACK_STALL_CURRENT = Amps.of(40);
+        public static final AngularVelocity RACK_STALL_ANGULAR_VEL = RadiansPerSecond.of(0.1);
         public static final Voltage ZEROING_VOLTAGE = Volts.of(-5);
+
+        public static final Current SPIN_STALL_CURRENT = Amps.of(20);
+        public static final AngularVelocity SPIN_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.5);
     }
 
     public static class IndexerConstants {

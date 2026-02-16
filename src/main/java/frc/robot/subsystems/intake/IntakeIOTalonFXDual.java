@@ -15,14 +15,14 @@ import static frc.robot.Constants.IntakeConstants.DEPLOY_POS;
 import static frc.robot.Constants.IntakeConstants.PINION_PITCH_RADIUS;
 import static frc.robot.Constants.IntakeConstants.RACK_DIFF_GAINS;
 import static frc.robot.Constants.IntakeConstants.RACK_MOTION_MAGIC;
+import static frc.robot.Constants.IntakeConstants.RACK_STALL_ANGULAR_VEL;
+import static frc.robot.Constants.IntakeConstants.RACK_STALL_CURRENT;
 import static frc.robot.Constants.IntakeConstants.RIGHT_RACK_CURRENT_LIMITS;
 import static frc.robot.Constants.IntakeConstants.RIGHT_RACK_GAINS;
 import static frc.robot.Constants.IntakeConstants.RIGHT_RACK_OUTPUT_CONFIGS;
 import static frc.robot.Constants.IntakeConstants.ROTOR_TO_PINION_RATIO;
 import static frc.robot.Constants.IntakeConstants.SPIN_CURRENT_LIMITS;
 import static frc.robot.Constants.IntakeConstants.SPIN_OUTPUT_CONFIGS;
-import static frc.robot.Constants.IntakeConstants.STALL_ANGULAR_VEL;
-import static frc.robot.Constants.IntakeConstants.STALL_CURRENT;
 import static frc.robot.Constants.IntakeConstants.STOW_POS;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
@@ -196,8 +196,8 @@ public class IntakeIOTalonFXDual implements IntakeIO {
 
     @Override
     public boolean rackIsStalled() {
-        return rackCurrent.getValue().abs(Amps) >= STALL_CURRENT.in(Amps)
-                && rackVelocity.getValue().abs(RadiansPerSecond) <= STALL_ANGULAR_VEL.in(RadiansPerSecond);
+        return rackCurrent.getValue().abs(Amps) >= RACK_STALL_CURRENT.in(Amps)
+                && rackVelocity.getValue().abs(RadiansPerSecond) <= RACK_STALL_ANGULAR_VEL.in(RadiansPerSecond);
     }
 
     @Override

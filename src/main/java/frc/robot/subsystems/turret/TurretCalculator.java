@@ -14,9 +14,6 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
-import static frc.robot.Constants.IntakeConstants.BASE_VEL;
-import static frc.robot.Constants.IntakeConstants.VEL_MULTIPLIER;
-import static frc.robot.Constants.IntakeConstants.VEL_POWER;
 import static frc.robot.Constants.TurretConstants.DISTANCE_ABOVE_FUNNEL;
 import static frc.robot.Constants.TurretConstants.FLYWHEEL_RADIUS;
 import static frc.robot.Constants.TurretConstants.MAX_TURN_ANGLE;
@@ -98,13 +95,6 @@ public class TurretCalculator {
         double predictedY = target.getY() - fieldSpeeds.vyMetersPerSecond * timeOfFlight.in(Seconds);
 
         return new Translation3d(predictedX, predictedY, target.getZ());
-    }
-
-    // Custom velocity ramp meant to minimize how fast the flywheels have to change speed
-    public static LinearVelocity scaleLinearVelocity(Distance distanceToTarget) {
-        double velocity =
-                BASE_VEL.in(InchesPerSecond) + VEL_MULTIPLIER * Math.pow(distanceToTarget.in(Inches), VEL_POWER);
-        return InchesPerSecond.of(velocity);
     }
 
     // see https://www.desmos.com/calculator/ezjqolho6g

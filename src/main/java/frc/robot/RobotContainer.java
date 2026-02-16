@@ -42,6 +42,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
@@ -90,8 +91,8 @@ public class RobotContainer {
     // Bindings
     private final Trigger resetHeadingTrigger = controller.y();
     private final Trigger indexTrigger = controller.a();
-    private final Trigger deployRightIntakeTrigger = controller.b();
-    private final Trigger deployLeftIntakeTrigger = controller.x();
+    private final Trigger deployLeftIntakeTrigger = controller.b();
+    private final Trigger intakeAutoSwitchTrigger = controller.x();
     private final Trigger zeroRightRackTrigger = controller.povRight();
     private final Trigger zeroLeftRackTrigger = controller.povLeft();
     private final Trigger zeroHoodTrigger = controller.povUp();
@@ -232,13 +233,15 @@ public class RobotContainer {
         drive.setDefaultCommand(teleopDrive);
 
         resetHeadingTrigger.onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d())));
-        indexTrigger.onTrue(indexer.activate());
-        indexTrigger.onFalse(indexer.stop());
+        indexTrigger.onTrue(Commands.either(
+                indexer.setGoal(IndexerGoal.ACTIVE),
+                indexer.setGoal(IndexerGoal.OFF),
+                () -> indexer.getGoal() == IndexerGoal.OFF));
 
-        deployRightIntakeTrigger.onTrue(intake.deployLeft());
-        deployRightIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
+        deployLeftIntakeTrigger.onTrue(intake.deployLeft());
+        deployLeftIntakeTrigger.onFalse(intake.setGoal(IntakeGoal.STOW));
 
-        deployLeftIntakeTrigger.onTrue(Commands.either(
+        intakeAutoSwitchTrigger.onTrue(Commands.either(
                 intake.setGoal(IntakeGoal.STOW),
                 intake.setGoal(IntakeGoal.AUTOSWITCH),
                 () -> intake.getGoal() == IntakeGoal.AUTOSWITCH));
