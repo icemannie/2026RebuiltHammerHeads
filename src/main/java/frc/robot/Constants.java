@@ -434,6 +434,8 @@ public final class Constants {
         public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
         public static final Angle TURNAROUND_ZONE = Degrees.of(30);
 
+        public static final Distance DUCK_DISTANCE = Meters.of(0.5);
+
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
 
@@ -653,8 +655,8 @@ public final class Constants {
         public static final Distance FUNNEL_RADIUS = Inches.of(24);
         public static final Distance FUNNEL_HEIGHT = Inches.of(72 - 56.4);
 
-        private static final Distance TRENCH_BUMP_X = Inches.of(181.56);
-        private static final Distance TRENCH_WIDTH = Inches.of(49.86);
+        public static final Distance TRENCH_BUMP_X = Inches.of(181.56);
+        public static final Distance TRENCH_WIDTH = Inches.of(49.86);
         private static final Distance BUMP_INSET = TRENCH_WIDTH.plus(Inches.of(12));
         private static final Distance BUMP_LENGTH = Inches.of(73);
 

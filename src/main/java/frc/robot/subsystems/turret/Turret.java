@@ -69,6 +69,10 @@ public class Turret extends SubsystemBase {
     public final Trigger turnaroundZoneMaxTrigger = new Trigger(this::inTurnaroundZoneMax).debounce(0.05);
     public final Trigger turnaroundZoneMinTrigger = new Trigger(this::inTurnaroundZoneMin).debounce(0.05);
 
+    public final Trigger underTrenchTrigger = new Trigger(this::underTrench).debounce(0.05);
+
+    private TurretGoal nonDuckingGoal = goal;
+
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.io = io;
         this.inputs = new TurretIOInputsAutoLogged();
@@ -80,6 +84,9 @@ public class Turret extends SubsystemBase {
         hoodStalledTrigger = new Trigger(() -> inputs.hoodCurrent.abs(Amps) >= HOOD_STALL_CURRENT.abs(Amps)
                 && inputs.hoodVelocity.abs(RadiansPerSecond) <= HOOD_STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond));
 
+        underTrenchTrigger.onTrue(setGoal(TurretGoal.DUCKING));
+        underTrenchTrigger.onFalse(setGoal(nonDuckingGoal));
+
         turretVisualizer = new TurretVisualizer(
                 () -> new Pose3d(poseSupplier
                                 .get()
@@ -90,6 +97,10 @@ public class Turret extends SubsystemBase {
 
     public Command setGoal(TurretGoal goal) {
         return this.runOnce(() -> {
+            // don't interrupt ducking with another goal
+            if (this.goal == TurretGoal.DUCKING && underTrenchTrigger.getAsBoolean()) {
+                this.nonDuckingGoal = goal;
+            }
             this.goal = goal;
             switch (goal) {
                 case SCORING:
@@ -105,6 +116,9 @@ public class Turret extends SubsystemBase {
                     break;
                 case TUNING:
                     setTarget(FieldConstants.HUB_BLUE);
+                    break;
+                case DUCKING:
+                    setHoodPosition(MIN_HOOD_ANGLE);
                     break;
                 case OFF:
                     io.stopFlywheel();
@@ -152,6 +166,16 @@ public class Turret extends SubsystemBase {
 
     private boolean inTurnaroundZoneMin() {
         return inputs.turnPosition.isNear(MIN_TURN_ANGLE, TURNAROUND_ZONE);
+    }
+
+    private boolean underTrench() {
+        Pose2d pose = poseSupplier.get();
+
+        return (pose.getMeasureX().isNear(FieldConstants.TRENCH_BUMP_X, DUCK_DISTANCE)
+                        || pose.getMeasureX()
+                                .isNear(FieldConstants.FIELD_LENGTH.minus(FieldConstants.TRENCH_BUMP_X), DUCK_DISTANCE))
+                && (pose.getMeasureY().lt(FieldConstants.TRENCH_WIDTH)
+                        || pose.getMeasureY().gt(FieldConstants.FIELD_WIDTH.minus(FieldConstants.TRENCH_WIDTH)));
     }
 
     @Override
@@ -242,6 +266,7 @@ public class Turret extends SubsystemBase {
         PASSING,
         IDLE,
         TUNING,
+        DUCKING,
         OFF
     }
 }
