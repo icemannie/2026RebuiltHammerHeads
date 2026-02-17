@@ -348,9 +348,9 @@ public final class Constants {
 
         // Alignment
         private static final ControlConstants TRENCH_TRANSLATION_BASE_CONSTANTS =
-                new ControlConstants().withPID(6, 0, 0);
+                new ControlConstants().withPID(10, 0, 0.1);
         private static final ControlConstants ROTATION_BASE_CONSTANTS =
-                new ControlConstants().withPID(8, 0, 0).withContinuous(-180, 180);
+                new ControlConstants().withPID(4, 0, 0).withContinuous(-180, 180);
 
         public static final TunableControlConstants TRENCH_TRANSLATION_CONSTANTS =
                 new TunableControlConstants("Swerve/Trench Translation", TRENCH_TRANSLATION_BASE_CONSTANTS);
@@ -660,7 +660,7 @@ public final class Constants {
         private static final Distance BUMP_INSET = TRENCH_WIDTH.plus(Inches.of(12));
         private static final Distance BUMP_LENGTH = Inches.of(73);
 
-        private static final Distance TRENCH_ZONE_EXTENSION = Inches.of(70);
+        private static final Distance TRENCH_ZONE_EXTENSION = Inches.of(60);
         private static final Distance BUMP_ZONE_EXTENSION = Inches.of(60);
         private static final Distance TRENCH_BUMP_ZONE_TRANSITION =
                 TRENCH_WIDTH.plus(BUMP_INSET).div(2);

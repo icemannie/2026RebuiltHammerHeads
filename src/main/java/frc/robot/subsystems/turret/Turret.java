@@ -44,7 +44,7 @@ public class Turret extends SubsystemBase {
             : FieldConstants.HUB_RED;
 
     @AutoLogOutput
-    private TurretGoal goal = TurretGoal.OFF;
+    private TurretGoal goal = TurretGoal.PASSING;
 
     private final TurretVisualizer turretVisualizer;
 
@@ -118,7 +118,7 @@ public class Turret extends SubsystemBase {
                     setTarget(FieldConstants.HUB_BLUE);
                     break;
                 case DUCKING:
-                    setHoodPosition(MIN_HOOD_ANGLE);
+                    io.setHoodAngle(MIN_HOOD_ANGLE);
                     break;
                 case OFF:
                     io.stopFlywheel();

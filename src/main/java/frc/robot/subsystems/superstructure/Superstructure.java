@@ -31,7 +31,7 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> poseSupplier;
 
     @AutoLogOutput
-    private Goal goal = Goal.IDLE;
+    private Goal goal = Goal.PASSING;
 
     private Goal nonCollectingGoal = goal;
 
@@ -88,9 +88,9 @@ public class Superstructure extends SubsystemBase {
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Idle"));
 
-        // inAllianceZoneTrigger.and(activeHubTrigger).onTrue(this.setGoal(Goal.SCORING));
+        inAllianceZoneTrigger.onTrue(this.setGoal(Goal.SCORING));
         // inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
-        // inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
+        inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
     }
 
     private boolean inAllianceZone() {

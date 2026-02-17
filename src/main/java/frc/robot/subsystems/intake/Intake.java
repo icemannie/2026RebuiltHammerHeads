@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
@@ -60,13 +61,15 @@ public class Intake extends SubsystemBase {
     private final LoggedTunableNumber rackKA;
     private final LoggedTunableNumber rackKS;
     private final LoggedTunableNumber rackMaxVel =
-            new LoggedTunableNumber("Intake/maxVelRotPerSec", RACK_MOTION_MAGIC.MotionMagicCruiseVelocity);
+            new LoggedTunableNumber("Intakes/maxVelRotPerSec", RACK_MOTION_MAGIC.MotionMagicCruiseVelocity);
     private final LoggedTunableNumber rackMaxAcc =
-            new LoggedTunableNumber("Intake/maxAccRotPerSecPerSec", RACK_MOTION_MAGIC.MotionMagicAcceleration);
+            new LoggedTunableNumber("Intakes/maxAccRotPerSecPerSec", RACK_MOTION_MAGIC.MotionMagicAcceleration);
     private final LoggedTunableNumber spinVoltage =
-            new LoggedTunableNumber("Intake/Spin Voltage", SPIN_VOLTAGE.in(Volts));
+            new LoggedTunableNumber("Intakes/Spin Voltage", SPIN_VOLTAGE.in(Volts));
     private final LoggedTunableNumber reverseSpinVoltage =
-            new LoggedTunableNumber("Intake/Reverse Spin Voltage", REVERSE_SPIN_VOLTAGE.in(Volts));
+            new LoggedTunableNumber("Intakes/Reverse Spin Voltage", REVERSE_SPIN_VOLTAGE.in(Volts));
+    private final LoggedTunableNumber deployPos =
+            new LoggedTunableNumber("Intakes/DeployPosInches", DEPLOY_POS.in(Inches));
 
     public Intake(IntakeIO io, IntakeSide side) {
         this.io = io;
@@ -109,7 +112,7 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean deployed() {
-        return inputs.rackPosition.isNear(DEPLOY_POS, DEPLOY_TOLERANCE);
+        return inputs.rackPosition.isNear(Inches.of(deployPos.get()), DEPLOY_TOLERANCE);
     }
 
     private boolean stowed() {
@@ -148,7 +151,7 @@ public class Intake extends SubsystemBase {
                 Map.of(
                         IntakeGoal.STOWING, // extend intake and reverse rollers
                         Commands.sequence(
-                                Commands.runOnce(() -> io.setRackPosition(DEPLOY_POS)),
+                                Commands.runOnce(() -> io.setRackPosition(Inches.of(deployPos.get()))),
                                 Commands.waitUntil(
                                         rackStallTrigger.or(spinStallTrigger).negate()),
                                 Commands.runOnce(() -> io.setRackPosition(STOW_POS))),
@@ -166,7 +169,7 @@ public class Intake extends SubsystemBase {
                         Commands.sequence(
                                 Commands.runOnce(() -> io.setRackPosition(STOW_POS)),
                                 Commands.waitUntil(rackStallTrigger.negate()),
-                                Commands.runOnce(() -> io.setRackPosition(DEPLOY_POS)))),
+                                Commands.runOnce(() -> io.setRackPosition(Inches.of(deployPos.get()))))),
                 () -> this.goal);
     }
 
@@ -179,7 +182,7 @@ public class Intake extends SubsystemBase {
                     break;
                 case DEPLOYING:
                     io.setSpinOutput(Volts.of(spinVoltage.get()));
-                    io.setRackPosition(DEPLOY_POS);
+                    io.setRackPosition(Inches.of(deployPos.get()));
                     break;
                 case OFF:
                     io.stopRack();
