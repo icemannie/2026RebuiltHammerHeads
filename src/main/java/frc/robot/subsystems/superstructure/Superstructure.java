@@ -31,7 +31,7 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> poseSupplier;
 
     @AutoLogOutput
-    private Goal goal = Goal.PASSING;
+    private Goal goal = Goal.SCORING;
 
     private Goal nonCollectingGoal = goal;
 

@@ -218,7 +218,7 @@ public class RobotContainer {
                 drive::setPose,
                 drive::getChassisSpeeds,
                 (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
-                new PPHolonomicDriveController(new PIDConstants(1), new PIDConstants(1)),
+                new PPHolonomicDriveController(new PIDConstants(10, 0.05), new PIDConstants(5, 0.05)),
                 AutoConstants.PP_CONFIG,
                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                 drive);

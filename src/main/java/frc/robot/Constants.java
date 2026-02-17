@@ -348,9 +348,9 @@ public final class Constants {
 
         // Alignment
         private static final ControlConstants TRENCH_TRANSLATION_BASE_CONSTANTS =
-                new ControlConstants().withPID(10, 0, 0.1);
+                new ControlConstants().withPID(8, 0, 0.05).withTolerance(0.05);
         private static final ControlConstants ROTATION_BASE_CONSTANTS =
-                new ControlConstants().withPID(4, 0, 0).withContinuous(-180, 180);
+                new ControlConstants().withPID(5, 0, 0).withTolerance(0.08).withContinuous(-180, 180);
 
         public static final TunableControlConstants TRENCH_TRANSLATION_CONSTANTS =
                 new TunableControlConstants("Swerve/Trench Translation", TRENCH_TRANSLATION_BASE_CONSTANTS);

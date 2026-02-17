@@ -44,7 +44,7 @@ public class Turret extends SubsystemBase {
             : FieldConstants.HUB_RED;
 
     @AutoLogOutput
-    private TurretGoal goal = TurretGoal.PASSING;
+    private TurretGoal goal = TurretGoal.OFF;
 
     private final TurretVisualizer turretVisualizer;
 

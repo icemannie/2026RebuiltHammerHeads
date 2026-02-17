@@ -172,18 +172,29 @@ public class TeleopDrive extends Command {
                         maxRotSpeed.times(omega));
                 break;
             case TRENCH_LOCK:
-                double yVel = trenchYController.calculate(
-                        drive.getPose().getY(), getTrenchY().in(Meters));
-                double rotSpeedToStraight = rotationController.calculate(
-                        drive.getRotation().getRadians(), getTrenchLockAngle().getRadians());
+                trenchYController.setSetpoint(getTrenchY().in(Meters));
+                double yVel = trenchYController.calculate(drive.getPose().getY());
+                if (trenchYController.atSetpoint()) {
+                    yVel = 0;
+                }
+                rotationController.setSetpoint(getTrenchLockAngle().getRadians());
+                double rotSpeedToStraight =
+                        rotationController.calculate(drive.getRotation().getRadians());
+                if (rotationController.atSetpoint()) {
+                    rotSpeedToStraight = 0;
+                }
                 drive.driveFieldCentric(
                         MetersPerSecond.of(linearVelocity.getX()),
                         MetersPerSecond.of(yVel),
                         RadiansPerSecond.of(rotSpeedToStraight));
                 break;
             case BUMP_LOCK:
-                double rotSpeedToDiagonal = rotationController.calculate(
-                        drive.getRotation().getRadians(), getBumpLockAngle().getRadians());
+                rotationController.setSetpoint(getBumpLockAngle().getRadians());
+                double rotSpeedToDiagonal =
+                        rotationController.calculate(drive.getRotation().getRadians());
+                if (rotationController.atSetpoint()) {
+                    rotSpeedToDiagonal = 0;
+                }
                 drive.driveFieldCentric(
                         MetersPerSecond.of(linearVelocity.getX()),
                         MetersPerSecond.of(linearVelocity.getY()),
