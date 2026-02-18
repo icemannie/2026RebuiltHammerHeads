@@ -539,15 +539,15 @@ public final class Constants {
                 new CurrentLimitsConfigs().withStatorCurrentLimit(100).withSupplyCurrentLowerLimit(30);
 
         public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(30).withSupplyCurrentLowerLimit(30);
+                new CurrentLimitsConfigs().withStatorCurrentLimit(50).withSupplyCurrentLowerLimit(30);
 
         public static final MotionMagicConfigs RACK_MOTION_MAGIC = new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(RotationsPerSecond.of(240))
                 .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(400));
 
         public static final Distance STOW_POS = Inches.of(0);
-        public static final Distance DEPLOY_POS = Inches.of(11.125);
-        public static final Voltage SPIN_VOLTAGE = Volts.of(12);
+        public static final Distance DEPLOY_POS = Inches.of(10.75);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(8.5);
         public static final Voltage REVERSE_SPIN_VOLTAGE = Volts.of(-5);
         public static final Voltage UNJAM_SPIN_VOLTAGE = Volts.of(10);
         public static final Distance STOW_TOLERANCE = Inches.of(0.5);

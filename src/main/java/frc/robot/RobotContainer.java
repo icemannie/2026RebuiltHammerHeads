@@ -15,6 +15,7 @@ import static edu.wpi.first.units.Units.RPM;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -218,10 +219,13 @@ public class RobotContainer {
                 drive::setPose,
                 drive::getChassisSpeeds,
                 (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
-                new PPHolonomicDriveController(new PIDConstants(10, 0.05), new PIDConstants(5, 0.05)),
+                new PPHolonomicDriveController(new PIDConstants(3, 0.05), new PIDConstants(2, 0.05)),
                 AutoConstants.PP_CONFIG,
                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                 drive);
+        PathPlannerLogging.setLogActivePathCallback(
+                (path) -> Logger.recordOutput("Odometry/Active Path", path.toArray(Pose2d[]::new)));
+        PathPlannerLogging.setLogTargetPoseCallback((target) -> Logger.recordOutput("Odometry/Target Pose", target));
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
