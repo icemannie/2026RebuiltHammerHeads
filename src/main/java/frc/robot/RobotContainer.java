@@ -131,12 +131,15 @@ public class RobotContainer {
                         new ModuleIOTalonFX(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intakes = new Intakes(
                         // new IntakeIO() {},
+                        // new IntakeIO() {},
                         new IntakeIOTalonFX(IntakeConstants.LEFT_RACK_ID, IntakeConstants.LEFT_SPIN_ID),
                         new IntakeIOTalonFXDual(
                                 IntakeConstants.FR_RACK_ID, IntakeConstants.BR_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
                 indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
+                // indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
+                // turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0]),

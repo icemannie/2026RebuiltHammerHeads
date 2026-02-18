@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -120,8 +121,8 @@ public class IntakeIOTalonFXDual implements IntakeIO {
         this.spinCurrent = spinMotor.getStatorCurrent();
         this.spinAppliedVolts = spinMotor.getMotorVoltage();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50,
+        PhoenixUtil.registerStatusSignals(
+                Hertz.of(50),
                 rackPosition,
                 rackVelocity,
                 rackSetpoint,
@@ -146,9 +147,8 @@ public class IntakeIOTalonFXDual implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.rackMotorConnected = BaseStatusSignal.refreshAll(
-                        rackPosition, rackVelocity, rackSetpoint, rackSetpointVelocity, rackCurrent, rackAppliedVolts)
-                .isOK();
+        inputs.rackMotorConnected = BaseStatusSignal.isAllGood(
+                rackPosition, rackVelocity, rackSetpoint, rackSetpointVelocity, rackCurrent, rackAppliedVolts);
         inputs.rackPosition = rotorAngleToDistance(rackPosition.getValue());
         inputs.rackVelocity = rotorAngleToDistance(
                         Radians.of(rackVelocity.getValue().in(RadiansPerSecond)))
@@ -159,8 +159,7 @@ public class IntakeIOTalonFXDual implements IntakeIO {
         inputs.rackCurrent = rackCurrent.getValue();
         inputs.rackAppliedVolts = rackAppliedVolts.getValue();
 
-        inputs.spinMotorConnected = BaseStatusSignal.refreshAll(spinVelocity, spinCurrent, spinAppliedVolts)
-                .isOK();
+        inputs.spinMotorConnected = BaseStatusSignal.isAllGood(spinVelocity, spinCurrent, spinAppliedVolts);
         inputs.spinVelocity = spinVelocity.getValue();
         inputs.spinCurrent = spinCurrent.getValue();
         inputs.spinAppliedVolts = spinAppliedVolts.getValue();

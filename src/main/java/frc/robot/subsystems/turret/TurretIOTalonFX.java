@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -139,8 +140,8 @@ public class TurretIOTalonFX implements TurretIO {
         flywheelAppliedVolts = flywheelMotor.getMotorVoltage();
         flywheelCurrent = flywheelMotor.getTorqueCurrent();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50,
+        PhoenixUtil.registerStatusSignals(
+                Hertz.of(50),
                 turnPosition,
                 turnSetpoint,
                 turnVelocity,
@@ -167,32 +168,29 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        inputs.turnMotorConnected = BaseStatusSignal.refreshAll(
-                        turnPosition, turnSetpoint, turnVelocity, turnAppliedVolts, turnCurrent)
-                .isOK();
+        inputs.turnMotorConnected =
+                BaseStatusSignal.isAllGood(turnPosition, turnSetpoint, turnVelocity, turnAppliedVolts, turnCurrent);
         inputs.turnPosition = turnPosition.getValue();
         inputs.turnSetpoint = Rotations.of(turnSetpoint.getValueAsDouble());
         inputs.turnVelocity = turnVelocity.getValue();
         inputs.turnAppliedVolts = turnAppliedVolts.getValue();
         inputs.turnCurrent = turnCurrent.getValue();
 
-        inputs.hoodMotorConnected = BaseStatusSignal.refreshAll(
-                        hoodPosition, hoodSetpoint, hoodVelocity, hoodAppliedVolts, hoodCurrent)
-                .isOK();
+        inputs.hoodMotorConnected =
+                BaseStatusSignal.isAllGood(hoodPosition, hoodSetpoint, hoodVelocity, hoodAppliedVolts, hoodCurrent);
         inputs.hoodPosition = hoodPosition.getValue();
         inputs.hoodSetpoint = Rotations.of(hoodSetpoint.getValueAsDouble());
         inputs.hoodVelocity = hoodVelocity.getValue();
         inputs.hoodAppliedVolts = hoodAppliedVolts.getValue();
         inputs.hoodCurrent = hoodCurrent.getValue();
 
-        inputs.flywheelMotorConnected = BaseStatusSignal.refreshAll(
-                        flywheelSpeed,
-                        flywheelAccel,
-                        flywheelSetpointSpeed,
-                        flywheelSetpointAccel,
-                        flywheelAppliedVolts,
-                        flywheelCurrent)
-                .isOK();
+        inputs.flywheelMotorConnected = BaseStatusSignal.isAllGood(
+                flywheelSpeed,
+                flywheelAccel,
+                flywheelSetpointSpeed,
+                flywheelSetpointAccel,
+                flywheelAppliedVolts,
+                flywheelCurrent);
         inputs.flywheelSpeed = flywheelSpeed.getValue();
         inputs.flywheelAccel = flywheelAccel.getValue();
         inputs.flywheelSetpointSpeed = RotationsPerSecond.of(flywheelSetpointSpeed.getValueAsDouble());

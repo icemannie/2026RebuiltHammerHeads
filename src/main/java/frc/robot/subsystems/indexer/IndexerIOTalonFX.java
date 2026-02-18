@@ -1,5 +1,6 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.Hertz;
 import static frc.robot.Constants.IndexerConstants.FEED_CURRENT_LIMITS;
 import static frc.robot.Constants.IndexerConstants.FEED_ID;
 import static frc.robot.Constants.IndexerConstants.FEED_OUTPUT_CONFIGS;
@@ -58,8 +59,8 @@ public class IndexerIOTalonFX implements IndexerIO {
         feedCurrent = feedMotor.getStatorCurrent();
         feedAppliedVolts = feedMotor.getMotorVoltage();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50, spinVelocity, spinCurrent, spinAppliedVolts, feedVelocity, feedCurrent, feedAppliedVolts);
+        PhoenixUtil.registerStatusSignals(
+                Hertz.of(50), spinVelocity, spinCurrent, spinAppliedVolts, feedVelocity, feedCurrent, feedAppliedVolts);
 
         spinMotor.optimizeBusUtilization();
         feedMotor.optimizeBusUtilization();
@@ -67,14 +68,12 @@ public class IndexerIOTalonFX implements IndexerIO {
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
-        inputs.spinMotorConnected = BaseStatusSignal.refreshAll(spinVelocity, spinCurrent, spinAppliedVolts)
-                .isOK();
+        inputs.spinMotorConnected = BaseStatusSignal.isAllGood(spinVelocity, spinCurrent, spinAppliedVolts);
         inputs.spinVelocity = spinVelocity.getValue();
         inputs.spinCurrent = spinCurrent.getValue();
         inputs.spinAppliedVolts = spinAppliedVolts.getValue();
 
-        inputs.feedMotorConnected = BaseStatusSignal.refreshAll(feedVelocity, feedCurrent, feedAppliedVolts)
-                .isOK();
+        inputs.feedMotorConnected = BaseStatusSignal.isAllGood(feedVelocity, feedCurrent, feedAppliedVolts);
         inputs.feedVelocity = feedVelocity.getValue();
         inputs.feedCurrent = feedCurrent.getValue();
         inputs.feedAppliedVolts = feedAppliedVolts.getValue();
