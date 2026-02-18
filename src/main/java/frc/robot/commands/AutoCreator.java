@@ -54,7 +54,8 @@ public class AutoCreator {
         }
     }
 
-    private static record AutoPath(StartEndPoint start, StartEndPoint end, String name, boolean collect) {
+    private static record AutoPath(
+            StartEndPoint start, StartEndPoint end, String name, boolean collect, double dumpTime) {
         private static AutoPath fromString(String s) {
             if (s.startsWith("Collect")) {
                 return fromCollectString(s);
@@ -64,9 +65,15 @@ public class AutoCreator {
             if (parts.length != 2) {
                 throw new IllegalArgumentException("Invalid auto path: " + s);
             }
+            double dumpTime = 0;
+            if (parts[1].split("=").length == 2) {
+                dumpTime = Double.parseDouble(parts[1].split("=")[1]);
+                parts[1] = parts[1].split("=")[0];
+                s = parts[0] + " to " + parts[1];
+            }
             StartEndPoint start = StartEndPoint.fromString(parts[0]);
             StartEndPoint end = StartEndPoint.fromString(parts[1]);
-            return new AutoPath(start, end, s, false);
+            return new AutoPath(start, end, s, false, dumpTime);
         }
 
         private static AutoPath fromCollectString(String s) {
@@ -85,7 +92,7 @@ public class AutoCreator {
             StartEndPoint startEnd =
                     parts[3].equalsIgnoreCase("Left") ? StartEndPoint.TRENCH_LEFT : StartEndPoint.TRENCH_RIGHT;
 
-            return new AutoPath(startEnd, startEnd, s, collect);
+            return new AutoPath(startEnd, startEnd, s, collect, 0);
         }
 
         private PathPlannerPath getPathPlannerPath() {
@@ -97,17 +104,24 @@ public class AutoCreator {
         }
 
         private List<PathPlannerTrajectoryState> getTrajectoryStates() {
-            return getPathPlannerPath()
+            ArrayList<PathPlannerTrajectoryState> states = new ArrayList<>(getPathPlannerPath()
                     .getIdealTrajectory(AutoConstants.PP_CONFIG)
                     .orElse(new PathPlannerTrajectory(new ArrayList<>()))
-                    .getStates();
+                    .getStates());
+            if (dumpTime > 0) {
+                PathPlannerTrajectoryState lastState = states.get(states.size() - 1);
+                states.add(lastState.copyWithTime(lastState.timeSeconds + dumpTime));
+            }
+
+            return states;
         }
 
         private double getTotalTime() {
             return getPathPlannerPath()
-                    .getIdealTrajectory(AutoConstants.PP_CONFIG)
-                    .orElse(new PathPlannerTrajectory(new ArrayList<>()))
-                    .getTotalTimeSeconds();
+                            .getIdealTrajectory(AutoConstants.PP_CONFIG)
+                            .orElse(new PathPlannerTrajectory(new ArrayList<>()))
+                            .getTotalTimeSeconds()
+                    + dumpTime;
         }
     }
 
@@ -211,7 +225,7 @@ public class AutoCreator {
         try {
             updateCurrentTrajectoryStates();
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Trajectory state update error: " + e.getMessage());
             return;
         }
 
@@ -255,6 +269,9 @@ public class AutoCreator {
             Command toAdd = AutoBuilder.followPath(path.getPathPlannerPath());
             if (path.collect) {
                 toAdd = toAdd.beforeStarting(superstructure.startCollecting()).andThen(superstructure.stopCollecting());
+            }
+            if (path.dumpTime > 0) {
+                toAdd = toAdd.andThen(Commands.waitSeconds(path.dumpTime));
             }
             commands.add(toAdd);
         }
