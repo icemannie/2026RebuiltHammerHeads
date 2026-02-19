@@ -15,7 +15,12 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.intake.Intakes;
+import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.superstructure.Superstructure.Goal;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,8 +94,7 @@ public class AutoCreator {
                 s = s.substring(0, s.length() - 1);
             }
 
-            StartEndPoint startEnd =
-                    parts[3].equalsIgnoreCase("Left") ? StartEndPoint.TRENCH_LEFT : StartEndPoint.TRENCH_RIGHT;
+            StartEndPoint startEnd = s.contains("Left") ? StartEndPoint.TRENCH_LEFT : StartEndPoint.TRENCH_RIGHT;
 
             return new AutoPath(startEnd, startEnd, s, collect, 0);
         }
@@ -263,18 +267,47 @@ public class AutoCreator {
         return timestamps;
     }
 
-    public Command buildAuto(Superstructure superstructure) {
+    public Command buildAuto(Drive drive, Intakes intakes, Climber climber, Superstructure superstructure) {
         ArrayList<Command> commands = new ArrayList<>();
         for (AutoPath path : selectedAutoPaths) {
             Command toAdd = AutoBuilder.followPath(path.getPathPlannerPath());
-            if (path.collect) {
-                toAdd = toAdd.beforeStarting(superstructure.startCollecting()).andThen(superstructure.stopCollecting());
+            if (path.name.contains("Collect")) {
+                if (path.collect) {
+                    toAdd = toAdd.beforeStarting(superstructure.startCollecting())
+                            .andThen(superstructure.stopCollecting());
+                } else {
+                    toAdd = toAdd.beforeStarting(superstructure.setGoal(Goal.PASSING));
+                }
+
+                if (path.start == StartEndPoint.TRENCH_LEFT) {
+                    toAdd = toAdd.alongWith(intakes.deployLeft());
+                } else if (path.start == StartEndPoint.TRENCH_RIGHT) {
+                    toAdd = toAdd.alongWith(intakes.deployRight());
+                }
+
+                if (path.dumpTime > 0) {
+                    toAdd = toAdd.andThen(Commands.waitSeconds(path.dumpTime));
+                }
+            } else {
+                toAdd = toAdd.beforeStarting(superstructure.setGoal(Goal.SCORING));
             }
-            if (path.dumpTime > 0) {
-                toAdd = toAdd.andThen(Commands.waitSeconds(path.dumpTime));
+
+            if (path.end == StartEndPoint.CLIMB_LEFT || path.end == StartEndPoint.CLIMB_RIGHT) {
+                toAdd = toAdd.alongWith(climber.extend(), intakes.setGoal(IntakesGoal.STOW))
+                        .andThen(AutoClimb.getAutoClimbCommand(drive, climber, superstructure));
             }
+
+            if (path.end == StartEndPoint.DEPOT) {
+                toAdd = toAdd.alongWith(intakes.deployRight());
+            }
+
+            if (path.end == StartEndPoint.OUTPOST) {
+                toAdd = toAdd.alongWith(intakes.deployLeft());
+            }
+
             commands.add(toAdd);
         }
+        System.out.println(commands.size());
 
         return Commands.sequence(commands.toArray(Command[]::new));
     }

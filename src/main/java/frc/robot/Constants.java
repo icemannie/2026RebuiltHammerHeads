@@ -41,6 +41,8 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -350,7 +352,7 @@ public final class Constants {
         private static final ControlConstants TRENCH_TRANSLATION_BASE_CONSTANTS =
                 new ControlConstants().withPID(8, 0, 0.05).withTolerance(0.05);
         private static final ControlConstants ROTATION_BASE_CONSTANTS =
-                new ControlConstants().withPID(5, 0, 0).withTolerance(0.08).withContinuous(-180, 180);
+                new ControlConstants().withPID(5, 0, 0).withTolerance(0.08).withContinuous(-Math.PI, Math.PI);
 
         public static final TunableControlConstants TRENCH_TRANSLATION_CONSTANTS =
                 new TunableControlConstants("Swerve/Trench Translation", TRENCH_TRANSLATION_BASE_CONSTANTS);
@@ -434,7 +436,7 @@ public final class Constants {
         public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
         public static final Angle TURNAROUND_ZONE = Degrees.of(30);
 
-        public static final Distance DUCK_DISTANCE = Meters.of(0.5);
+        public static final Distance DUCK_DISTANCE = Meters.of(0.75);
 
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
@@ -593,15 +595,15 @@ public final class Constants {
         public static final int BACK_ID = 1;
 
         public static final CurrentLimitsConfigs CURRENT_LIMITS_CONFIGS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(100);
+                new CurrentLimitsConfigs().withStatorCurrentLimit(80);
 
         public static final MotorOutputConfigs FRONT_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
-                .withNeutralMode(NeutralModeValue.Coast);
+                .withNeutralMode(NeutralModeValue.Brake);
 
         public static final MotorOutputConfigs BACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-                .withNeutralMode(NeutralModeValue.Coast);
+                .withNeutralMode(NeutralModeValue.Brake);
 
         public static final Voltage CLIMB_VOLTAGE = Volts.of(-12);
         public static final Voltage STOW_VOLTAGE = Volts.of(-3);
@@ -611,14 +613,50 @@ public final class Constants {
         public static final Current STALL_CURRENT = Amps.of(20);
         public static final AngularVelocity STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.2);
 
-        public static final Angle CLIMB_POSITION = Rotations.of(0.5);
-        public static final Angle STOW_POSITION = Rotations.of(0.5);
-        public static final Angle EXTEND_POSITION = Rotations.of(5);
+        public static final Angle CLIMB_POSITION = Rotations.of(25);
+        public static final Angle AUTO_CLIMB_POSITION = Rotations.of(35);
+        public static final Angle STOW_POSITION = Rotations.of(0.1);
+        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(43);
+        public static final Angle EXTEND_POSITION_BACK = Rotations.of(43);
+
+        // volts / rotation diff
+        public static final double DIFF_KP = 0.0;
+
+        private static final ControlConstants CLIMB_ALIGN_BASE_CONSTANTS_TRANSLATION =
+                new ControlConstants().withPID(2, 0, 0).withTolerance(0.02);
+
+        public static final TunableControlConstants CLIMB_ALIGN_CONSTANTS_TRANSLATION =
+                new TunableControlConstants("Climber/AlignTranslation", CLIMB_ALIGN_BASE_CONSTANTS_TRANSLATION);
+
+        private static final ControlConstants CLIMB_ALIGN_BASE_CONSTANTS_ROTATION = new ControlConstants()
+                .withPID(2, 0, 0)
+                .withTolerance(Degrees.of(3).in(Radians))
+                .withContinuous(-Math.PI, Math.PI);
+
+        public static final TunableControlConstants CLIMB_ALIGN_CONSTANTS_ROTATION =
+                new TunableControlConstants("Climber/AlignRotation", CLIMB_ALIGN_BASE_CONSTANTS_ROTATION);
+
+        public static enum ClimbPosition {
+            FRONT_LEFT(new Pose2d(1.54, 3.91, Rotation2d.kCW_90deg)),
+            FRONT_RIGHT(new Pose2d(1.54, 3.50, Rotation2d.kCW_90deg)),
+            BACK_LEFT(new Pose2d(0.67, 3.91, Rotation2d.kCCW_90deg)),
+            BACK_RIGHT(new Pose2d(0.67, 3.50, Rotation2d.kCCW_90deg));
+
+            private Pose2d pose;
+
+            private ClimbPosition(Pose2d pose) {
+                this.pose = pose;
+            }
+
+            public Pose2d getPose() {
+                return pose;
+            }
+        }
     }
 
     public static class VisionConstants {
         // Standard deviation baselines for 1 meter distance to single tag
-        public static final double LINEAR_STD_DEV_BASELINE = 0.08; // Meters
+        public static final double LINEAR_STD_DEV_BASELINE = 0.1; // Meters
         public static final double ANGULAR_STD_DEV_BASELINE = 1.0; // Radians
 
         public static final String[] CAMERA_NAMES = {

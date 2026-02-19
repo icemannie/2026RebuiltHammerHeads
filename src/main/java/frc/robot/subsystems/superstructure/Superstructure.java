@@ -20,6 +20,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.util.HubTracker;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
@@ -33,6 +34,7 @@ public class Superstructure extends SubsystemBase {
     @AutoLogOutput
     private Goal goal = Goal.SCORING;
 
+    @AutoLogOutput
     private Goal nonCollectingGoal = goal;
 
     @AutoLogOutput
@@ -75,22 +77,18 @@ public class Superstructure extends SubsystemBase {
                 () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
                                 this.intake.setGoal(IntakesGoal.MANUAL),
-                                this.indexer.setGoal(IndexerGoal.OFF),
-                                Commands.either(
-                                        this.intake.deployLeft(),
-                                        this.intake.deployRight(),
-                                        this.intake::travelingLeft))
+                                this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Start collecting"),
                 Goal.IDLE,
                 () -> Commands.sequence(
-                                this.turret.setGoal(TurretGoal.IDLE),
+                                this.turret.setGoal(TurretGoal.OFF),
                                 this.intake.setGoal(IntakesGoal.STOW),
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Idle"));
 
-        inAllianceZoneTrigger.onTrue(this.setGoal(Goal.SCORING));
+        inAllianceZoneTrigger.and(DriverStation::isTeleop).onTrue(this.setGoal(Goal.SCORING));
         // inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
-        inAllianceZoneTrigger.onFalse(this.setGoal(Goal.PASSING));
+        inAllianceZoneTrigger.and(DriverStation::isTeleop).onFalse(this.setGoal(Goal.PASSING));
     }
 
     private boolean inAllianceZone() {
@@ -105,15 +103,22 @@ public class Superstructure extends SubsystemBase {
                 this.runOnce(() -> nonCollectingGoal = goal),
                 this.runOnce(() -> this.goal = goal)
                         .andThen(goalCommands.get(goal).get()),
-                () -> this.goal == Goal.COLLECTING);
+                () -> this.goal == Goal.COLLECTING).withName("Set goal");
+    }
+
+    public Goal getGoal() {
+        return goal;
     }
 
     public Command startCollecting() {
-        return this.setGoal(Goal.COLLECTING).beforeStarting(() -> nonCollectingGoal = goal);
+        return Commands.defer(
+                () -> this.setGoal(Goal.COLLECTING).beforeStarting(() -> nonCollectingGoal = goal), Set.of(this));
     }
 
     public Command stopCollecting() {
-        return this.setGoal(nonCollectingGoal);
+        return Commands.defer(
+                () -> this.setGoal(nonCollectingGoal).beforeStarting(() -> this.goal = nonCollectingGoal),
+                Set.of(this));
     }
 
     @Override

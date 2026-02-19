@@ -10,8 +10,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
-import static frc.robot.Constants.ClimberConstants.BACK_ID;
-import static frc.robot.Constants.ClimberConstants.FRONT_ID;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -31,16 +29,19 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.ClimberConstants.ClimbPosition;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.commands.AlignToClimb;
+import frc.robot.commands.AutoClimb;
 import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.HookIO;
-import frc.robot.subsystems.climber.HookIOTalonFX;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -59,6 +60,7 @@ import frc.robot.subsystems.intake.IntakeIOTalonFXDual;
 import frc.robot.subsystems.intake.Intakes;
 import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.superstructure.Superstructure.Goal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.subsystems.turret.TurretIO;
@@ -145,7 +147,7 @@ public class RobotContainer {
                 // indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
                 // turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
-                climber = new Climber(new HookIOTalonFX(FRONT_ID), new HookIOTalonFX(BACK_ID));
+                climber = new Climber(new ClimberIOTalonFX());
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0]),
@@ -169,7 +171,7 @@ public class RobotContainer {
                 intakes = new Intakes(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
-                climber = new Climber(new HookIO() {}, new HookIO() {});
+                climber = new Climber(new ClimberIO() {});
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVisionSim(
@@ -195,7 +197,7 @@ public class RobotContainer {
                 intakes = new Intakes(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
-                climber = new Climber(new HookIO() {}, new HookIO() {});
+                climber = new Climber(new ClimberIO() {});
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIO() {},
@@ -240,6 +242,12 @@ public class RobotContainer {
 
         teleopDrive = new TeleopDrive(drive, controller);
         Logger.recordOutput("ZeroedRobotComponents", new Pose3d[] {new Pose3d(), new Pose3d(), new Pose3d()});
+
+        SmartDashboard.putData("Align/ClimbFL", new AlignToClimb(ClimbPosition.FRONT_LEFT, drive));
+        SmartDashboard.putData("Align/ClimbFR", new AlignToClimb(ClimbPosition.FRONT_RIGHT, drive));
+        SmartDashboard.putData("Align/ClimbBL", new AlignToClimb(ClimbPosition.BACK_LEFT, drive));
+        SmartDashboard.putData("Align/ClimbBR", new AlignToClimb(ClimbPosition.BACK_RIGHT, drive));
+        SmartDashboard.putData("Auto Climb", AutoClimb.getAutoClimbCommand(drive, climber, superstructure));
 
         // Turret turnaround danger zone controller rumble
         turret.turnaroundZoneMaxTrigger.whileTrue(rumbleLeft);
@@ -299,9 +307,9 @@ public class RobotContainer {
                 () -> turret.getGoal() == TurretGoal.TUNING));
 
         turretScoringTrigger.onTrue(Commands.either(
-                turret.setGoal(TurretGoal.OFF),
-                turret.setGoal(TurretGoal.SCORING),
-                () -> turret.getGoal() == TurretGoal.SCORING));
+                superstructure.setGoal(Goal.IDLE),
+                superstructure.setGoal(Goal.SCORING),
+                () -> superstructure.getGoal() == Goal.SCORING));
     }
 
     private void configureFuelSim() {
@@ -346,6 +354,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoCreator.buildAuto(superstructure);
+        return autoCreator.buildAuto(drive, intakes, climber, superstructure);
     }
 }

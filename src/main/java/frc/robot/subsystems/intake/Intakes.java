@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.robot.Constants.IntakeConstants.*;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,11 +32,13 @@ public class Intakes extends SubsystemBase {
     @AutoLogOutput
     public Trigger deployLeftTrigger = new Trigger(this::travelingLeft)
             .and(() -> goal == IntakesGoal.AUTOSWITCH)
+            .and(DriverStation::isTeleop)
             .debounce(0.08);
 
     @AutoLogOutput
     public Trigger deployRightTrigger = new Trigger(this::travelingRight)
             .and(() -> goal == IntakesGoal.AUTOSWITCH)
+            .and(DriverStation::isTeleop)
             .debounce(0.08);
 
     private final IntakeVisualizer measuredVisualizer = new IntakeVisualizer("Measured", Color.kGreen);

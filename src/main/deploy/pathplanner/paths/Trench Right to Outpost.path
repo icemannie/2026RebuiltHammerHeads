@@ -8,48 +8,27 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.035044444444444,
-        "y": 0.6926555555555557
+        "x": 3.837212336892053,
+        "y": 0.64047449584816
       },
       "isLocked": false,
       "linkedName": "Trench Exit Right"
     },
     {
       "anchor": {
-        "x": 3.0323611111111113,
-        "y": 0.7413777777777772
+        "x": 0.75,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 3.4621612418492544,
-        "y": 0.5737827582446647
-      },
-      "nextControl": {
-        "x": 2.257677777777778,
-        "y": 1.0434555555555551
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 0.5426555555555554,
-        "y": 0.7413777777777772
-      },
-      "prevControl": {
-        "x": 1.4342722222222224,
-        "y": 0.916777777777777
+        "x": 2.0948517200474495,
+        "y": 0.6459294582839062
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Outpost"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 1.0,
-      "rotationDegrees": 90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -63,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Inside Zone",

@@ -104,6 +104,7 @@ public class Turret extends SubsystemBase {
             // don't interrupt ducking with another goal
             if (this.goal == TurretGoal.DUCKING && underTrenchTrigger.getAsBoolean()) {
                 this.nonDuckingGoal = goal;
+                return;
             }
             this.goal = goal;
             switch (goal) {

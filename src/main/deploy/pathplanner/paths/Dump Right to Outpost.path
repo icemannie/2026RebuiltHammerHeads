@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.6812331679659822,
-        "y": 1.7112544294826364
+        "x": 2.1695373665480435,
+        "y": 1.490450771055754
       },
       "isLocked": false,
       "linkedName": "Dump Right"
     },
     {
       "anchor": {
-        "x": 0.5426555555555554,
-        "y": 0.7413777777777772
+        "x": 0.75,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 1.3212615166548551,
-        "y": 1.3319985825655567
+        "x": 1.792965599051009,
+        "y": 0.7911032028469753
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Inside Zone",
