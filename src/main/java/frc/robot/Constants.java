@@ -588,7 +588,33 @@ public final class Constants {
         public static final AngularVelocity FEED_THRESHOLD = RPM.of(3000);
     }
 
-    public static class ClimberConstants {}
+    public static class ClimberConstants {
+        public static final int FRONT_ID = 13;
+        public static final int BACK_ID = 1;
+
+        public static final CurrentLimitsConfigs CURRENT_LIMITS_CONFIGS =
+                new CurrentLimitsConfigs().withStatorCurrentLimit(100);
+
+        public static final MotorOutputConfigs FRONT_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast);
+
+        public static final MotorOutputConfigs BACK_OUTPUT_CONFIGS = new MotorOutputConfigs()
+                .withInverted(InvertedValue.Clockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast);
+
+        public static final Voltage CLIMB_VOLTAGE = Volts.of(-12);
+        public static final Voltage STOW_VOLTAGE = Volts.of(-3);
+        public static final Voltage EXTEND_VOLTAGE = Volts.of(3);
+        public static final Voltage ZERO_VOLTAGE = Volts.of(-1);
+
+        public static final Current STALL_CURRENT = Amps.of(20);
+        public static final AngularVelocity STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.2);
+
+        public static final Angle CLIMB_POSITION = Rotations.of(0.5);
+        public static final Angle STOW_POSITION = Rotations.of(0.5);
+        public static final Angle EXTEND_POSITION = Rotations.of(5);
+    }
 
     public static class VisionConstants {
         // Standard deviation baselines for 1 meter distance to single tag

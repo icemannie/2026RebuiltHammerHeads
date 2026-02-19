@@ -10,6 +10,8 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.Constants.ClimberConstants.BACK_ID;
+import static frc.robot.Constants.ClimberConstants.FRONT_ID;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -36,6 +38,9 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.HookIO;
+import frc.robot.subsystems.climber.HookIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -80,6 +85,7 @@ public class RobotContainer {
     private final Intakes intakes;
     private final Turret turret;
     private final Indexer indexer;
+    private final Climber climber;
     private final Superstructure superstructure;
     private final Vision vision;
 
@@ -139,6 +145,7 @@ public class RobotContainer {
                 // indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
                 // turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
+                climber = new Climber(new HookIOTalonFX(FRONT_ID), new HookIOTalonFX(BACK_ID));
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0]),
@@ -162,6 +169,7 @@ public class RobotContainer {
                 intakes = new Intakes(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
+                climber = new Climber(new HookIO() {}, new HookIO() {});
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVisionSim(
@@ -187,6 +195,7 @@ public class RobotContainer {
                 intakes = new Intakes(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
+                climber = new Climber(new HookIO() {}, new HookIO() {});
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIO() {},
