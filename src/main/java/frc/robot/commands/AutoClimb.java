@@ -13,8 +13,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants.ClimberConstants.ClimbPosition;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.superstructure.Superstructure.Goal;
 import java.util.Set;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -22,18 +20,14 @@ import java.util.Set;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class AutoClimb extends SequentialCommandGroup {
     /** Creates a new AutoClimb. */
-    public AutoClimb(
-            ClimbPosition position, Drive drive, Climber climber, Superstructure superstructure, boolean isAuto) {
+    public AutoClimb(ClimbPosition position, Drive drive, Climber climber, boolean isAuto) {
         // Add your commands in the addCommands() call, e.g.
         // addCommands(new FooCommand(), new BarCommand());
         addCommands(
-                superstructure.setGoal(Goal.IDLE),
-                climber.extend(),
-                new AlignToClimb(position, drive),
-                isAuto ? climber.autoClimb() : climber.climb());
+                climber.extend(), new AlignToClimb(position, drive), isAuto ? climber.autoClimb() : climber.climb());
     }
 
-    public static Command getAutoClimbCommand(Drive drive, Climber climber, Superstructure superstructure) {
+    public static Command getAutoClimbCommand(Drive drive, Climber climber) {
         return Commands.defer(
                 () -> {
                     Pose2d pose = drive.getPose();
@@ -52,15 +46,15 @@ public class AutoClimb extends SequentialCommandGroup {
                                     / 2.0;
                     boolean isAuto = DriverStation.isAutonomous();
                     if (front && left) {
-                        return new AutoClimb(ClimbPosition.FRONT_LEFT, drive, climber, superstructure, isAuto);
+                        return new AutoClimb(ClimbPosition.FRONT_LEFT, drive, climber, isAuto);
                     } else if (front) {
-                        return new AutoClimb(ClimbPosition.FRONT_RIGHT, drive, climber, superstructure, isAuto);
+                        return new AutoClimb(ClimbPosition.FRONT_RIGHT, drive, climber, isAuto);
                     } else if (left) {
-                        return new AutoClimb(ClimbPosition.BACK_LEFT, drive, climber, superstructure, isAuto);
+                        return new AutoClimb(ClimbPosition.BACK_LEFT, drive, climber, isAuto);
                     } else {
-                        return new AutoClimb(ClimbPosition.BACK_RIGHT, drive, climber, superstructure, isAuto);
+                        return new AutoClimb(ClimbPosition.BACK_RIGHT, drive, climber, isAuto);
                     }
                 },
-                Set.of(drive, climber, superstructure));
+                Set.of(drive, climber));
     }
 }

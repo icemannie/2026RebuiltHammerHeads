@@ -1,5 +1,6 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -14,6 +15,7 @@ public class IndexerIOSim implements IndexerIO {
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
         inputs.spinVelocity = simulatedSpinVelocity;
+        inputs.feedVelocity = RPM.of(5000);
     }
 
     @Override

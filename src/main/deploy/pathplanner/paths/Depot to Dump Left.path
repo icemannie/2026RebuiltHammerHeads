@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 2.3746111111111112,
-        "y": 5.686683333333333
+        "x": 3.403314393939394,
+        "y": 7.441
       },
       "prevControl": {
-        "x": 1.9361111111111113,
-        "y": 5.910805555555555
+        "x": 2.8717992424242422,
+        "y": 7.0091439393939385
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -36.93029373680505
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "Dumping",

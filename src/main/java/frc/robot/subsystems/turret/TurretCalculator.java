@@ -25,6 +25,7 @@ import static frc.robot.Constants.TurretConstants.TOF_MAP;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -80,8 +81,13 @@ public class TurretCalculator {
                 .getTranslation();
 
         Translation2d direction = target.toTranslation2d().minus(turretTranslation);
+        return calculateAzimuthAngle(robot, direction.getAngle().getMeasure(), currentAngle);
+    }
+
+    // calculates the angle of a turret relative to the robot to hit a target
+    public static Angle calculateAzimuthAngle(Pose2d robot, Angle fieldRelativeAngle, Angle currentAngle) {
         double angle = MathUtil.inputModulus(
-                direction.getAngle().minus(robot.getRotation()).getRotations(), -0.5, 0.5);
+                new Rotation2d(fieldRelativeAngle).minus(robot.getRotation()).getRotations(), -0.5, 0.5);
         double current = currentAngle.in(Rotations);
         if (current > 0 && angle + 1 <= MAX_TURN_ANGLE.in(Rotations)) angle += 1;
         if (current < 0 && angle - 1 >= MIN_TURN_ANGLE.in(Rotations)) angle -= 1;

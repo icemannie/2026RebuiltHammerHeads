@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
@@ -88,22 +89,26 @@ public class Superstructure extends SubsystemBase {
 
         inAllianceZoneTrigger.and(DriverStation::isTeleop).onTrue(this.setGoal(Goal.SCORING));
         // inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
-        inAllianceZoneTrigger.and(DriverStation::isTeleop).onFalse(this.setGoal(Goal.PASSING));
+        inAllianceZoneTrigger.negate().and(DriverStation::isTeleop).onTrue(this.setGoal(Goal.PASSING));
     }
 
     private boolean inAllianceZone() {
         Pose2d pose = poseSupplier.get();
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
-        return isBlue && pose.getMeasureX().lt(FieldConstants.ALLIANCE_ZONE)
-                || !isBlue && pose.getMeasureX().gt(FieldConstants.FIELD_LENGTH.minus(FieldConstants.ALLIANCE_ZONE));
+        return isBlue && pose.getMeasureX().lt(FieldConstants.ALLIANCE_ZONE.plus(Dimensions.FULL_WIDTH.div(2)))
+                || !isBlue
+                        && pose.getMeasureX()
+                                .gt(FieldConstants.FIELD_LENGTH.minus(
+                                        FieldConstants.ALLIANCE_ZONE.plus(Dimensions.FULL_WIDTH.div(2))));
     }
 
     public Command setGoal(Goal goal) {
         return Commands.either(
-                this.runOnce(() -> nonCollectingGoal = goal),
-                this.runOnce(() -> this.goal = goal)
-                        .andThen(goalCommands.get(goal).get()),
-                () -> this.goal == Goal.COLLECTING).withName("Set goal");
+                        this.runOnce(() -> nonCollectingGoal = goal),
+                        this.runOnce(() -> this.goal = goal)
+                                .andThen(goalCommands.get(goal).get()),
+                        () -> this.goal == Goal.COLLECTING)
+                .withName("Set goal");
     }
 
     public Goal getGoal() {

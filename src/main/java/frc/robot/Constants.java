@@ -37,6 +37,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -68,6 +69,7 @@ import frc.robot.util.TunableControls.TunableControlConstants;
 import java.io.IOException;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkString;
 
 /**
@@ -373,7 +375,7 @@ public final class Constants {
                 40.0 / 14 * 2.0 / 1 * 180.0 / 10; // 40:14 gear, 2:1 belt, 180:10 rack
 
         public static final Slot0Configs TURN_GAINS =
-                new Slot0Configs().withKP(200).withKD(0.1).withKS(2);
+                new Slot0Configs().withKP(400).withKD(0.1).withKS(2);
 
         public static final Slot0Configs HOOD_GAINS =
                 new Slot0Configs().withKP(1024).withKD(5).withKS(0.28);
@@ -549,8 +551,8 @@ public final class Constants {
 
         public static final Distance STOW_POS = Inches.of(0);
         public static final Distance DEPLOY_POS = Inches.of(10.75);
-        public static final Voltage SPIN_VOLTAGE = Volts.of(8.5);
-        public static final Voltage REVERSE_SPIN_VOLTAGE = Volts.of(-5);
+        public static final Voltage SPIN_VOLTAGE = Volts.of(12);
+        public static final Voltage REVERSE_SPIN_VOLTAGE = Volts.of(-2);
         public static final Voltage UNJAM_SPIN_VOLTAGE = Volts.of(10);
         public static final Distance STOW_TOLERANCE = Inches.of(0.5);
         public static final Distance DEPLOY_TOLERANCE = Inches.of(1);
@@ -606,7 +608,7 @@ public final class Constants {
                 .withNeutralMode(NeutralModeValue.Brake);
 
         public static final Voltage CLIMB_VOLTAGE = Volts.of(-12);
-        public static final Voltage STOW_VOLTAGE = Volts.of(-3);
+        public static final Voltage STOW_VOLTAGE = Volts.of(-10);
         public static final Voltage EXTEND_VOLTAGE = Volts.of(3);
         public static final Voltage ZERO_VOLTAGE = Volts.of(-1);
 
@@ -623,13 +625,13 @@ public final class Constants {
         public static final double DIFF_KP = 0.0;
 
         private static final ControlConstants CLIMB_ALIGN_BASE_CONSTANTS_TRANSLATION =
-                new ControlConstants().withPID(2, 0, 0).withTolerance(0.02);
+                new ControlConstants().withPID(5, 0, 0).withTolerance(0.02);
 
         public static final TunableControlConstants CLIMB_ALIGN_CONSTANTS_TRANSLATION =
                 new TunableControlConstants("Climber/AlignTranslation", CLIMB_ALIGN_BASE_CONSTANTS_TRANSLATION);
 
         private static final ControlConstants CLIMB_ALIGN_BASE_CONSTANTS_ROTATION = new ControlConstants()
-                .withPID(2, 0, 0)
+                .withPID(3, 0, 0)
                 .withTolerance(Degrees.of(3).in(Radians))
                 .withContinuous(-Math.PI, Math.PI);
 
@@ -792,6 +794,7 @@ public final class Constants {
         public static final DoubleArrayTopic TRAJECTORY_TIMESTAMPS =
                 INST.getDoubleArrayTopic("Autos/Trajectory Timestamps");
         public static final DoubleTopic TIMESTAMP = INST.getDoubleTopic("Autos/timestamp");
+        public static final LoggedNetworkBoolean DUMP_AT_START = new LoggedNetworkBoolean("Autos/DumpAtStart", true);
 
         public static final RobotConfig PP_CONFIG = new RobotConfig(
                 Pounds.of(130),
@@ -805,6 +808,25 @@ public final class Constants {
                         Amps.of(SwerveConstants.DRIVE_CONFIGS.CurrentLimits.StatorCurrentLimit),
                         1),
                 SwerveConstants.GET_MODULE_POSITIONS.get());
+
+        public static final PathConstraints CONSTRAINTS = new PathConstraints(
+                MetersPerSecond.of(3.5),
+                MetersPerSecondPerSecond.of(5),
+                DegreesPerSecond.of(360),
+                DegreesPerSecondPerSecond.of(540),
+                Volts.of(12),
+                false);
+
+        public static final PathConstraints COLLECT_CONSTRAINTS = new PathConstraints(
+                MetersPerSecond.of(0.4),
+                MetersPerSecondPerSecond.of(3),
+                DegreesPerSecond.of(360),
+                DegreesPerSecondPerSecond.of(540),
+                Volts.of(12),
+                false);
+        public static final LinearVelocity HANDOFF_VELOCITY = MetersPerSecond.of(3);
+        public static final Time START_DUMP_TIME = Seconds.of(1.5);
+        public static final Time START_SPIN_UP_TIME = Seconds.of(0.5);
     }
 
     private Constants() {}

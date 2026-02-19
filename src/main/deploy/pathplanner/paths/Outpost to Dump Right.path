@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5928944444444444,
-        "y": 1.2638999999999998
+        "x": 1.7091098484848484,
+        "y": 0.6715056818181824
       },
       "isLocked": false,
       "linkedName": "Outpost"
     },
     {
       "anchor": {
-        "x": 2.285471296952516,
-        "y": 2.1162225372076535
+        "x": 3.3,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 1.8532833333333332,
-        "y": 1.7353111111111117
+        "x": 2.6057007575757574,
+        "y": 0.6632007575757565
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 37.092837297041555
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Dumping",

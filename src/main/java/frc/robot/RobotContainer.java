@@ -247,7 +247,9 @@ public class RobotContainer {
         SmartDashboard.putData("Align/ClimbFR", new AlignToClimb(ClimbPosition.FRONT_RIGHT, drive));
         SmartDashboard.putData("Align/ClimbBL", new AlignToClimb(ClimbPosition.BACK_LEFT, drive));
         SmartDashboard.putData("Align/ClimbBR", new AlignToClimb(ClimbPosition.BACK_RIGHT, drive));
-        SmartDashboard.putData("Auto Climb", AutoClimb.getAutoClimbCommand(drive, climber, superstructure));
+        SmartDashboard.putData(
+                "Auto Climb",
+                AutoClimb.getAutoClimbCommand(drive, climber).beforeStarting(superstructure.setGoal(Goal.IDLE)));
 
         // Turret turnaround danger zone controller rumble
         turret.turnaroundZoneMaxTrigger.whileTrue(rumbleLeft);
@@ -354,6 +356,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoCreator.buildAuto(drive, intakes, climber, superstructure);
+        return autoCreator.buildAuto(drive, intakes, indexer, turret, climber, superstructure);
     }
 }

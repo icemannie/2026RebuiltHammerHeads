@@ -24,38 +24,33 @@
         "y": 0.6499999999999999
       },
       "nextControl": {
-        "x": 2.5104307075591255,
-        "y": 0.6500000000000001
+        "x": 3.347538888888889,
+        "y": 0.65
       },
       "isLocked": false,
       "linkedName": "Trench Start Right"
     },
     {
       "anchor": {
-        "x": 2.285471296952516,
-        "y": 2.1162225372076535
+        "x": 3.3,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 2.388320340184267,
-        "y": 1.3962792345854007
+        "x": 3.55,
+        "y": 0.65
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Dump Right"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 1.0,
-      "rotationDegrees": 90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
@@ -63,12 +58,12 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 37.092837297041555
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Dumping",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": 90.0
   },
   "useDefaultConstraints": true

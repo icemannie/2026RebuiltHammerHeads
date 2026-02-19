@@ -90,11 +90,13 @@ public class Intakes extends SubsystemBase {
     }
 
     public Command deployLeft() {
-        return Commands.sequence(right.stow(), Commands.waitUntil(right.stowedTrigger), left.deploy());
+        return Commands.sequence(right.stow(), Commands.waitUntil(right.stowedTrigger), left.deploy())
+                .withName("Deploy Left");
     }
 
     public Command deployRight() {
-        return Commands.sequence(left.stow(), Commands.waitUntil(left.stowedTrigger), right.deploy());
+        return Commands.sequence(left.stow(), Commands.waitUntil(left.stowedTrigger), right.deploy())
+                .withName("Deploy Right");
     }
 
     public Command switchIntakes() {

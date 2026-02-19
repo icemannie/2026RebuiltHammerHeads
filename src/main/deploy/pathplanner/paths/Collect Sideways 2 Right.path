@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.24,
-        "y": 0.6500000000000004
+        "x": 6.3441043890865965,
+        "y": 1.0600830367734273
       },
       "isLocked": false,
       "linkedName": "Trench Exit Right"
@@ -17,15 +17,15 @@
     {
       "anchor": {
         "x": 7.782777777777778,
-        "y": 1.028838888888889
+        "y": 2.0
       },
       "prevControl": {
         "x": 7.782777777777778,
-        "y": 0.590230630647516
+        "y": 1.561391741758627
       },
       "nextControl": {
         "x": 7.782777777777778,
-        "y": 1.297518863343331
+        "y": 2.268679974454442
       },
       "isLocked": false,
       "linkedName": null
@@ -48,28 +48,12 @@
     },
     {
       "anchor": {
-        "x": 7.782777777777778,
-        "y": 1.028838888888889
-      },
-      "prevControl": {
-        "x": 7.782777777777778,
-        "y": 1.5759180701938296
-      },
-      "nextControl": {
-        "x": 7.782777777777778,
-        "y": 0.7115453529760076
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
         "x": 5.99,
         "y": 0.65
       },
       "prevControl": {
-        "x": 6.49,
-        "y": 0.6500000000000004
+        "x": 6.4926021118799895,
+        "y": 0.6499999999999999
       },
       "nextControl": null,
       "isLocked": false,
@@ -82,7 +66,7 @@
       "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 3.0,
+      "waypointRelativePos": 1.9986702127659615,
       "rotationDegrees": 180.0
     }
   ],
@@ -104,21 +88,21 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": 90.0
   },
   "reversed": false,
   "folder": "Collection",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": 90.0
   },
   "useDefaultConstraints": true

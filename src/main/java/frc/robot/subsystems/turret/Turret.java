@@ -101,37 +101,44 @@ public class Turret extends SubsystemBase {
 
     public Command setGoal(TurretGoal goal) {
         return this.runOnce(() -> {
-            // don't interrupt ducking with another goal
-            if (this.goal == TurretGoal.DUCKING && underTrenchTrigger.getAsBoolean()) {
-                this.nonDuckingGoal = goal;
-                return;
-            }
-            this.goal = goal;
-            switch (goal) {
-                case SCORING:
-                    setTarget(FieldConstants.HUB_BLUE);
-                    break;
-                case PASSING:
-                    setTarget(getPassingTarget(poseSupplier.get()));
-                    break;
-                case IDLE:
-                    io.stopFlywheel();
-                    io.stopHood();
-                    io.stopTurn();
-                    break;
-                case TUNING:
-                    setTarget(FieldConstants.HUB_BLUE);
-                    break;
-                case DUCKING:
-                    io.setHoodAngle(MIN_HOOD_ANGLE);
-                    break;
-                case OFF:
-                    io.stopFlywheel();
-                    io.stopHood();
-                    io.stopTurn();
-                    break;
-            }
-        });
+                    // don't interrupt ducking with another goal
+                    if (this.goal == TurretGoal.DUCKING && underTrenchTrigger.getAsBoolean()) {
+                        this.nonDuckingGoal = goal;
+                        return;
+                    }
+                    this.goal = goal;
+                    switch (goal) {
+                        case SCORING:
+                            setTarget(FieldConstants.HUB_BLUE);
+                            break;
+                        case PASSING:
+                            setTarget(getPassingTarget(poseSupplier.get()));
+                            break;
+                        case IDLE:
+                            io.stopFlywheel();
+                            io.stopHood();
+                            io.stopTurn();
+                            break;
+                        case TUNING:
+                            setTarget(FieldConstants.HUB_BLUE);
+                            break;
+                        case DUCKING:
+                            io.setHoodAngle(MIN_HOOD_ANGLE);
+                            Angle desired =
+                                    fieldSpeedsSupplier.get().vxMetersPerSecond > 0 ? Degrees.zero() : Degrees.of(180);
+                            io.setTurnSetpoint(
+                                    TurretCalculator.calculateAzimuthAngle(
+                                            poseSupplier.get(), desired, inputs.turnPosition),
+                                    RadiansPerSecond.of(0));
+                            break;
+                        case OFF:
+                            io.stopFlywheel();
+                            io.stopHood();
+                            io.stopTurn();
+                            break;
+                    }
+                })
+                .withName("Set Turret Goal");
     }
 
     private Command duck() {

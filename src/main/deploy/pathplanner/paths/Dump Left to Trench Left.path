@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.3746111111111112,
-        "y": 5.686683333333333
+        "x": 3.403314393939394,
+        "y": 7.441
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6004464918497523,
-        "y": 6.4615946137491145
+        "x": 3.653314393939394,
+        "y": 7.441
       },
       "isLocked": false,
       "linkedName": "Dump Left"
@@ -20,12 +20,12 @@
         "y": 7.440683333333332
       },
       "prevControl": {
-        "x": 3.2783683200040037,
-        "y": 7.464282028448578
+        "x": 3.5278111111111112,
+        "y": 7.440683333333332
       },
       "nextControl": {
-        "x": 4.277253902218218,
-        "y": 7.417084638218087
+        "x": 4.277811111111111,
+        "y": 7.440683333333332
       },
       "isLocked": false,
       "linkedName": "Trench Start Left"
@@ -54,8 +54,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
@@ -69,7 +69,7 @@
   "folder": "Inside Zone",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -36.93029373680505
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

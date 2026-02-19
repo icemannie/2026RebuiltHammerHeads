@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.285471296952516,
-        "y": 2.1162225372076535
+        "x": 3.3,
+        "y": 0.65
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9833522324592492,
-        "y": 1.1841530829199143
+        "x": 3.55,
+        "y": 0.65
       },
       "isLocked": false,
       "linkedName": "Dump Right"
@@ -20,7 +20,7 @@
         "y": 0.65
       },
       "prevControl": {
-        "x": 3.035443110343965,
+        "x": 3.347538888888889,
         "y": 0.65
       },
       "nextControl": {
@@ -37,25 +37,20 @@
       },
       "prevControl": {
         "x": 4.99,
-        "y": 0.6500000000000004
+        "y": 0.6500000000000001
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Trench Exit Right"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 1.0,
-      "rotationDegrees": 90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
@@ -69,7 +64,7 @@
   "folder": "Inside Zone",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 37.092837297041555
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

@@ -1,6 +1,11 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.ConstraintsZone;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
@@ -10,6 +15,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -17,10 +23,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intakes;
 import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.superstructure.Superstructure.Goal;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.TurretGoal;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,23 +38,25 @@ import org.json.simple.parser.ParseException;
 
 public class AutoCreator {
     private enum StartEndPoint {
-        TRENCH_START_LEFT("Trench Start Left"),
-        TRENCH_START_RIGHT("Trench Start Right"),
-        TRENCH_RIGHT("Trench Right"),
-        TRENCH_LEFT("Trench Left"),
-        CLIMB_RIGHT("Climb Right"),
-        CLIMB_LEFT("Climb Left"),
-        DUMP_RIGHT("Dump Right"),
-        DUMP_LEFT("Dump Left"),
-        BUMP_START_LEFT("Bump Start Left"),
-        BUMP_START_RIGHT("Bump Start Right"),
-        DEPOT("Depot"),
-        OUTPOST("Outpost");
+        TRENCH_START_LEFT("Trench Start Left", MetersPerSecond.of(0)),
+        TRENCH_START_RIGHT("Trench Start Right", MetersPerSecond.of(0)),
+        TRENCH_RIGHT("Trench Right", AutoConstants.HANDOFF_VELOCITY),
+        TRENCH_LEFT("Trench Left", AutoConstants.HANDOFF_VELOCITY),
+        CLIMB_RIGHT("Climb Right", MetersPerSecond.of(0)),
+        CLIMB_LEFT("Climb Left", MetersPerSecond.of(0)),
+        DUMP_RIGHT("Dump Right", MetersPerSecond.of(0)),
+        DUMP_LEFT("Dump Left", MetersPerSecond.of(0)),
+        BUMP_START_LEFT("Bump Start Left", MetersPerSecond.of(0)),
+        BUMP_START_RIGHT("Bump Start Right", MetersPerSecond.of(0)),
+        DEPOT("Depot", MetersPerSecond.of(0)),
+        OUTPOST("Outpost", MetersPerSecond.of(0));
 
         private String name;
+        private LinearVelocity handoffVelocity;
 
-        private StartEndPoint(String name) {
+        private StartEndPoint(String name, LinearVelocity handoffVelocity) {
             this.name = name;
+            this.handoffVelocity = handoffVelocity;
         }
 
         private static StartEndPoint fromString(String s) {
@@ -101,7 +111,25 @@ public class AutoCreator {
 
         private PathPlannerPath getPathPlannerPath() {
             try {
-                return PathPlannerPath.fromPathFile(name);
+                PathPlannerPath path = PathPlannerPath.fromPathFile(name);
+                ArrayList<ConstraintsZone> constraintZones = new ArrayList<>();
+                if (name.contains("Collect")) {
+                    constraintZones.add(new ConstraintsZone(1, 2, AutoConstants.COLLECT_CONSTRAINTS));
+                }
+                path = new PathPlannerPath(
+                        path.getWaypoints(),
+                        path.getRotationTargets(),
+                        path.getPointTowardsZones(),
+                        constraintZones,
+                        path.getEventMarkers(),
+                        AutoConstants.CONSTRAINTS,
+                        new IdealStartingState(
+                                start.handoffVelocity,
+                                path.getIdealStartingState().rotation()),
+                        new GoalEndState(
+                                end.handoffVelocity, path.getGoalEndState().rotation()),
+                        false);
+                return path;
             } catch (FileVersionException | IOException | ParseException e) {
                 throw new RuntimeException("Failed to load path: " + name, e);
             }
@@ -267,16 +295,24 @@ public class AutoCreator {
         return timestamps;
     }
 
-    public Command buildAuto(Drive drive, Intakes intakes, Climber climber, Superstructure superstructure) {
+    public Command buildAuto(
+            Drive drive,
+            Intakes intakes,
+            Indexer indexer,
+            Turret turret,
+            Climber climber,
+            Superstructure superstructure) {
         ArrayList<Command> commands = new ArrayList<>();
         for (AutoPath path : selectedAutoPaths) {
             Command toAdd = AutoBuilder.followPath(path.getPathPlannerPath());
             if (path.name.contains("Collect")) {
                 if (path.collect) {
-                    toAdd = toAdd.beforeStarting(superstructure.startCollecting())
-                            .andThen(superstructure.stopCollecting());
+                    toAdd = toAdd.alongWith(
+                            indexer.stop(), turret.setGoal(TurretGoal.IDLE).asProxy());
                 } else {
-                    toAdd = toAdd.beforeStarting(superstructure.setGoal(Goal.PASSING));
+                    toAdd = toAdd.alongWith(
+                            indexer.activate(),
+                            turret.setGoal(TurretGoal.PASSING).asProxy());
                 }
 
                 if (path.start == StartEndPoint.TRENCH_LEFT) {
@@ -284,17 +320,19 @@ public class AutoCreator {
                 } else if (path.start == StartEndPoint.TRENCH_RIGHT) {
                     toAdd = toAdd.alongWith(intakes.deployRight());
                 }
-
-                if (path.dumpTime > 0) {
-                    toAdd = toAdd.andThen(Commands.waitSeconds(path.dumpTime));
-                }
             } else {
-                toAdd = toAdd.beforeStarting(superstructure.setGoal(Goal.SCORING));
+                toAdd = toAdd.alongWith(Commands.waitUntil(superstructure.inAllianceZoneTrigger)
+                        .andThen(indexer.activate()
+                                .alongWith(turret.setGoal(TurretGoal.SCORING).asProxy())));
+            }
+
+            if (path.dumpTime > 0) {
+                toAdd = toAdd.andThen(Commands.waitSeconds(path.dumpTime));
             }
 
             if (path.end == StartEndPoint.CLIMB_LEFT || path.end == StartEndPoint.CLIMB_RIGHT) {
                 toAdd = toAdd.alongWith(climber.extend(), intakes.setGoal(IntakesGoal.STOW))
-                        .andThen(AutoClimb.getAutoClimbCommand(drive, climber, superstructure));
+                        .andThen(AutoClimb.getAutoClimbCommand(drive, climber));
             }
 
             if (path.end == StartEndPoint.DEPOT) {
@@ -307,7 +345,15 @@ public class AutoCreator {
 
             commands.add(toAdd);
         }
-        System.out.println(commands.size());
+
+        if (AutoConstants.DUMP_AT_START.get()) {
+            commands.add(
+                    0,
+                    Commands.parallel(
+                            turret.setGoal(TurretGoal.SCORING).asProxy(),
+                            Commands.waitTime(AutoConstants.START_SPIN_UP_TIME).andThen(indexer.activate()),
+                            Commands.waitTime(AutoConstants.START_SPIN_UP_TIME.plus(AutoConstants.START_DUMP_TIME))));
+        }
 
         return Commands.sequence(commands.toArray(Command[]::new));
     }

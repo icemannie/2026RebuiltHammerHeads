@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.126422222222223,
-        "y": 1.5903388888888896
+        "x": 6.537769869513642,
+        "y": 0.6619928825622776
       },
       "isLocked": false,
       "linkedName": "Trench Exit Right"
@@ -68,8 +68,8 @@
         "y": 0.65
       },
       "prevControl": {
-        "x": 5.99,
-        "y": 1.9025023097610605
+        "x": 6.494733096085409,
+        "y": 0.6619928825622776
       },
       "nextControl": null,
       "isLocked": false,
@@ -95,21 +95,21 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.01,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": 90.0
   },
   "reversed": false,
   "folder": "Collection",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": 90.0
   },
   "useDefaultConstraints": true
