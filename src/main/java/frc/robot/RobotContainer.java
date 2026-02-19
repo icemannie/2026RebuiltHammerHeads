@@ -10,7 +10,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.RPM;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -106,8 +105,8 @@ public class RobotContainer {
     private final Trigger zeroHoodTrigger = controller.povUp();
     private final Trigger hoodTrigger = controller.rightBumper();
     private final Trigger turnTrigger = controller.rightTrigger();
-    private final Trigger flywheelTrigger = controller.leftBumper();
-    private final Trigger flywheelSlowTrigger = controller.leftTrigger();
+    private final Trigger switchIntakesTrigger = controller.leftBumper();
+    private final Trigger collectTrigger = controller.leftTrigger();
     private final Trigger turretTuningTrigger = controller.start();
     private final Trigger turretScoringTrigger = controller.back();
 
@@ -281,11 +280,9 @@ public class RobotContainer {
         turnTrigger.onTrue(turret.setTurnPosition(Degrees.of(20)));
         turnTrigger.onFalse(turret.setTurnPosition(Degrees.of(0)));
 
-        flywheelTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(3000)));
-        flywheelTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
-
-        flywheelSlowTrigger.onTrue(turret.setFlywheelSpeed(RPM.of(500)));
-        flywheelSlowTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
+        switchIntakesTrigger.onTrue(intakes.switchIntakes());
+        collectTrigger.onTrue(superstructure.startCollecting());
+        collectTrigger.onFalse(superstructure.stopCollecting());
 
         turretTuningTrigger.onTrue(Commands.either(
                 turret.setGoal(TurretGoal.OFF),

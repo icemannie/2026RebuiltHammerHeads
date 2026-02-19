@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -44,7 +45,7 @@ public class Turret extends SubsystemBase {
             : FieldConstants.HUB_RED;
 
     @AutoLogOutput
-    private TurretGoal goal = TurretGoal.OFF;
+    private TurretGoal goal = TurretGoal.SCORING;
 
     private final TurretVisualizer turretVisualizer;
 
@@ -69,8 +70,10 @@ public class Turret extends SubsystemBase {
     public final Trigger turnaroundZoneMaxTrigger = new Trigger(this::inTurnaroundZoneMax).debounce(0.05);
     public final Trigger turnaroundZoneMinTrigger = new Trigger(this::inTurnaroundZoneMin).debounce(0.05);
 
-    public final Trigger underTrenchTrigger = new Trigger(this::underTrench).debounce(0.05);
+    @AutoLogOutput
+    public final Trigger underTrenchTrigger = new Trigger(this::underTrench).debounce(0.1);
 
+    @AutoLogOutput
     private TurretGoal nonDuckingGoal = goal;
 
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
@@ -80,12 +83,13 @@ public class Turret extends SubsystemBase {
         this.fieldSpeedsSupplier = fieldSpeedsSupplier;
 
         io.zeroHoodPosition();
+        setTarget(FieldConstants.HUB_BLUE);
 
         hoodStalledTrigger = new Trigger(() -> inputs.hoodCurrent.abs(Amps) >= HOOD_STALL_CURRENT.abs(Amps)
                 && inputs.hoodVelocity.abs(RadiansPerSecond) <= HOOD_STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond));
 
-        underTrenchTrigger.onTrue(setGoal(TurretGoal.DUCKING));
-        underTrenchTrigger.onFalse(setGoal(nonDuckingGoal));
+        underTrenchTrigger.onTrue(duck());
+        underTrenchTrigger.onFalse(unduck());
 
         turretVisualizer = new TurretVisualizer(
                 () -> new Pose3d(poseSupplier
@@ -127,6 +131,14 @@ public class Turret extends SubsystemBase {
                     break;
             }
         });
+    }
+
+    private Command duck() {
+        return this.setGoal(TurretGoal.DUCKING).beforeStarting(() -> nonDuckingGoal = this.goal);
+    }
+
+    private Command unduck() {
+        return Commands.defer(() -> this.setGoal(nonDuckingGoal), Set.of());
     }
 
     public TurretGoal getGoal() {

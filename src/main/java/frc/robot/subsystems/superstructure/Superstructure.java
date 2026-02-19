@@ -44,7 +44,7 @@ public class Superstructure extends SubsystemBase {
     @AutoLogOutput
     public final Trigger onLeftSideTrigger;
 
-    private final Map<Goal, Command> goalCommands;
+    private final Map<Goal, Supplier<Command>> goalCommands;
 
     /** Creates a new Superstructure. */
     public Superstructure(Turret turret, Intakes intake, Indexer indexer, Supplier<Pose2d> poseSupplier) {
@@ -60,19 +60,19 @@ public class Superstructure extends SubsystemBase {
 
         goalCommands = Map.of(
                 Goal.SCORING,
-                Commands.sequence(
+                () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.SCORING),
                                 this.intake.setGoal(IntakesGoal.AUTOSWITCH),
                                 this.indexer.setGoal(IndexerGoal.ACTIVE))
                         .withName("Start scoring"),
                 Goal.PASSING,
-                Commands.sequence(
+                () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.PASSING),
                                 this.intake.setGoal(IntakesGoal.AUTOSWITCH),
                                 this.indexer.setGoal(IndexerGoal.ACTIVE))
                         .withName("Start passing"),
                 Goal.COLLECTING,
-                Commands.sequence(
+                () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
                                 this.intake.setGoal(IntakesGoal.MANUAL),
                                 this.indexer.setGoal(IndexerGoal.OFF),
@@ -82,7 +82,7 @@ public class Superstructure extends SubsystemBase {
                                         this.intake::travelingLeft))
                         .withName("Start collecting"),
                 Goal.IDLE,
-                Commands.sequence(
+                () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
                                 this.intake.setGoal(IntakesGoal.STOW),
                                 this.indexer.setGoal(IndexerGoal.OFF))
@@ -101,7 +101,11 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command setGoal(Goal goal) {
-        return this.runOnce(() -> this.goal = goal).andThen(goalCommands.get(goal));
+        return Commands.either(
+                this.runOnce(() -> nonCollectingGoal = goal),
+                this.runOnce(() -> this.goal = goal)
+                        .andThen(goalCommands.get(goal).get()),
+                () -> this.goal == Goal.COLLECTING);
     }
 
     public Command startCollecting() {
