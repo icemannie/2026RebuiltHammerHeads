@@ -24,6 +24,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.intake.Intakes;
 import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.superstructure.Superstructure;
@@ -308,10 +309,10 @@ public class AutoCreator {
             if (path.name.contains("Collect")) {
                 if (path.collect) {
                     toAdd = toAdd.alongWith(
-                            indexer.stop(), turret.setGoal(TurretGoal.IDLE).asProxy());
+                            indexer.setGoal(IndexerGoal.OFF), turret.setGoal(TurretGoal.IDLE).asProxy());
                 } else {
                     toAdd = toAdd.alongWith(
-                            indexer.activate(),
+                            indexer.setGoal(IndexerGoal.ACTIVE),
                             turret.setGoal(TurretGoal.PASSING).asProxy());
                 }
 
@@ -322,8 +323,10 @@ public class AutoCreator {
                 }
             } else {
                 toAdd = toAdd.alongWith(Commands.waitUntil(superstructure.inAllianceZoneTrigger)
-                        .andThen(indexer.activate()
-                                .alongWith(turret.setGoal(TurretGoal.SCORING).asProxy())));
+                        .andThen(turret.setGoal(TurretGoal.SCORING)
+                                .asProxy()
+                                .alongWith(Commands.waitTime(AutoConstants.START_SPIN_UP_TIME)
+                                        .andThen(indexer.setGoal(IndexerGoal.ACTIVE)))));
             }
 
             if (path.dumpTime > 0) {
@@ -351,8 +354,10 @@ public class AutoCreator {
                     0,
                     Commands.parallel(
                             turret.setGoal(TurretGoal.SCORING).asProxy(),
-                            Commands.waitTime(AutoConstants.START_SPIN_UP_TIME).andThen(indexer.activate()),
+                            Commands.waitTime(AutoConstants.START_SPIN_UP_TIME).andThen(indexer.setGoal(IndexerGoal.ACTIVE)),
                             Commands.waitTime(AutoConstants.START_SPIN_UP_TIME.plus(AutoConstants.START_DUMP_TIME))));
+        } else {
+            commands.add(0, indexer.setGoal(IndexerGoal.OFF));
         }
 
         return Commands.sequence(commands.toArray(Command[]::new));

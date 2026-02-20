@@ -183,7 +183,7 @@ public final class Constants {
         // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns;
         private static final double COUPLE_RATIO = 3.375;
 
-        private static final double DRIVE_GEAR_RATIO = 5.2734375;
+        private static final double DRIVE_GEAR_RATIO = 6.03; // R2 gear ratio
         private static final double STEER_GEAR_RATIO = 26.09090909090909;
         private static final Distance WHEEL_RADIUS = Inches.of(1.985);
 
@@ -432,7 +432,7 @@ public final class Constants {
                 new Transform3d(new Translation3d(Inches.zero(), Inches.zero(), Inches.of(18)), Rotation3d.kZero);
         public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
         public static final Distance SHOOT_RADIUS = Inches.of(1);
-        public static final int LOOKAHEAD_ITERATIONS = 2;
+        public static final int LOOKAHEAD_ITERATIONS = 3;
 
         public static final Angle MIN_TURN_ANGLE = Rotations.of(-0.55);
         public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
@@ -581,15 +581,15 @@ public final class Constants {
                 .withInverted(InvertedValue.Clockwise_Positive);
 
         public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
+                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30).withStatorCurrentLimit(50);
 
         public static final CurrentLimitsConfigs FEED_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30);
+                new CurrentLimitsConfigs().withSupplyCurrentLowerLimit(30).withStatorCurrentLimit(60);
 
         public static final Voltage SPIN_VOLTAGE = Volts.of(3);
         public static final Voltage FEED_VOLTAGE = Volts.of(12);
 
-        public static final AngularVelocity FEED_THRESHOLD = RPM.of(3000);
+        public static final AngularVelocity FEED_THRESHOLD = RPM.of(2000);
     }
 
     public static class ClimberConstants {
@@ -658,7 +658,7 @@ public final class Constants {
 
     public static class VisionConstants {
         // Standard deviation baselines for 1 meter distance to single tag
-        public static final double LINEAR_STD_DEV_BASELINE = 0.1; // Meters
+        public static final double[] LINEAR_STD_DEV_BASELINES = {0.15, 0.15, 0.07, 0.15, 0.15, 0.15}; // Meters
         public static final double ANGULAR_STD_DEV_BASELINE = 1.0; // Radians
 
         public static final String[] CAMERA_NAMES = {
@@ -794,7 +794,7 @@ public final class Constants {
         public static final DoubleArrayTopic TRAJECTORY_TIMESTAMPS =
                 INST.getDoubleArrayTopic("Autos/Trajectory Timestamps");
         public static final DoubleTopic TIMESTAMP = INST.getDoubleTopic("Autos/timestamp");
-        public static final LoggedNetworkBoolean DUMP_AT_START = new LoggedNetworkBoolean("Autos/DumpAtStart", true);
+        public static final LoggedNetworkBoolean DUMP_AT_START = new LoggedNetworkBoolean("Autos/Dump At Start", true);
 
         public static final RobotConfig PP_CONFIG = new RobotConfig(
                 Pounds.of(130),
@@ -810,8 +810,8 @@ public final class Constants {
                 SwerveConstants.GET_MODULE_POSITIONS.get());
 
         public static final PathConstraints CONSTRAINTS = new PathConstraints(
-                MetersPerSecond.of(3.5),
-                MetersPerSecondPerSecond.of(5),
+                MetersPerSecond.of(3),
+                MetersPerSecondPerSecond.of(4),
                 DegreesPerSecond.of(360),
                 DegreesPerSecondPerSecond.of(540),
                 Volts.of(12),
