@@ -52,6 +52,9 @@ public class Indexer extends SubsystemBase {
         return Commands.defer(
                 () -> {
                     Command toSchedule = Commands.none();
+                    if (goal == IndexerGoal.ESTOP) {
+                        return toSchedule;
+                    }
                     if (goal == IndexerGoal.ACTIVE && this.goal != IndexerGoal.ACTIVE) {
                         toSchedule = activate();
                     } else if (goal == IndexerGoal.OFF) {
@@ -92,6 +95,7 @@ public class Indexer extends SubsystemBase {
 
     public enum IndexerGoal {
         ACTIVE,
-        OFF
+        OFF,
+        ESTOP
     }
 }

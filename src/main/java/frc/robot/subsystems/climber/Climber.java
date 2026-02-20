@@ -53,47 +53,64 @@ public class Climber extends SubsystemBase {
 
     public Command climb() {
         return Commands.sequence(
-                setVoltage(CLIMB_VOLTAGE),
-                Commands.waitUntil(() -> inputs.averagePosition.lte(CLIMB_POSITION)),
-                setVoltage(Volts.of(0)));
+                        setVoltage(CLIMB_VOLTAGE),
+                        Commands.waitUntil(() -> inputs.averagePosition.lte(CLIMB_POSITION)),
+                        setVoltage(Volts.of(-0.5)),
+                        Commands.idle())
+                .finallyDo(io::stop);
     }
 
     public Command autoClimb() {
         return Commands.sequence(
-                setVoltage(CLIMB_VOLTAGE),
-                Commands.waitUntil(() -> inputs.averagePosition.lte(AUTO_CLIMB_POSITION)),
-                setVoltage(Volts.of(0)));
+                        setVoltage(CLIMB_VOLTAGE),
+                        Commands.waitUntil(() -> inputs.averagePosition.lte(AUTO_CLIMB_POSITION)),
+                        setVoltage(Volts.of(-0.5)),
+                        Commands.idle())
+                .finallyDo(io::stop);
     }
 
     public Command stow() {
         return Commands.sequence(
-                setVoltage(STOW_VOLTAGE), Commands.waitUntil(() -> inputs.averagePosition.lte(STOW_POSITION)), stop());
+                        setVoltage(STOW_VOLTAGE),
+                        Commands.parallel(
+                                Commands.waitUntil(() -> inputs.frontPosition.lte(STOW_POSITION))
+                                        .finallyDo(io::stopFront),
+                                Commands.waitUntil(() -> inputs.backPosition.lte(STOW_POSITION))
+                                        .finallyDo(io::stopBack)),
+                        stop())
+                .finallyDo(io::stop);
     }
 
     public Command extend() {
         return Commands.sequence(
-                setVoltage(EXTEND_VOLTAGE),
-                Commands.waitUntil(() -> inputs.frontPosition.gte(EXTEND_POSITION_FRONT)
-                        && inputs.backPosition.gte(EXTEND_POSITION_BACK)),
-                stop());
+                        setVoltage(EXTEND_VOLTAGE),
+                        Commands.parallel(
+                                Commands.waitUntil(() -> inputs.frontPosition.gte(EXTEND_POSITION_FRONT))
+                                        .finallyDo(io::stopFront),
+                                Commands.waitUntil(() -> inputs.backPosition.gte(EXTEND_POSITION_BACK))
+                                        .finallyDo(io::stopBack)),
+                        stop())
+                .finallyDo(io::stop);
     }
 
     public Command zero() {
         return Commands.sequence(
-                this.runOnce(() -> {
-                    io.setFrontVoltage(ZERO_VOLTAGE);
-                    io.setBackVoltage(ZERO_VOLTAGE);
-                }),
-                Commands.waitSeconds(0.1),
-                Commands.parallel(Commands.waitUntil(() -> inputs.frontTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
-                                && inputs.frontVelocity.abs(RadiansPerSecond)
-                                        < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
-                        .finallyDo(() -> io.stopFront())),
-                Commands.waitUntil(() -> inputs.backTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
-                                && inputs.backVelocity.abs(RadiansPerSecond)
-                                        < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
-                        .finallyDo(() -> io.stopBack()),
-                Commands.waitSeconds(0.4),
-                this.runOnce(io::zeroPosition));
+                        this.runOnce(() -> {
+                            io.setFrontVoltage(ZERO_VOLTAGE);
+                            io.setBackVoltage(ZERO_VOLTAGE);
+                        }),
+                        Commands.waitSeconds(0.1),
+                        Commands.parallel(
+                                Commands.waitUntil(() -> inputs.frontTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
+                                                && inputs.frontVelocity.abs(RadiansPerSecond)
+                                                        < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
+                                        .finallyDo(() -> io.stopFront())),
+                        Commands.waitUntil(() -> inputs.backTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
+                                        && inputs.backVelocity.abs(RadiansPerSecond)
+                                                < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
+                                .finallyDo(() -> io.stopBack()),
+                        Commands.waitSeconds(0.4),
+                        this.runOnce(io::zeroPosition))
+                .finallyDo(io::stop);
     }
 }

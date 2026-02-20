@@ -3,48 +3,69 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.2150222222222222,
-        "y": 5.9497833333333325
+        "x": 3.403314393939394,
+        "y": 7.441
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.0725333333333333,
-        "y": 5.477177777777777
+        "x": 2.2904545454545455,
+        "y": 7.431714015151515
       },
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": "Dump Left"
     },
     {
       "anchor": {
-        "x": 2.530522222222223,
-        "y": 4.907127777777777
+        "x": 1.7506344696969696,
+        "y": 5.46344696969697
       },
       "prevControl": {
-        "x": 2.452566666666667,
-        "y": 5.272544444444446
+        "x": 1.7164660733932715,
+        "y": 6.368909471744961
       },
       "nextControl": {
-        "x": 2.6220384247651123,
-        "y": 4.478145578357984
+        "x": 1.783854166666667,
+        "y": 4.583125
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.8435388888888893,
+        "x": 0.45,
+        "y": 4.765833333333332
+      },
+      "prevControl": {
+        "x": 0.45,
+        "y": 5.104891812389164
+      },
+      "nextControl": {
+        "x": 0.45,
+        "y": 4.4267748542775
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.45,
         "y": 3.9
       },
       "prevControl": {
-        "x": 2.7364857715286406,
-        "y": 3.9
+        "x": 0.44999999999999996,
+        "y": 4.450255743013408
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Climb Left"
+      "linkedName": "Back Climb Left"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 2,
+      "rotationDegrees": 90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -58,7 +79,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Climbs",

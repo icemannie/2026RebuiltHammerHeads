@@ -6,6 +6,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.ConstraintsZone;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.IdealStartingState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
@@ -45,6 +46,8 @@ public class AutoCreator {
         TRENCH_LEFT("Trench Left", AutoConstants.HANDOFF_VELOCITY),
         CLIMB_RIGHT("Climb Right", MetersPerSecond.of(0)),
         CLIMB_LEFT("Climb Left", MetersPerSecond.of(0)),
+        BACK_CLIMB_RIGHT("Back Climb Right", MetersPerSecond.of(0)),
+        BACK_CLIMB_LEFT("Back Climb Left", MetersPerSecond.of(0)),
         DUMP_RIGHT("Dump Right", MetersPerSecond.of(0)),
         DUMP_LEFT("Dump Left", MetersPerSecond.of(0)),
         BUMP_START_LEFT("Bump Start Left", MetersPerSecond.of(0)),
@@ -113,17 +116,21 @@ public class AutoCreator {
         private PathPlannerPath getPathPlannerPath() {
             try {
                 PathPlannerPath path = PathPlannerPath.fromPathFile(name);
-                ArrayList<ConstraintsZone> constraintZones = new ArrayList<>();
+                List<ConstraintsZone> constraintZones = path.getConstraintZones();
+                PathConstraints constraints = AutoConstants.SCORING_CONSTRAINTS;
                 if (name.contains("Collect")) {
+                    constraintZones.clear();
                     constraintZones.add(new ConstraintsZone(1, 2, AutoConstants.COLLECT_CONSTRAINTS));
+                    constraints = AutoConstants.CONSTRAINTS;
                 }
+
                 path = new PathPlannerPath(
                         path.getWaypoints(),
                         path.getRotationTargets(),
                         path.getPointTowardsZones(),
                         constraintZones,
                         path.getEventMarkers(),
-                        AutoConstants.CONSTRAINTS,
+                        constraints,
                         new IdealStartingState(
                                 start.handoffVelocity,
                                 path.getIdealStartingState().rotation()),
@@ -309,7 +316,8 @@ public class AutoCreator {
             if (path.name.contains("Collect")) {
                 if (path.collect) {
                     toAdd = toAdd.alongWith(
-                            indexer.setGoal(IndexerGoal.OFF), turret.setGoal(TurretGoal.IDLE).asProxy());
+                            indexer.setGoal(IndexerGoal.OFF),
+                            turret.setGoal(TurretGoal.IDLE).asProxy());
                 } else {
                     toAdd = toAdd.alongWith(
                             indexer.setGoal(IndexerGoal.ACTIVE),
@@ -338,6 +346,11 @@ public class AutoCreator {
                         .andThen(AutoClimb.getAutoClimbCommand(drive, climber));
             }
 
+            if (path.end == StartEndPoint.BACK_CLIMB_LEFT || path.end == StartEndPoint.BACK_CLIMB_RIGHT) {
+                toAdd = toAdd.alongWith(intakes.setGoal(IntakesGoal.STOW))
+                        .andThen(AutoClimb.getAutoClimbCommand(drive, climber));
+            }
+
             if (path.end == StartEndPoint.DEPOT) {
                 toAdd = toAdd.alongWith(intakes.deployRight());
             }
@@ -354,7 +367,8 @@ public class AutoCreator {
                     0,
                     Commands.parallel(
                             turret.setGoal(TurretGoal.SCORING).asProxy(),
-                            Commands.waitTime(AutoConstants.START_SPIN_UP_TIME).andThen(indexer.setGoal(IndexerGoal.ACTIVE)),
+                            Commands.waitTime(AutoConstants.START_SPIN_UP_TIME)
+                                    .andThen(indexer.setGoal(IndexerGoal.ACTIVE)),
                             Commands.waitTime(AutoConstants.START_SPIN_UP_TIME.plus(AutoConstants.START_DUMP_TIME))));
         } else {
             commands.add(0, indexer.setGoal(IndexerGoal.OFF));

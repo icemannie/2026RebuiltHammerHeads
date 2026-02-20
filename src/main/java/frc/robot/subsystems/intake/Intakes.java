@@ -81,8 +81,11 @@ public class Intakes extends SubsystemBase {
                                 IntakesGoal.OFF,
                                 left.off().alongWith(right.off()),
                                 IntakesGoal.STOW,
-                                left.stow().alongWith(right.stow())),
-                        () -> goal));
+                                left.stow().alongWith(right.stow()),
+                                IntakesGoal.ESTOP,
+                                left.off().alongWith(right.off())),
+                        () -> goal))
+                .onlyIf(() -> this.goal != IntakesGoal.ESTOP);
     }
 
     public IntakesGoal getGoal() {
@@ -116,7 +119,8 @@ public class Intakes extends SubsystemBase {
         AUTOSWITCH,
         MANUAL,
         STOW,
-        OFF
+        OFF,
+        ESTOP
     }
 
     public enum IntakeSide {

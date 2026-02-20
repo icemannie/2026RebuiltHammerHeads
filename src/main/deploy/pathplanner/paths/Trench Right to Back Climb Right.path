@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.004542877391922,
-        "y": 0.6184833451452869
+        "x": 4.942437329933884,
+        "y": 0.6500000000000001
       },
       "isLocked": false,
       "linkedName": "Trench Exit Right"
@@ -20,31 +20,52 @@
         "y": 0.65
       },
       "prevControl": {
-        "x": 4.1744822794399346,
+        "x": 4.571984065389942,
         "y": 0.6499999999999999
       },
       "nextControl": {
-        "x": 3.347538888888889,
-        "y": 0.65
+        "x": 2.423104820436354,
+        "y": 0.6500000000000001
       },
       "isLocked": false,
       "linkedName": "Trench Start Right"
     },
     {
       "anchor": {
-        "x": 3.3,
-        "y": 0.65
+        "x": 0.45,
+        "y": 2.33249053030303
       },
       "prevControl": {
-        "x": 3.55,
-        "y": 0.65
+        "x": 0.4633712121212119,
+        "y": 1.2943749999999998
+      },
+      "nextControl": {
+        "x": 0.44433070077990133,
+        "y": 2.772644161325212
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.45,
+        "y": 3.6
+      },
+      "prevControl": {
+        "x": 0.45,
+        "y": 3.35
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Dump Right"
+      "linkedName": "Back Climb Right"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -61,7 +82,7 @@
     "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Dumping",
+  "folder": "Climbs",
   "idealStartingState": {
     "velocity": 2.0,
     "rotation": 90.0

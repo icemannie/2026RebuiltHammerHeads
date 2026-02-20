@@ -80,6 +80,12 @@ public class Superstructure extends SubsystemBase {
                                 this.intake.setGoal(IntakesGoal.MANUAL),
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Start collecting"),
+                Goal.EXPANDED,
+                () -> Commands.sequence(
+                                this.turret.setGoal(TurretGoal.IDLE),
+                                this.intake.setGoal(IntakesGoal.OFF),
+                                this.indexer.setGoal(IndexerGoal.OFF))
+                        .withName("Start expanded"),
                 Goal.IDLE,
                 () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.OFF),
@@ -107,7 +113,7 @@ public class Superstructure extends SubsystemBase {
                         this.runOnce(() -> nonCollectingGoal = goal),
                         this.runOnce(() -> this.goal = goal)
                                 .andThen(goalCommands.get(goal).get()),
-                        () -> this.goal == Goal.COLLECTING)
+                        () -> this.goal == Goal.COLLECTING || (this.goal == Goal.EXPANDED && goal != Goal.EXPANDED))
                 .withName("Set goal");
     }
 
@@ -135,6 +141,7 @@ public class Superstructure extends SubsystemBase {
         SCORING,
         PASSING,
         COLLECTING,
+        EXPANDED,
         IDLE
     }
 }

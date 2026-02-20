@@ -41,7 +41,6 @@ import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -147,7 +146,7 @@ public class RobotContainer {
                 // indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
                 // turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
-                climber = new Climber(new ClimberIOTalonFX());
+                climber = new Climber(new ClimberIO() {});
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0]),
@@ -300,8 +299,11 @@ public class RobotContainer {
         turnTrigger.onFalse(turret.setTurnPosition(Degrees.of(0)));
 
         switchIntakesTrigger.onTrue(intakes.switchIntakes());
-        collectTrigger.onTrue(superstructure.startCollecting());
-        collectTrigger.onFalse(superstructure.stopCollecting());
+        collectTrigger.onTrue(Commands.either(
+                superstructure.startCollecting(),
+                superstructure.setGoal(Goal.EXPANDED),
+                () -> superstructure.getGoal() != Goal.COLLECTING));
+        collectTrigger.onFalse(superstructure.stopCollecting().onlyIf(() -> superstructure.getGoal() == Goal.EXPANDED));
 
         turretTuningTrigger.onTrue(Commands.either(
                 turret.setGoal(TurretGoal.OFF),

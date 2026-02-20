@@ -6,6 +6,7 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.Constants.TurretConstants.*;
@@ -19,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -106,6 +108,9 @@ public class Turret extends SubsystemBase {
                         this.nonDuckingGoal = goal;
                         return;
                     }
+                    if (this.goal == TurretGoal.ESTOP) {
+                        return;
+                    }
                     this.goal = goal;
                     switch (goal) {
                         case SCORING:
@@ -132,6 +137,11 @@ public class Turret extends SubsystemBase {
                                     RadiansPerSecond.of(0));
                             break;
                         case OFF:
+                            io.stopFlywheel();
+                            io.stopHood();
+                            io.stopTurn();
+                            break;
+                        case ESTOP:
                             io.stopFlywheel();
                             io.stopHood();
                             io.stopTurn();
@@ -190,10 +200,26 @@ public class Turret extends SubsystemBase {
 
     private boolean underTrench() {
         Pose2d pose = poseSupplier.get();
+        ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
+        Distance duckDistance = DUCK_DISTANCE;
+        if (pose.getMeasureX().lt(FieldConstants.TRENCH_BUMP_X) && fieldSpeeds.vxMetersPerSecond > 0) {
+            duckDistance =
+                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
+        } else if (pose.getMeasureX().lt(FieldConstants.FIELD_LENGTH.div(2)) && fieldSpeeds.vxMetersPerSecond < 0) {
+            duckDistance =
+                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
+        } else if (pose.getMeasureX().lt(FieldConstants.FIELD_LENGTH.minus(FieldConstants.TRENCH_BUMP_X))
+                && fieldSpeeds.vxMetersPerSecond > 0) {
+            duckDistance =
+                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
+        } else if (fieldSpeeds.vxMetersPerSecond < 0) {
+            duckDistance =
+                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
+        }
 
-        return (pose.getMeasureX().isNear(FieldConstants.TRENCH_BUMP_X, DUCK_DISTANCE)
+        return (pose.getMeasureX().isNear(FieldConstants.TRENCH_BUMP_X, duckDistance)
                         || pose.getMeasureX()
-                                .isNear(FieldConstants.FIELD_LENGTH.minus(FieldConstants.TRENCH_BUMP_X), DUCK_DISTANCE))
+                                .isNear(FieldConstants.FIELD_LENGTH.minus(FieldConstants.TRENCH_BUMP_X), duckDistance))
                 && (pose.getMeasureY().lt(FieldConstants.TRENCH_WIDTH)
                         || pose.getMeasureY().gt(FieldConstants.FIELD_WIDTH.minus(FieldConstants.TRENCH_WIDTH)));
     }
@@ -287,6 +313,7 @@ public class Turret extends SubsystemBase {
         IDLE,
         TUNING,
         DUCKING,
-        OFF
+        OFF,
+        ESTOP
     }
 }

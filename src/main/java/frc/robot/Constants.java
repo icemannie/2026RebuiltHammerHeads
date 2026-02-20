@@ -438,7 +438,8 @@ public final class Constants {
         public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
         public static final Angle TURNAROUND_ZONE = Degrees.of(30);
 
-        public static final Distance DUCK_DISTANCE = Meters.of(0.75);
+        public static final Distance DUCK_DISTANCE = Meters.of(0.3);
+        public static final double DUCK_DISTANCE_PER_MPS = 0.2;
 
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
@@ -811,9 +812,17 @@ public final class Constants {
 
         public static final PathConstraints CONSTRAINTS = new PathConstraints(
                 MetersPerSecond.of(3),
-                MetersPerSecondPerSecond.of(4),
+                MetersPerSecondPerSecond.of(2),
                 DegreesPerSecond.of(360),
                 DegreesPerSecondPerSecond.of(540),
+                Volts.of(12),
+                false);
+
+        public static final PathConstraints SCORING_CONSTRAINTS = new PathConstraints(
+                MetersPerSecond.of(2),
+                MetersPerSecondPerSecond.of(1),
+                DegreesPerSecond.of(360),
+                DegreesPerSecondPerSecond.of(360),
                 Volts.of(12),
                 false);
 
