@@ -73,9 +73,24 @@ public class AutoCreator {
         }
     }
 
-    private static record AutoPath(
-            StartEndPoint start, StartEndPoint end, String name, boolean collect, double dumpTime) {
-        private static AutoPath fromString(String s) {
+    private static class AutoPath {
+        protected final StartEndPoint start;
+        protected final StartEndPoint end;
+        protected final String name;
+        protected final boolean collect;
+        protected final double dumpTime;
+        private PathPlannerPath pathPlannerPath = null;
+        private PathPlannerTrajectory idealTrajectory = null;
+
+        private AutoPath(StartEndPoint start, StartEndPoint end, String name, boolean collect, double dumpTime) {
+            this.start = start;
+            this.end = end;
+            this.name = name;
+            this.collect = collect;
+            this.dumpTime = dumpTime;
+        }
+
+        protected static AutoPath fromString(String s) {
             if (s.startsWith("Collect")) {
                 return fromCollectString(s);
             }
@@ -95,7 +110,7 @@ public class AutoCreator {
             return new AutoPath(start, end, s, false, dumpTime);
         }
 
-        private static AutoPath fromCollectString(String s) {
+        protected static AutoPath fromCollectString(String s) {
             String[] parts = s.split(" ");
             if (parts.length != 4) {
                 throw new IllegalArgumentException("Invalid collect auto path: " + s);
@@ -113,7 +128,10 @@ public class AutoCreator {
             return new AutoPath(startEnd, startEnd, s, collect, 0);
         }
 
-        private PathPlannerPath getPathPlannerPath() {
+        protected PathPlannerPath getPathPlannerPath() {
+            if (pathPlannerPath != null) {
+                return pathPlannerPath;
+            }
             try {
                 PathPlannerPath path = PathPlannerPath.fromPathFile(name);
                 List<ConstraintsZone> constraintZones = path.getConstraintZones();
@@ -137,17 +155,20 @@ public class AutoCreator {
                         new GoalEndState(
                                 end.handoffVelocity, path.getGoalEndState().rotation()),
                         false);
+                this.pathPlannerPath = path;
                 return path;
             } catch (FileVersionException | IOException | ParseException e) {
                 throw new RuntimeException("Failed to load path: " + name, e);
             }
         }
 
-        private List<PathPlannerTrajectoryState> getTrajectoryStates() {
-            ArrayList<PathPlannerTrajectoryState> states = new ArrayList<>(getPathPlannerPath()
-                    .getIdealTrajectory(AutoConstants.PP_CONFIG)
-                    .orElse(new PathPlannerTrajectory(new ArrayList<>()))
-                    .getStates());
+        protected List<PathPlannerTrajectoryState> getTrajectoryStates() {
+            if (idealTrajectory == null) {
+                idealTrajectory = getPathPlannerPath()
+                        .getIdealTrajectory(AutoConstants.PP_CONFIG)
+                        .orElse(new PathPlannerTrajectory(new ArrayList<>()));
+            }
+            ArrayList<PathPlannerTrajectoryState> states = new ArrayList<>(idealTrajectory.getStates());
             if (dumpTime > 0) {
                 PathPlannerTrajectoryState lastState = states.get(states.size() - 1);
                 states.add(lastState.copyWithTime(lastState.timeSeconds + dumpTime));
@@ -157,11 +178,12 @@ public class AutoCreator {
         }
 
         private double getTotalTime() {
-            return getPathPlannerPath()
-                            .getIdealTrajectory(AutoConstants.PP_CONFIG)
-                            .orElse(new PathPlannerTrajectory(new ArrayList<>()))
-                            .getTotalTimeSeconds()
-                    + dumpTime;
+            if (idealTrajectory == null) {
+                idealTrajectory = getPathPlannerPath()
+                        .getIdealTrajectory(AutoConstants.PP_CONFIG)
+                        .orElse(new PathPlannerTrajectory(new ArrayList<>()));
+            }
+            return idealTrajectory.getTotalTimeSeconds() + dumpTime;
         }
     }
 
@@ -199,7 +221,7 @@ public class AutoCreator {
         for (StartEndPoint point : StartEndPoint.values()) {
             autoPathsByStartPoint.put(
                     point,
-                    autoPaths.stream().filter(path -> path.start() == point).toList());
+                    autoPaths.stream().filter(path -> path.start == point).toList());
         }
         return;
     }
