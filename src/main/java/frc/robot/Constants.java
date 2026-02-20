@@ -67,6 +67,7 @@ import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.TunableControls.ControlConstants;
 import frc.robot.util.TunableControls.TunableControlConstants;
 import java.io.IOException;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
@@ -461,25 +462,25 @@ public final class Constants {
         public static final InterpolatingDoubleTreeMap TOF_MAP = new InterpolatingDoubleTreeMap();
 
         static {
-            SHOT_MAP.put(5.34, new ShotData(RPM.of(2900), Degrees.of(27)));
+            SHOT_MAP.put(5.34, new ShotData(RPM.of(2850), Degrees.of(27)));
             TOF_MAP.put(5.34, 1.30);
 
-            SHOT_MAP.put(4.90, new ShotData(RPM.of(2700), Degrees.of(26)));
+            SHOT_MAP.put(4.90, new ShotData(RPM.of(2820), Degrees.of(26)));
             TOF_MAP.put(4.90, 1.42);
 
-            SHOT_MAP.put(4.44, new ShotData(RPM.of(2820), Degrees.of(25.5)));
+            SHOT_MAP.put(4.44, new ShotData(RPM.of(2800), Degrees.of(25.5)));
             TOF_MAP.put(4.44, 1.34);
 
-            SHOT_MAP.put(4.05, new ShotData(RPM.of(2800), Degrees.of(25)));
+            SHOT_MAP.put(4.05, new ShotData(RPM.of(2770), Degrees.of(25)));
             TOF_MAP.put(4.05, 1.36);
 
-            SHOT_MAP.put(3.74, new ShotData(RPM.of(2750), Degrees.of(24)));
+            SHOT_MAP.put(3.74, new ShotData(RPM.of(2720), Degrees.of(24)));
             TOF_MAP.put(3.74, 1.21);
 
-            SHOT_MAP.put(3.42, new ShotData(RPM.of(2700), Degrees.of(23)));
+            SHOT_MAP.put(3.42, new ShotData(RPM.of(2670), Degrees.of(23)));
             TOF_MAP.put(3.42, 1.40);
 
-            SHOT_MAP.put(3.06, new ShotData(RPM.of(2610), Degrees.of(22)));
+            SHOT_MAP.put(3.06, new ShotData(RPM.of(2600), Degrees.of(22)));
             TOF_MAP.put(3.06, 1.38);
 
             SHOT_MAP.put(2.73, new ShotData(RPM.of(2500), Degrees.of(20.5)));
@@ -659,7 +660,7 @@ public final class Constants {
 
     public static class VisionConstants {
         // Standard deviation baselines for 1 meter distance to single tag
-        public static final double[] LINEAR_STD_DEV_BASELINES = {0.15, 0.15, 0.07, 0.15, 0.15, 0.15}; // Meters
+        public static final double[] LINEAR_STD_DEV_BASELINES = {0.2, 0.2, 0.07, 0.3, 0.3, 0.3}; // Meters
         public static final double ANGULAR_STD_DEV_BASELINE = 1.0; // Radians
 
         public static final String[] CAMERA_NAMES = {
@@ -685,6 +686,11 @@ public final class Constants {
             }
             APRIL_TAGS = tryAprilTags;
         }
+
+        public static final Set<Integer> BLUE_HUB_TAG_IDS = Set.of(18, 19, 20, 21, 24, 25, 26, 27);
+        public static final Set<Integer> RED_HUB_TAG_IDS = Set.of(2, 3, 4, 5, 8, 9, 10, 1);
+
+        public static final double HUB_TAG_STD_DEV_BIAS = 0.05; // added to non-hub tags
 
         // Transforms from robot to cameras, (x forward, y left, z up), (roll, pitch,
         // yaw)

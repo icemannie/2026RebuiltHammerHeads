@@ -19,9 +19,12 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
@@ -70,6 +73,9 @@ public class Vision extends SubsystemBase {
         List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
         List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
+        Set<Integer> hubTags =
+                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? BLUE_HUB_TAG_IDS : RED_HUB_TAG_IDS;
+
         // Loop over cameras
         for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
             // Update disconnected alert
@@ -80,14 +86,6 @@ public class Vision extends SubsystemBase {
             List<Pose3d> robotPoses = new LinkedList<>();
             List<Pose3d> robotPosesAccepted = new LinkedList<>();
             List<Pose3d> robotPosesRejected = new LinkedList<>();
-
-            // Add tag poses
-            for (int tagId : inputs[cameraIndex].tagIds) {
-                var tagPose = APRIL_TAGS.getTagPose(tagId);
-                if (tagPose.isPresent()) {
-                    tagPoses.add(tagPose.get());
-                }
-            }
 
             // Loop over pose observations
             for (var observation : inputs[cameraIndex].poseObservations) {
@@ -117,6 +115,17 @@ public class Vision extends SubsystemBase {
 
                 // Calculate standard deviations
                 double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+
+                // Add tag poses
+                for (int tagId : inputs[cameraIndex].tagIds) {
+                    var tagPose = APRIL_TAGS.getTagPose(tagId);
+                    if (tagPose.isPresent()) {
+                        tagPoses.add(tagPose.get());
+                    }
+                    if (!hubTags.contains(tagId)) {
+                        stdDevFactor += HUB_TAG_STD_DEV_BIAS; // Non-hub tags are less accurate
+                    }
+                }
                 double linearStdDev = LINEAR_STD_DEV_BASELINES[cameraIndex] * stdDevFactor;
                 double angularStdDev = ANGULAR_STD_DEV_BASELINE * stdDevFactor;
 
