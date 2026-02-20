@@ -113,7 +113,8 @@ public class Superstructure extends SubsystemBase {
                         this.runOnce(() -> nonCollectingGoal = goal),
                         this.runOnce(() -> this.goal = goal)
                                 .andThen(goalCommands.get(goal).get()),
-                        () -> this.goal == Goal.COLLECTING || (this.goal == Goal.EXPANDED && goal != Goal.EXPANDED))
+                        () -> (this.goal == Goal.COLLECTING && goal != Goal.COLLECTING && goal != Goal.EXPANDED)
+                                || (this.goal == Goal.EXPANDED && goal != Goal.EXPANDED))
                 .withName("Set goal");
     }
 
