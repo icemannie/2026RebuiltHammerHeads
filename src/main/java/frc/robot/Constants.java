@@ -623,7 +623,7 @@ public final class Constants {
         public static final Angle STOW_POSITION = Rotations.of(0.2);
         public static final Angle STOW_SLOW_POSITION = Rotations.of(15);
         public static final Angle EXTEND_POSITION_FRONT = Rotations.of(40);
-        public static final Angle EXTEND_POSITION_BACK = Rotations.of(41);
+        public static final Angle EXTEND_POSITION_BACK = Rotations.of(43);
 
         // volts / rotation diff
         public static final double DIFF_KP = 0.0;
