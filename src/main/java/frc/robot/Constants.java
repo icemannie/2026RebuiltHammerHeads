@@ -462,37 +462,37 @@ public final class Constants {
         public static final InterpolatingDoubleTreeMap TOF_MAP = new InterpolatingDoubleTreeMap();
 
         static {
-            SHOT_MAP.put(5.34, new ShotData(RPM.of(2850), Degrees.of(27)));
+            SHOT_MAP.put(5.34, new ShotData(RPM.of(2820), Degrees.of(27)));
             TOF_MAP.put(5.34, 1.30);
 
-            SHOT_MAP.put(4.90, new ShotData(RPM.of(2810), Degrees.of(26)));
+            SHOT_MAP.put(4.90, new ShotData(RPM.of(2790), Degrees.of(26)));
             TOF_MAP.put(4.90, 1.42);
 
-            SHOT_MAP.put(4.44, new ShotData(RPM.of(2800), Degrees.of(25.5)));
+            SHOT_MAP.put(4.44, new ShotData(RPM.of(2775), Degrees.of(25.5)));
             TOF_MAP.put(4.44, 1.34);
 
-            SHOT_MAP.put(4.05, new ShotData(RPM.of(2790), Degrees.of(25)));
+            SHOT_MAP.put(4.05, new ShotData(RPM.of(2775), Degrees.of(25)));
             TOF_MAP.put(4.05, 1.36);
 
-            SHOT_MAP.put(3.74, new ShotData(RPM.of(2720), Degrees.of(24)));
+            SHOT_MAP.put(3.74, new ShotData(RPM.of(2710), Degrees.of(24)));
             TOF_MAP.put(3.74, 1.21);
 
-            SHOT_MAP.put(3.42, new ShotData(RPM.of(2670), Degrees.of(23)));
+            SHOT_MAP.put(3.42, new ShotData(RPM.of(2650), Degrees.of(23)));
             TOF_MAP.put(3.42, 1.40);
 
-            SHOT_MAP.put(3.06, new ShotData(RPM.of(2600), Degrees.of(22)));
+            SHOT_MAP.put(3.06, new ShotData(RPM.of(2560), Degrees.of(22)));
             TOF_MAP.put(3.06, 1.38);
 
-            SHOT_MAP.put(2.73, new ShotData(RPM.of(2500), Degrees.of(20.5)));
+            SHOT_MAP.put(2.73, new ShotData(RPM.of(2460), Degrees.of(20.5)));
             TOF_MAP.put(2.73, 1.34);
 
-            SHOT_MAP.put(2.45, new ShotData(RPM.of(2450), Degrees.of(19.5)));
+            SHOT_MAP.put(2.45, new ShotData(RPM.of(2400), Degrees.of(19.5)));
             TOF_MAP.put(2.45, 1.28);
 
-            SHOT_MAP.put(2.14, new ShotData(RPM.of(2400), Degrees.of(18)));
+            SHOT_MAP.put(2.14, new ShotData(RPM.of(2360), Degrees.of(18)));
             TOF_MAP.put(2.14, 1.31);
 
-            SHOT_MAP.put(1.86, new ShotData(RPM.of(2350), Degrees.of(17)));
+            SHOT_MAP.put(1.86, new ShotData(RPM.of(2300), Degrees.of(17)));
             TOF_MAP.put(1.86, 1.24);
 
             SHOT_MAP.put(1.55, new ShotData(RPM.of(2275), Degrees.of(15)));
@@ -618,12 +618,12 @@ public final class Constants {
         public static final Current STALL_CURRENT = Amps.of(20);
         public static final AngularVelocity STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(6);
 
-        public static final Angle CLIMB_POSITION = Rotations.of(30);
-        public static final Angle AUTO_CLIMB_POSITION = Rotations.of(35);
+        public static final Angle CLIMB_POSITION = Rotations.of(16);
+        public static final Angle AUTO_CLIMB_POSITION = Rotations.of(20);
         public static final Angle STOW_POSITION = Rotations.of(0.1);
-        public static final Angle STOW_SLOW_POSITION = Rotations.of(15);
-        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(37);
-        public static final Angle EXTEND_POSITION_BACK = Rotations.of(40.5);
+        public static final Angle STOW_SLOW_POSITION = Rotations.of(10);
+        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(30);
+        public static final Angle EXTEND_POSITION_BACK = Rotations.of(28);
 
         // volts / rotation diff
         public static final double DIFF_KP = 0.0;
