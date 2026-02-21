@@ -618,12 +618,12 @@ public final class Constants {
         public static final Current STALL_CURRENT = Amps.of(20);
         public static final AngularVelocity STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(6);
 
-        public static final Angle CLIMB_POSITION = Rotations.of(16);
-        public static final Angle AUTO_CLIMB_POSITION = Rotations.of(20);
-        public static final Angle STOW_POSITION = Rotations.of(0.1);
-        public static final Angle STOW_SLOW_POSITION = Rotations.of(10);
-        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(30);
-        public static final Angle EXTEND_POSITION_BACK = Rotations.of(28);
+        public static final Angle CLIMB_POSITION = Rotations.of(25);
+        public static final Angle AUTO_CLIMB_POSITION = Rotations.of(30);
+        public static final Angle STOW_POSITION = Rotations.of(0.2);
+        public static final Angle STOW_SLOW_POSITION = Rotations.of(15);
+        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(39);
+        public static final Angle EXTEND_POSITION_BACK = Rotations.of(37);
 
         // volts / rotation diff
         public static final double DIFF_KP = 0.0;
