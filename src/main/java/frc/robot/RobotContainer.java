@@ -37,6 +37,7 @@ import frc.robot.commands.AlignToClimb;
 import frc.robot.commands.AutoClimb;
 import frc.robot.commands.AutoCreator;
 import frc.robot.commands.DriveCharacterization;
+import frc.robot.commands.SystemChecks;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
@@ -118,6 +119,8 @@ public class RobotContainer {
     private final LoggedDashboardChooser<Command> autoChooser;
 
     public final AutoCreator autoCreator;
+
+    public final SystemChecks systemChecks;
 
     public FuelSim fuelSim;
 
@@ -246,6 +249,8 @@ public class RobotContainer {
         SmartDashboard.putData(
                 "Auto Climb",
                 AutoClimb.getAutoClimbCommand(drive, climber).beforeStarting(superstructure.setGoal(Goal.IDLE)));
+
+        systemChecks = new SystemChecks(turret, intakes, indexer, climber);
 
         // Turret turnaround danger zone controller rumble
         turret.turnaroundZoneMaxTrigger.whileTrue(rumbleLeft);

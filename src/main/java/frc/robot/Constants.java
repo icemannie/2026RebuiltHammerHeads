@@ -621,7 +621,7 @@ public final class Constants {
         public static final Angle CLIMB_POSITION = Rotations.of(30);
         public static final Angle AUTO_CLIMB_POSITION = Rotations.of(35);
         public static final Angle STOW_POSITION = Rotations.of(0.1);
-        public static final Angle STOW_SLOW_POSITION = Rotations.of(10);
+        public static final Angle STOW_SLOW_POSITION = Rotations.of(15);
         public static final Angle EXTEND_POSITION_FRONT = Rotations.of(37);
         public static final Angle EXTEND_POSITION_BACK = Rotations.of(40.5);
 
