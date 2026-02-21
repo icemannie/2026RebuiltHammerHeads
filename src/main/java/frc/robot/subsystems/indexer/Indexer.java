@@ -7,6 +7,7 @@ import static frc.robot.Constants.IndexerConstants.FEED_VOLTAGE;
 import static frc.robot.Constants.IndexerConstants.SPIN_VOLTAGE;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,6 +34,8 @@ public class Indexer extends SubsystemBase {
     public Indexer(IndexerIO io, Supplier<Rotation2d> robotRotationSupplier) {
         this.io = io;
         this.visualizer = new IndexerVisualizer(robotRotationSupplier);
+
+        SmartDashboard.putData("EStops/Indexer", setGoal(IndexerGoal.ESTOP));
     }
 
     @Override

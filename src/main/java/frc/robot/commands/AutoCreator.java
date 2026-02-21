@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.ConstraintsZone;
@@ -17,6 +18,7 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -52,8 +54,8 @@ public class AutoCreator {
         DUMP_LEFT("Dump Left", MetersPerSecond.of(0)),
         BUMP_START_LEFT("Bump Start Left", MetersPerSecond.of(0)),
         BUMP_START_RIGHT("Bump Start Right", MetersPerSecond.of(0)),
-        BUMP_LEFT("Bump Left", MetersPerSecond.of(0)),
-        BUMP_RIGHT("Bump Right", MetersPerSecond.of(0)),
+        BUMP_LEFT("Bump Left", AutoConstants.HANDOFF_VELOCITY),
+        BUMP_RIGHT("Bump Right", AutoConstants.HANDOFF_VELOCITY),
         BUMP_DUMP_LEFT("Bump Dump Left", MetersPerSecond.of(0)),
         BUMP_DUMP_RIGHT("Bump Dump Right", MetersPerSecond.of(0)),
         DEPOT("Depot", MetersPerSecond.of(0)),
@@ -358,8 +360,15 @@ public class AutoCreator {
                     toAdd = toAdd.alongWith(intakes.deployLeft());
                 } else if (path.start == StartEndPoint.TRENCH_RIGHT) {
                     toAdd = toAdd.alongWith(intakes.deployRight());
+                } else if (path.start == StartEndPoint.BUMP_LEFT) {
+                    toAdd = toAdd.alongWith(intakes.deployLeft());
+                } else if (path.start == StartEndPoint.BUMP_RIGHT) {
+                    toAdd = toAdd.alongWith(intakes.deployRight());
                 }
-            } else {
+            } else if (!((path.start == StartEndPoint.TRENCH_START_LEFT && path.end == StartEndPoint.TRENCH_LEFT)
+                    || (path.start == StartEndPoint.TRENCH_START_RIGHT && path.end == StartEndPoint.TRENCH_RIGHT)
+                    || (path.start == StartEndPoint.BUMP_START_LEFT && path.end == StartEndPoint.BUMP_LEFT)
+                    || (path.start == StartEndPoint.BUMP_START_RIGHT && path.end == StartEndPoint.BUMP_RIGHT))) {
                 toAdd = toAdd.alongWith(Commands.waitUntil(superstructure.inAllianceZoneTrigger)
                         .andThen(turret.setGoal(TurretGoal.SCORING)
                                 .asProxy()
@@ -373,12 +382,18 @@ public class AutoCreator {
 
             if (path.end == StartEndPoint.CLIMB_LEFT || path.end == StartEndPoint.CLIMB_RIGHT) {
                 toAdd = toAdd.alongWith(climber.extend(), intakes.setGoal(IntakesGoal.STOW))
-                        .andThen(AutoClimb.getAutoClimbCommand(drive, climber));
+                        .andThen(
+                                Commands.waitUntil(() ->
+                                        DriverStation.getMatchTime() <= AutoConstants.CLIMB_TIME_REMAINING.in(Seconds)),
+                                AutoClimb.getAutoClimbCommand(drive, climber));
             }
 
             if (path.end == StartEndPoint.BACK_CLIMB_LEFT || path.end == StartEndPoint.BACK_CLIMB_RIGHT) {
                 toAdd = toAdd.alongWith(intakes.setGoal(IntakesGoal.STOW))
-                        .andThen(AutoClimb.getAutoClimbCommand(drive, climber));
+                        .andThen(
+                                Commands.waitUntil(() ->
+                                        DriverStation.getMatchTime() <= AutoConstants.CLIMB_TIME_REMAINING.in(Seconds)),
+                                AutoClimb.getAutoClimbCommand(drive, climber));
             }
 
             if (path.end == StartEndPoint.DEPOT) {
@@ -401,7 +416,10 @@ public class AutoCreator {
                                     .andThen(indexer.setGoal(IndexerGoal.ACTIVE)),
                             Commands.waitTime(AutoConstants.START_SPIN_UP_TIME.plus(AutoConstants.START_DUMP_TIME))));
         } else {
-            commands.add(0, indexer.setGoal(IndexerGoal.OFF));
+            commands.add(
+                    0,
+                    indexer.setGoal(IndexerGoal.OFF)
+                            .alongWith(turret.setGoal(TurretGoal.IDLE).asProxy()));
         }
 
         return Commands.sequence(commands.toArray(Command[]::new));

@@ -158,7 +158,7 @@ public final class Constants {
 
         private static final SteerFeedbackType STEER_FEEDBACK_TYPE = SteerFeedbackType.FusedCANcoder;
 
-        private static final Current SLIP_CURRENT = Amps.of(95); // NEEDS TUNING
+        private static final Current SLIP_CURRENT = Amps.of(95);
 
         private static final TalonFXConfiguration DRIVE_CONFIGS = new TalonFXConfiguration()
                 .withCurrentLimits(new CurrentLimitsConfigs()
@@ -445,8 +445,8 @@ public final class Constants {
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
 
-        public static final Current HOOD_STALL_CURRENT = Amps.of(20);
-        public static final AngularVelocity HOOD_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.1);
+        public static final Current HOOD_STALL_CURRENT = Amps.of(10);
+        public static final AngularVelocity HOOD_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.3);
         public static final Voltage HOOD_ZEROING_VOLTAGE = Volts.of(-1);
 
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
@@ -465,13 +465,13 @@ public final class Constants {
             SHOT_MAP.put(5.34, new ShotData(RPM.of(2850), Degrees.of(27)));
             TOF_MAP.put(5.34, 1.30);
 
-            SHOT_MAP.put(4.90, new ShotData(RPM.of(2820), Degrees.of(26)));
+            SHOT_MAP.put(4.90, new ShotData(RPM.of(2810), Degrees.of(26)));
             TOF_MAP.put(4.90, 1.42);
 
             SHOT_MAP.put(4.44, new ShotData(RPM.of(2800), Degrees.of(25.5)));
             TOF_MAP.put(4.44, 1.34);
 
-            SHOT_MAP.put(4.05, new ShotData(RPM.of(2770), Degrees.of(25)));
+            SHOT_MAP.put(4.05, new ShotData(RPM.of(2790), Degrees.of(25)));
             TOF_MAP.put(4.05, 1.36);
 
             SHOT_MAP.put(3.74, new ShotData(RPM.of(2720), Degrees.of(24)));
@@ -545,14 +545,14 @@ public final class Constants {
                 new CurrentLimitsConfigs().withStatorCurrentLimit(100).withSupplyCurrentLowerLimit(30);
 
         public static final CurrentLimitsConfigs SPIN_CURRENT_LIMITS =
-                new CurrentLimitsConfigs().withStatorCurrentLimit(50).withSupplyCurrentLowerLimit(30);
+                new CurrentLimitsConfigs().withStatorCurrentLimit(65).withSupplyCurrentLowerLimit(30);
 
         public static final MotionMagicConfigs RACK_MOTION_MAGIC = new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(RotationsPerSecond.of(240))
                 .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(400));
 
         public static final Distance STOW_POS = Inches.of(0);
-        public static final Distance DEPLOY_POS = Inches.of(10.75);
+        public static final Distance DEPLOY_POS = Inches.of(11);
         public static final Voltage SPIN_VOLTAGE = Volts.of(12);
         public static final Voltage REVERSE_SPIN_VOLTAGE = Volts.of(-2);
         public static final Voltage UNJAM_SPIN_VOLTAGE = Volts.of(10);
@@ -611,17 +611,19 @@ public final class Constants {
 
         public static final Voltage CLIMB_VOLTAGE = Volts.of(-12);
         public static final Voltage STOW_VOLTAGE = Volts.of(-10);
+        public static final Voltage STOW_SLOW_VOLTAGE = Volts.of(-1);
         public static final Voltage EXTEND_VOLTAGE = Volts.of(3);
         public static final Voltage ZERO_VOLTAGE = Volts.of(-1);
 
         public static final Current STALL_CURRENT = Amps.of(20);
-        public static final AngularVelocity STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.2);
+        public static final AngularVelocity STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(6);
 
-        public static final Angle CLIMB_POSITION = Rotations.of(25);
+        public static final Angle CLIMB_POSITION = Rotations.of(30);
         public static final Angle AUTO_CLIMB_POSITION = Rotations.of(35);
         public static final Angle STOW_POSITION = Rotations.of(0.1);
-        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(43);
-        public static final Angle EXTEND_POSITION_BACK = Rotations.of(43);
+        public static final Angle STOW_SLOW_POSITION = Rotations.of(10);
+        public static final Angle EXTEND_POSITION_FRONT = Rotations.of(37);
+        public static final Angle EXTEND_POSITION_BACK = Rotations.of(40.5);
 
         // volts / rotation diff
         public static final double DIFF_KP = 0.0;
@@ -818,15 +820,15 @@ public final class Constants {
 
         public static final PathConstraints CONSTRAINTS = new PathConstraints(
                 MetersPerSecond.of(3),
-                MetersPerSecondPerSecond.of(2),
+                MetersPerSecondPerSecond.of(3.5),
                 DegreesPerSecond.of(360),
                 DegreesPerSecondPerSecond.of(540),
                 Volts.of(12),
                 false);
 
         public static final PathConstraints SCORING_CONSTRAINTS = new PathConstraints(
-                MetersPerSecond.of(2),
-                MetersPerSecondPerSecond.of(1),
+                MetersPerSecond.of(2.5),
+                MetersPerSecondPerSecond.of(2.5),
                 DegreesPerSecond.of(360),
                 DegreesPerSecondPerSecond.of(360),
                 Volts.of(12),
@@ -839,9 +841,10 @@ public final class Constants {
                 DegreesPerSecondPerSecond.of(540),
                 Volts.of(12),
                 false);
-        public static final LinearVelocity HANDOFF_VELOCITY = MetersPerSecond.of(3);
+        public static final LinearVelocity HANDOFF_VELOCITY = MetersPerSecond.of(2.5);
         public static final Time START_DUMP_TIME = Seconds.of(1.5);
         public static final Time START_SPIN_UP_TIME = Seconds.of(0.5);
+        public static final Time CLIMB_TIME_REMAINING = Seconds.of(3);
     }
 
     private Constants() {}

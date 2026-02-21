@@ -12,6 +12,8 @@ import static frc.robot.Constants.ClimberConstants.EXTEND_VOLTAGE;
 import static frc.robot.Constants.ClimberConstants.STALL_ANGULAR_VELOCITY;
 import static frc.robot.Constants.ClimberConstants.STALL_CURRENT;
 import static frc.robot.Constants.ClimberConstants.STOW_POSITION;
+import static frc.robot.Constants.ClimberConstants.STOW_SLOW_POSITION;
+import static frc.robot.Constants.ClimberConstants.STOW_SLOW_VOLTAGE;
 import static frc.robot.Constants.ClimberConstants.STOW_VOLTAGE;
 import static frc.robot.Constants.ClimberConstants.ZERO_VOLTAGE;
 
@@ -51,6 +53,10 @@ public class Climber extends SubsystemBase {
         return this.runOnce(io::stop);
     }
 
+    public boolean isExtended() {
+        return inputs.frontPosition.gte(EXTEND_POSITION_FRONT) && inputs.backPosition.gte(EXTEND_POSITION_BACK);
+    }
+
     public Command climb() {
         return Commands.sequence(
                         setVoltage(CLIMB_VOLTAGE),
@@ -72,6 +78,9 @@ public class Climber extends SubsystemBase {
     public Command stow() {
         return Commands.sequence(
                         setVoltage(STOW_VOLTAGE),
+                        Commands.waitUntil(() -> inputs.frontPosition.lte(STOW_SLOW_POSITION)
+                                || inputs.backPosition.lte(STOW_SLOW_POSITION)),
+                        setVoltage(STOW_SLOW_VOLTAGE),
                         Commands.parallel(
                                 Commands.waitUntil(() -> inputs.frontPosition.lte(STOW_POSITION))
                                         .finallyDo(io::stopFront),
@@ -104,11 +113,11 @@ public class Climber extends SubsystemBase {
                                 Commands.waitUntil(() -> inputs.frontTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
                                                 && inputs.frontVelocity.abs(RadiansPerSecond)
                                                         < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
-                                        .finallyDo(() -> io.stopFront())),
-                        Commands.waitUntil(() -> inputs.backTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
-                                        && inputs.backVelocity.abs(RadiansPerSecond)
-                                                < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
-                                .finallyDo(() -> io.stopBack()),
+                                        .finallyDo(() -> io.stopFront()),
+                                Commands.waitUntil(() -> inputs.backTorqueCurrent.abs(Amps) > STALL_CURRENT.abs(Amps)
+                                                && inputs.backVelocity.abs(RadiansPerSecond)
+                                                        < STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond))
+                                        .finallyDo(() -> io.stopBack())),
                         Commands.waitSeconds(0.4),
                         this.runOnce(io::zeroPosition))
                 .finallyDo(io::stop);

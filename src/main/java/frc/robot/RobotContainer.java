@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
@@ -41,6 +40,7 @@ import frc.robot.commands.DriveCharacterization;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -48,7 +48,6 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
@@ -103,19 +102,17 @@ public class RobotContainer {
             () -> controller.setRumble(RumbleType.kRightRumble, 0));
 
     // Bindings
-    private final Trigger resetHeadingTrigger = controller.y();
-    private final Trigger indexTrigger = controller.a();
-    private final Trigger deployLeftIntakeTrigger = controller.b();
     private final Trigger intakeAutoSwitchTrigger = controller.x();
     private final Trigger zeroRightRackTrigger = controller.povRight();
     private final Trigger zeroLeftRackTrigger = controller.povLeft();
     private final Trigger zeroHoodTrigger = controller.povUp();
-    private final Trigger hoodTrigger = controller.rightBumper();
-    private final Trigger turnTrigger = controller.rightTrigger();
     private final Trigger switchIntakesTrigger = controller.leftBumper();
     private final Trigger collectTrigger = controller.leftTrigger();
-    private final Trigger turretTuningTrigger = controller.start();
-    private final Trigger turretScoringTrigger = controller.back();
+    // private final Trigger turretTuningTrigger = controller.start();
+    private final Trigger turretScoringTrigger = controller.a();
+    private final Trigger climbTrigger = controller.y();
+    private final Trigger extendTrigger = controller.start();
+    private final Trigger stowTrigger = controller.back();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -146,7 +143,7 @@ public class RobotContainer {
                 // indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
                 // turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
-                climber = new Climber(new ClimberIO() {});
+                climber = new Climber(new ClimberIOTalonFX());
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVision(VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0]),
@@ -268,15 +265,6 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(teleopDrive);
 
-        resetHeadingTrigger.onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d())));
-        indexTrigger.onTrue(Commands.either(
-                indexer.setGoal(IndexerGoal.ACTIVE),
-                indexer.setGoal(IndexerGoal.OFF),
-                () -> indexer.getGoal() == IndexerGoal.OFF));
-
-        deployLeftIntakeTrigger.onTrue(intakes.deployLeft());
-        deployLeftIntakeTrigger.onFalse(intakes.setGoal(IntakesGoal.STOW));
-
         intakeAutoSwitchTrigger.onTrue(Commands.either(
                 intakes.setGoal(IntakesGoal.STOW),
                 intakes.setGoal(IntakesGoal.AUTOSWITCH),
@@ -292,12 +280,6 @@ public class RobotContainer {
         zeroHoodTrigger.whileTrue(turret.zeroHoodSequence());
         zeroHoodTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
 
-        hoodTrigger.onTrue(turret.setHoodPosition(Degrees.of(35)));
-        hoodTrigger.onFalse(turret.setHoodPosition(Degrees.of(20)));
-
-        turnTrigger.onTrue(turret.setTurnPosition(Degrees.of(20)));
-        turnTrigger.onFalse(turret.setTurnPosition(Degrees.of(0)));
-
         switchIntakesTrigger.onTrue(intakes.switchIntakes());
         collectTrigger.onTrue(Commands.either(
                 superstructure.startCollecting(),
@@ -305,15 +287,20 @@ public class RobotContainer {
                 () -> superstructure.getGoal() != Goal.COLLECTING));
         collectTrigger.onFalse(superstructure.stopCollecting().onlyIf(() -> superstructure.getGoal() == Goal.EXPANDED));
 
-        turretTuningTrigger.onTrue(Commands.either(
-                turret.setGoal(TurretGoal.OFF),
-                turret.setGoal(TurretGoal.TUNING),
-                () -> turret.getGoal() == TurretGoal.TUNING));
+        // turretTuningTrigger.onTrue(Commands.either(
+        //         turret.setGoal(TurretGoal.OFF),
+        //         turret.setGoal(TurretGoal.TUNING),
+        //         () -> turret.getGoal() == TurretGoal.TUNING));
 
         turretScoringTrigger.onTrue(Commands.either(
                 superstructure.setGoal(Goal.IDLE),
                 superstructure.setGoal(Goal.SCORING),
                 () -> superstructure.getGoal() == Goal.SCORING));
+
+        climbTrigger.toggleOnTrue(
+                intakes.setGoal(IntakesGoal.STOW).andThen(AutoClimb.getAutoClimbCommand(drive, climber)));
+        extendTrigger.toggleOnTrue(intakes.setGoal(IntakesGoal.STOW).andThen(climber.extend()));
+        stowTrigger.toggleOnTrue(climber.stow());
     }
 
     private void configureFuelSim() {

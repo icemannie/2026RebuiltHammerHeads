@@ -33,7 +33,7 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> poseSupplier;
 
     @AutoLogOutput
-    private Goal goal = Goal.SCORING;
+    private Goal goal = Goal.IDLE;
 
     @AutoLogOutput
     private Goal nonCollectingGoal = goal;
@@ -93,8 +93,11 @@ public class Superstructure extends SubsystemBase {
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Idle"));
 
-        inAllianceZoneTrigger.and(DriverStation::isTeleop).onTrue(this.setGoal(Goal.SCORING));
-        // inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.IDLE));
+        inAllianceZoneTrigger
+                .and(DriverStation::isTeleop)
+                .and(activeHubTrigger)
+                .onTrue(stopCollecting().onlyIf(() -> goal == Goal.COLLECTING).andThen(this.setGoal(Goal.SCORING)));
+        inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.COLLECTING));
         inAllianceZoneTrigger.negate().and(DriverStation::isTeleop).onTrue(this.setGoal(Goal.PASSING));
     }
 

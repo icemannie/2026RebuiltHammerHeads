@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -47,7 +48,7 @@ public class Turret extends SubsystemBase {
             : FieldConstants.HUB_RED;
 
     @AutoLogOutput
-    private TurretGoal goal = TurretGoal.SCORING;
+    private TurretGoal goal = TurretGoal.OFF;
 
     private final TurretVisualizer turretVisualizer;
 
@@ -99,12 +100,16 @@ public class Turret extends SubsystemBase {
                                 .rotateAround(poseSupplier.get().getTranslation(), new Rotation2d(inputs.turnPosition)))
                         .transformBy(ROBOT_TO_TURRET_TRANSFORM),
                 fieldSpeedsSupplier);
+
+        SmartDashboard.putData("EStops/Turret", setGoal(TurretGoal.ESTOP));
     }
 
     public Command setGoal(TurretGoal goal) {
         return this.runOnce(() -> {
                     // don't interrupt ducking with another goal
-                    if (this.goal == TurretGoal.DUCKING && underTrenchTrigger.getAsBoolean()) {
+                    if (goal != TurretGoal.ESTOP
+                            && this.goal == TurretGoal.DUCKING
+                            && underTrenchTrigger.getAsBoolean()) {
                         this.nonDuckingGoal = goal;
                         return;
                     }

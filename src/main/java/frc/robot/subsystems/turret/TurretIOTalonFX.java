@@ -70,10 +70,11 @@ public class TurretIOTalonFX implements TurretIO {
     private final VelocityTorqueCurrentFOC flywheelVelocityRequest = new VelocityTorqueCurrentFOC(0);
 
     private final Follower followRequest = new Follower(
-            FLYWHEEL_ID,
-            FLYWHEEL_OUTPUT_CONFIGS.Inverted == FLYWHEEL_FOLLOWER_OUTPUT_CONFIGS.Inverted
-                    ? MotorAlignmentValue.Aligned
-                    : MotorAlignmentValue.Opposed);
+                    FLYWHEEL_ID,
+                    FLYWHEEL_OUTPUT_CONFIGS.Inverted == FLYWHEEL_FOLLOWER_OUTPUT_CONFIGS.Inverted
+                            ? MotorAlignmentValue.Aligned
+                            : MotorAlignmentValue.Opposed)
+            .withUpdateFreqHz(250);
     private final NeutralOut neutralOut = new NeutralOut();
 
     public TurretIOTalonFX() {

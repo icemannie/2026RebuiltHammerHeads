@@ -27,7 +27,7 @@ public class Intakes extends SubsystemBase {
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
     @AutoLogOutput
-    private IntakesGoal goal = IntakesGoal.AUTOSWITCH;
+    private IntakesGoal goal = IntakesGoal.OFF;
 
     @AutoLogOutput
     public Trigger deployLeftTrigger = new Trigger(this::travelingLeft)
@@ -60,6 +60,8 @@ public class Intakes extends SubsystemBase {
         SmartDashboard.putData("Intakes/Autoswitch", setGoal(IntakesGoal.AUTOSWITCH));
         SmartDashboard.putData("Intakes/Stow All", setGoal(IntakesGoal.STOW));
         SmartDashboard.putData("Intakes/Disable", setGoal(IntakesGoal.OFF));
+
+        SmartDashboard.putData("EStops/Intakes", setGoal(IntakesGoal.ESTOP));
     }
 
     public boolean travelingLeft() {
