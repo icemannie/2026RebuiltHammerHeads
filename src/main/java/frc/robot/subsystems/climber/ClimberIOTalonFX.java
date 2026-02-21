@@ -57,11 +57,11 @@ public class ClimberIOTalonFX implements ClimberIO {
         frontConfigs = new TalonFXConfiguration()
                 .withCurrentLimits(CURRENT_LIMITS_CONFIGS)
                 .withMotorOutput(FRONT_OUTPUT_CONFIGS)
-                .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.3));
+                .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.5));
         backConfigs = new TalonFXConfiguration()
                 .withCurrentLimits(CURRENT_LIMITS_CONFIGS)
                 .withMotorOutput(BACK_OUTPUT_CONFIGS)
-                .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.3));
+                .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.5));
 
         PhoenixUtil.tryUntilOk(5, () -> frontMotor.getConfigurator().apply(frontConfigs, 0.25));
         PhoenixUtil.tryUntilOk(5, () -> backMotor.getConfigurator().apply(backConfigs, 0.25));
