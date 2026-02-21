@@ -3,32 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.989800000002521,
-        "y": 7.440683333333332
+        "x": 6.145711111111111,
+        "y": 5.525899999999999
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.942237329936405,
-        "y": 7.440683333333332
+        "x": 5.098148441044994,
+        "y": 5.525899999999999
       },
       "isLocked": false,
-      "linkedName": "Trench Exit Left"
+      "linkedName": "Bump Exit Left"
     },
     {
       "anchor": {
-        "x": 3.5439444444444446,
-        "y": 7.440683333333332
+        "x": 3.4,
+        "y": 5.525899999999999
       },
       "prevControl": {
-        "x": 4.518389620945498,
-        "y": 7.440683333333332
+        "x": 4.3744451765010535,
+        "y": 5.525899999999999
       },
       "nextControl": {
-        "x": 2.3695103759919096,
-        "y": 7.440683333333332
+        "x": 2.225565931547465,
+        "y": 5.525899999999999
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -79,14 +79,28 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 1.0,
-      "rotationDegrees": -90.0
+      "rotationDegrees": -45.0
     },
     {
       "waypointRelativePos": 2,
       "rotationDegrees": 90.0
     }
   ],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 4.0,
+      "constraints": {
+        "maxVelocity": 1.5,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 540.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -105,7 +119,7 @@
   "folder": "Climbs",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": -90.0
+    "rotation": -45.0
   },
   "useDefaultConstraints": true
 }

@@ -3,51 +3,51 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.403314393939394,
-        "y": 7.441
+        "x": 5.99,
+        "y": 2.3784444444444444
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.653314393939394,
-        "y": 7.441
+        "x": 4.99,
+        "y": 2.3784444444444444
       },
       "isLocked": false,
-      "linkedName": "Dump Left"
+      "linkedName": "Bump Exit Right"
     },
     {
       "anchor": {
-        "x": 3.5439444444444446,
-        "y": 7.440683333333332
+        "x": 3.4,
+        "y": 2.4174222222222226
       },
       "prevControl": {
-        "x": 3.2939444444444446,
-        "y": 7.440683333333332
+        "x": 4.7471211118987995,
+        "y": 2.4174222222222226
       },
       "nextControl": {
-        "x": 4.043944444444445,
-        "y": 7.440683333333332
+        "x": 2.052878888101201,
+        "y": 2.4174222222222226
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.989800000002521,
-        "y": 7.440683333333332
+        "x": 0.75,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 4.989800000002521,
-        "y": 7.440683333333332
+        "x": 1.75,
+        "y": 0.6500000000000001
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Trench Exit Left"
+      "linkedName": "Outpost"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.0,
-      "rotationDegrees": -90.0
+      "waypointRelativePos": 1,
+      "rotationDegrees": 135.0
     }
   ],
   "constraintZones": [],
@@ -63,13 +63,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Inside Zone",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 135.0
   },
   "useDefaultConstraints": true
 }

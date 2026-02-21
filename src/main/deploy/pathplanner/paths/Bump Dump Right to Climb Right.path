@@ -3,33 +3,47 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5439444444444446,
-        "y": 7.440683333333332
+        "x": 3.4,
+        "y": 2.4174222222222226
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2939513545064707,
-        "y": 7.442542091861001
+        "x": 2.225565931547465,
+        "y": 2.417422222222223
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.403314393939394,
-        "y": 7.441
+        "x": 1.8532833333333332,
+        "y": 3.6
       },
       "prevControl": {
-        "x": 3.653314393939394,
-        "y": 7.441
+        "x": 2.7462302159730845,
+        "y": 3.6
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Dump Left"
+      "linkedName": "Climb Right"
     }
   ],
   "rotationTargets": [],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.0,
+      "maxWaypointRelativePos": 1.0,
+      "constraints": {
+        "maxVelocity": 1.5,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 540.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -45,10 +59,10 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Starts",
+  "folder": "Climbs",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": -90.0
+    "velocity": 2.0,
+    "rotation": 135.0
   },
   "useDefaultConstraints": true
 }

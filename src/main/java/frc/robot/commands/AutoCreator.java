@@ -52,6 +52,10 @@ public class AutoCreator {
         DUMP_LEFT("Dump Left", MetersPerSecond.of(0)),
         BUMP_START_LEFT("Bump Start Left", MetersPerSecond.of(0)),
         BUMP_START_RIGHT("Bump Start Right", MetersPerSecond.of(0)),
+        BUMP_LEFT("Bump Left", MetersPerSecond.of(0)),
+        BUMP_RIGHT("Bump Right", MetersPerSecond.of(0)),
+        BUMP_DUMP_LEFT("Bump Dump Left", MetersPerSecond.of(0)),
+        BUMP_DUMP_RIGHT("Bump Dump Right", MetersPerSecond.of(0)),
         DEPOT("Depot", MetersPerSecond.of(0)),
         OUTPOST("Outpost", MetersPerSecond.of(0));
 
@@ -111,11 +115,6 @@ public class AutoCreator {
         }
 
         protected static AutoPath fromCollectString(String s) {
-            String[] parts = s.split(" ");
-            if (parts.length != 4) {
-                throw new IllegalArgumentException("Invalid collect auto path: " + s);
-            }
-
             boolean collect = false;
 
             if (s.endsWith("!")) {
@@ -123,7 +122,16 @@ public class AutoCreator {
                 s = s.substring(0, s.length() - 1);
             }
 
-            StartEndPoint startEnd = s.contains("Left") ? StartEndPoint.TRENCH_LEFT : StartEndPoint.TRENCH_RIGHT;
+            StartEndPoint startEnd;
+            if (s.contains("Left Bump")) {
+                startEnd = StartEndPoint.BUMP_LEFT;
+            } else if (s.contains("Right Bump")) {
+                startEnd = StartEndPoint.BUMP_RIGHT;
+            } else if (s.contains("Left")) {
+                startEnd = StartEndPoint.TRENCH_LEFT;
+            } else {
+                startEnd = StartEndPoint.TRENCH_RIGHT;
+            }
 
             return new AutoPath(startEnd, startEnd, s, collect, 0);
         }

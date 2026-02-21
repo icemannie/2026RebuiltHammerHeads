@@ -3,54 +3,68 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.989800000002521,
-        "y": 7.440683333333332
+        "x": 3.4,
+        "y": 2.4174222222222226
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.942237329936405,
-        "y": 7.440683333333332
+        "x": 2.225565931547465,
+        "y": 2.417422222222223
       },
       "isLocked": false,
-      "linkedName": "Trench Exit Left"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.5439444444444446,
-        "y": 7.440683333333332
+        "x": 0.45,
+        "y": 2.33249053030303
       },
       "prevControl": {
-        "x": 4.518389620945498,
-        "y": 7.440683333333332
+        "x": 0.44999999999999996,
+        "y": 2.03249053030303
       },
       "nextControl": {
-        "x": 2.3695103759919096,
-        "y": 7.440683333333332
+        "x": 0.45,
+        "y": 2.77249053030303
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.8435388888888893,
-        "y": 3.9
+        "x": 0.45,
+        "y": 3.6
       },
       "prevControl": {
-        "x": 2.7364857715286406,
-        "y": 3.9
+        "x": 0.45,
+        "y": 3.35
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Climb Left"
+      "linkedName": "Back Climb Right"
     }
   ],
   "rotationTargets": [
     {
       "waypointRelativePos": 1.0,
-      "rotationDegrees": -90.0
+      "rotationDegrees": 90.0
     }
   ],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.0,
+      "maxWaypointRelativePos": 2.0,
+      "constraints": {
+        "maxVelocity": 1.5,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 540.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -63,13 +77,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Climbs",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": -90.0
+    "rotation": 135.0
   },
   "useDefaultConstraints": true
 }

@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5439444444444446,
-        "y": 7.440683333333332
+        "x": 3.5,
+        "y": 2.4174222222222226
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2939513545064707,
-        "y": 7.442542091861001
+        "x": 4.847121111898799,
+        "y": 2.4174222222222226
       },
       "isLocked": false,
-      "linkedName": "Trench Start Left"
+      "linkedName": "Bump Start Right"
     },
     {
       "anchor": {
-        "x": 3.403314393939394,
-        "y": 7.441
+        "x": 5.99,
+        "y": 2.3784444444444444
       },
       "prevControl": {
-        "x": 3.653314393939394,
-        "y": 7.441
+        "x": 4.99,
+        "y": 2.3784444444444444
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Dump Left"
+      "linkedName": "Bump Exit Right"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 135.0
   },
   "reversed": false,
-  "folder": "Starts",
+  "folder": "Inside Zone",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 135.0
   },
   "useDefaultConstraints": true
 }
