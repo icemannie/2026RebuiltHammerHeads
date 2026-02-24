@@ -6,7 +6,6 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.Constants.TurretConstants.*;
@@ -20,7 +19,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.Zones;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -74,7 +73,7 @@ public class Turret extends SubsystemBase {
     public final Trigger turnaroundZoneMinTrigger = new Trigger(this::inTurnaroundZoneMin).debounce(0.05);
 
     @AutoLogOutput
-    public final Trigger underTrenchTrigger = new Trigger(this::underTrench).debounce(0.1);
+    public final Trigger underTrenchTrigger;
 
     @AutoLogOutput
     private TurretGoal nonDuckingGoal = goal;
@@ -90,6 +89,8 @@ public class Turret extends SubsystemBase {
 
         hoodStalledTrigger = new Trigger(() -> inputs.hoodCurrent.abs(Amps) >= HOOD_STALL_CURRENT.abs(Amps)
                 && inputs.hoodVelocity.abs(RadiansPerSecond) <= HOOD_STALL_ANGULAR_VELOCITY.abs(RadiansPerSecond));
+
+        underTrenchTrigger = Zones.TRENCH_DUCK_ZONES.willContain(poseSupplier, fieldSpeedsSupplier, DUCK_TIME);
 
         underTrenchTrigger.onTrue(duck());
         underTrenchTrigger.onFalse(unduck());
@@ -201,32 +202,6 @@ public class Turret extends SubsystemBase {
 
     private boolean inTurnaroundZoneMin() {
         return inputs.turnPosition.isNear(MIN_TURN_ANGLE, TURNAROUND_ZONE);
-    }
-
-    private boolean underTrench() {
-        Pose2d pose = poseSupplier.get();
-        ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
-        Distance duckDistance = DUCK_DISTANCE;
-        if (pose.getMeasureX().lt(FieldConstants.TRENCH_BUMP_X) && fieldSpeeds.vxMetersPerSecond > 0) {
-            duckDistance =
-                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
-        } else if (pose.getMeasureX().lt(FieldConstants.FIELD_LENGTH.div(2)) && fieldSpeeds.vxMetersPerSecond < 0) {
-            duckDistance =
-                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
-        } else if (pose.getMeasureX().lt(FieldConstants.FIELD_LENGTH.minus(FieldConstants.TRENCH_BUMP_X))
-                && fieldSpeeds.vxMetersPerSecond > 0) {
-            duckDistance =
-                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
-        } else if (fieldSpeeds.vxMetersPerSecond < 0) {
-            duckDistance =
-                    duckDistance.plus(Meters.of(DUCK_DISTANCE_PER_MPS * Math.abs(fieldSpeeds.vxMetersPerSecond)));
-        }
-
-        return (pose.getMeasureX().isNear(FieldConstants.TRENCH_BUMP_X, duckDistance)
-                        || pose.getMeasureX()
-                                .isNear(FieldConstants.FIELD_LENGTH.minus(FieldConstants.TRENCH_BUMP_X), duckDistance))
-                && (pose.getMeasureY().lt(FieldConstants.TRENCH_WIDTH)
-                        || pose.getMeasureY().gt(FieldConstants.FIELD_WIDTH.minus(FieldConstants.TRENCH_WIDTH)));
     }
 
     @Override

@@ -361,6 +361,8 @@ public final class Constants {
                 new TunableControlConstants("Swerve/Trench Translation", TRENCH_TRANSLATION_BASE_CONSTANTS);
         public static final TunableControlConstants ROTATION_CONSTANTS =
                 new TunableControlConstants("Swerve/Rotation", ROTATION_BASE_CONSTANTS);
+        public static final Time TRENCH_ALIGN_TIME = Seconds.of(0.5);
+        public static final Time BUMP_ALIGN_TIME = Seconds.of(0.3);
     }
 
     public static class TurretConstants {
@@ -439,8 +441,8 @@ public final class Constants {
         public static final Angle MAX_TURN_ANGLE = Rotations.of(0.55);
         public static final Angle TURNAROUND_ZONE = Degrees.of(30);
 
-        public static final Distance DUCK_DISTANCE = Meters.of(0.3);
-        public static final double DUCK_DISTANCE_PER_MPS = 0.2;
+        public static final Distance EXTRA_DUCK_DISTANCE = Meters.of(0.3);
+        public static final Time DUCK_TIME = Seconds.of(0.2);
 
         public static final Angle MIN_HOOD_ANGLE = Degrees.of(14);
         public static final Angle MAX_HOOD_ANGLE = Degrees.of(45);
@@ -730,65 +732,13 @@ public final class Constants {
         public static final Distance FUNNEL_RADIUS = Inches.of(24);
         public static final Distance FUNNEL_HEIGHT = Inches.of(72 - 56.4);
 
-        public static final Distance TRENCH_BUMP_X = Inches.of(181.56);
-        public static final Distance TRENCH_WIDTH = Inches.of(49.86);
-        private static final Distance BUMP_INSET = TRENCH_WIDTH.plus(Inches.of(12));
-        private static final Distance BUMP_LENGTH = Inches.of(73);
-
-        private static final Distance TRENCH_ZONE_EXTENSION = Inches.of(60);
-        private static final Distance BUMP_ZONE_EXTENSION = Inches.of(60);
-        private static final Distance TRENCH_BUMP_ZONE_TRANSITION =
-                TRENCH_WIDTH.plus(BUMP_INSET).div(2);
-
-        public static final Translation2d[][] TRENCH_ZONES = {
-            new Translation2d[] {
-                new Translation2d(TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION), Inches.zero()),
-                new Translation2d(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION), TRENCH_BUMP_ZONE_TRANSITION)
-            },
-            new Translation2d[] {
-                new Translation2d(
-                        TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION), FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION)),
-                new Translation2d(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION), FIELD_WIDTH)
-            },
-            new Translation2d[] {
-                new Translation2d(FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION)), Inches.zero()),
-                new Translation2d(
-                        FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION)), TRENCH_BUMP_ZONE_TRANSITION)
-            },
-            new Translation2d[] {
-                new Translation2d(
-                        FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(TRENCH_ZONE_EXTENSION)),
-                        FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION)),
-                new Translation2d(FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(TRENCH_ZONE_EXTENSION)), FIELD_WIDTH)
-            }
-        };
-
-        public static final Translation2d[][] BUMP_ZONES = {
-            new Translation2d[] {
-                new Translation2d(TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION), TRENCH_BUMP_ZONE_TRANSITION),
-                new Translation2d(TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION), BUMP_INSET.plus(BUMP_LENGTH))
-            },
-            new Translation2d[] {
-                new Translation2d(
-                        TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION), FIELD_WIDTH.minus(BUMP_INSET.plus(BUMP_LENGTH))),
-                new Translation2d(
-                        TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION), FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION))
-            },
-            new Translation2d[] {
-                new Translation2d(
-                        FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION)),
-                        FIELD_WIDTH.minus(BUMP_INSET.plus(BUMP_LENGTH))),
-                new Translation2d(
-                        FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION)),
-                        FIELD_WIDTH.minus(TRENCH_BUMP_ZONE_TRANSITION))
-            },
-            new Translation2d[] {
-                new Translation2d(
-                        FIELD_LENGTH.minus(TRENCH_BUMP_X.plus(BUMP_ZONE_EXTENSION)), TRENCH_BUMP_ZONE_TRANSITION),
-                new Translation2d(
-                        FIELD_LENGTH.minus(TRENCH_BUMP_X.minus(BUMP_ZONE_EXTENSION)), BUMP_INSET.plus(BUMP_LENGTH))
-            }
-        };
+        public static final Distance TRENCH_BUMP_X =
+                Inches.of(181.56); // x position of the center of the trench and bump
+        public static final Distance TRENCH_WIDTH = Inches.of(49.86); // y width of the trench
+        public static final Distance TRENCH_BUMP_LENGTH = Inches.of(47); // x length of the trench and bump
+        public static final Distance TRENCH_BAR_WIDTH = Inches.of(4); // x width of the trench bar
+        public static final Distance TRENCH_BLOCK_WIDTH = Inches.of(12); // y width of block separating bump and trench
+        public static final Distance BUMP_WIDTH = Inches.of(73); // y width of bump
 
         public static final Distance TRENCH_CENTER = TRENCH_WIDTH.div(2);
     }
