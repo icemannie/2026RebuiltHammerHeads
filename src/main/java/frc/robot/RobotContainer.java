@@ -41,6 +41,7 @@ import frc.robot.commands.SystemChecks;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOSim;
 import frc.robot.subsystems.climber.ClimberIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -143,7 +144,7 @@ public class RobotContainer {
                         new IntakeIOTalonFXDual(
                                 IntakeConstants.FR_RACK_ID, IntakeConstants.BR_RACK_ID, IntakeConstants.RIGHT_SPIN_ID),
                         drive::getChassisSpeeds);
-                indexer = new Indexer(new IndexerIOTalonFX(), drive::getRotation);
+                indexer = new Indexer(new IndexerIOTalonFX());
                 // indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
                 turret = new Turret(new TurretIOTalonFX(), drive::getPose, drive::getFieldSpeeds);
                 // turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
@@ -170,8 +171,8 @@ public class RobotContainer {
                         new ModuleIOSim(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intakes = new Intakes(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
-                indexer = new Indexer(new IndexerIOSim(), drive::getRotation);
-                climber = new Climber(new ClimberIO() {});
+                indexer = new Indexer(new IndexerIOSim());
+                climber = new Climber(new ClimberIOSim());
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVisionSim(
@@ -196,7 +197,7 @@ public class RobotContainer {
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 intakes = new Intakes(new IntakeIO() {}, new IntakeIO() {}, drive::getChassisSpeeds);
                 turret = new Turret(new TurretIO() {}, drive::getPose, drive::getFieldSpeeds);
-                indexer = new Indexer(new IndexerIO() {}, drive::getRotation);
+                indexer = new Indexer(new IndexerIO() {});
                 climber = new Climber(new ClimberIO() {});
                 vision = new Vision(
                         drive::addVisionMeasurement,

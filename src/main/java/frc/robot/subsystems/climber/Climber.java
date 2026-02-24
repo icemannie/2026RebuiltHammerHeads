@@ -29,6 +29,8 @@ public class Climber extends SubsystemBase {
 
     private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
 
+    private final ClimberVisualizer visualizer = new ClimberVisualizer();
+
     public Climber(ClimberIO io) {
         this.io = io;
 
@@ -43,6 +45,7 @@ public class Climber extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Climber", inputs);
+        visualizer.update(inputs.frontPosition, inputs.backPosition);
     }
 
     private Command setVoltage(Voltage out) {

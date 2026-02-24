@@ -9,23 +9,16 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class IndexerVisualizer {
     private Angle spinAngle = Radians.zero();
-    private final Supplier<Rotation2d> robotRotationSupplier;
 
-    public IndexerVisualizer(Supplier<Rotation2d> robotRotationSupplier) {
-        this.robotRotationSupplier = robotRotationSupplier;
-    }
+    public IndexerVisualizer() {}
 
     public void update(AngularVelocity spinVelocity) {
-        spinAngle = spinAngle.plus(Seconds.of(0.02).times(spinVelocity));
+        spinAngle = spinAngle.plus(Seconds.of(0.02).times(spinVelocity.unaryMinus()));
 
-        Logger.recordOutput(
-                "Indexer/Pose",
-                new Pose3d(
-                        new Pose2d(new Translation2d(), new Rotation2d(spinAngle).plus(robotRotationSupplier.get()))));
+        Logger.recordOutput("Indexer/Pose", new Pose3d(new Pose2d(new Translation2d(), new Rotation2d(spinAngle))));
     }
 }

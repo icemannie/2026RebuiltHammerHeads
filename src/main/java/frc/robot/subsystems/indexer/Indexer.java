@@ -6,14 +6,12 @@ import static frc.robot.Constants.IndexerConstants.FEED_THRESHOLD;
 import static frc.robot.Constants.IndexerConstants.FEED_VOLTAGE;
 import static frc.robot.Constants.IndexerConstants.SPIN_VOLTAGE;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,9 +29,9 @@ public class Indexer extends SubsystemBase {
     @AutoLogOutput
     private IndexerGoal goal = IndexerGoal.OFF;
 
-    public Indexer(IndexerIO io, Supplier<Rotation2d> robotRotationSupplier) {
+    public Indexer(IndexerIO io) {
         this.io = io;
-        this.visualizer = new IndexerVisualizer(robotRotationSupplier);
+        this.visualizer = new IndexerVisualizer();
 
         SmartDashboard.putData("EStops/Indexer", setGoal(IndexerGoal.ESTOP));
     }
