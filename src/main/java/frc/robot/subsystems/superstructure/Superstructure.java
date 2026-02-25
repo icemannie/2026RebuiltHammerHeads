@@ -111,13 +111,13 @@ public class Superstructure extends SubsystemBase {
                                         FieldConstants.ALLIANCE_ZONE.plus(Dimensions.FULL_WIDTH.div(2))));
     }
 
-    public Command setGoal(Goal goal) {
+    public Command setGoal(Goal newGoal) {
         return Commands.either(
-                        this.runOnce(() -> nonCollectingGoal = goal),
-                        this.runOnce(() -> this.goal = goal)
-                                .andThen(goalCommands.get(goal).get()),
-                        () -> (this.goal == Goal.COLLECTING && goal != Goal.COLLECTING && goal != Goal.EXPANDED)
-                                || (this.goal == Goal.EXPANDED && goal != Goal.EXPANDED))
+                        this.runOnce(() -> nonCollectingGoal = newGoal),
+                        this.runOnce(() -> this.goal = newGoal)
+                                .andThen(goalCommands.get(newGoal).get()),
+                        () -> (this.goal == Goal.COLLECTING && newGoal != Goal.COLLECTING && newGoal != Goal.EXPANDED)
+                                || (this.goal == Goal.EXPANDED && newGoal != Goal.EXPANDED))
                 .withName("Set goal");
     }
 
