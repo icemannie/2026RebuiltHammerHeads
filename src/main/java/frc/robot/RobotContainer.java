@@ -109,10 +109,10 @@ public class RobotContainer {
     private final Trigger zeroRightRackTrigger = controller.povRight();
     private final Trigger zeroLeftRackTrigger = controller.povLeft();
     private final Trigger zeroHoodTrigger = controller.povUp();
-    private final Trigger switchIntakesTrigger = controller.leftBumper();
+    private final Trigger switchIntakesTrigger = controller.rightTrigger();
     private final Trigger collectTrigger = controller.leftTrigger();
     // private final Trigger turretTuningTrigger = controller.start();
-    private final Trigger turretScoringTrigger = controller.a();
+    //     private final Trigger turretScoringTrigger = controller.a();
     private final Trigger climbTrigger = controller.y();
     private final Trigger extendTrigger = controller.start();
     private final Trigger stowTrigger = controller.back();
@@ -290,21 +290,19 @@ public class RobotContainer {
         zeroHoodTrigger.onFalse(turret.setGoal(TurretGoal.OFF));
 
         switchIntakesTrigger.onTrue(intakes.switchIntakes());
-        collectTrigger.onTrue(Commands.either(
-                superstructure.startCollecting(),
-                superstructure.setGoal(Goal.EXPANDED),
-                () -> superstructure.getGoal() != Goal.COLLECTING));
-        collectTrigger.onFalse(superstructure.stopCollecting().onlyIf(() -> superstructure.getGoal() == Goal.EXPANDED));
+        collectTrigger.onTrue(superstructure.toggleCollecting());
+        // collectTrigger.onFalse(superstructure.stopCollecting().onlyIf(() -> superstructure.getGoal() ==
+        // Goal.EXPANDED));
 
         // turretTuningTrigger.onTrue(Commands.either(
         //         turret.setGoal(TurretGoal.OFF),
         //         turret.setGoal(TurretGoal.TUNING),
         //         () -> turret.getGoal() == TurretGoal.TUNING));
 
-        turretScoringTrigger.onTrue(Commands.either(
-                superstructure.setGoal(Goal.IDLE),
-                superstructure.setGoal(Goal.SCORING),
-                () -> superstructure.getGoal() == Goal.SCORING));
+        // turretScoringTrigger.onTrue(Commands.either(
+        //         superstructure.setGoal(Goal.IDLE),
+        //         superstructure.setGoal(Goal.SCORING),
+        //         () -> superstructure.getGoal() == Goal.SCORING));
 
         climbTrigger.toggleOnTrue(
                 intakes.setGoal(IntakesGoal.STOW).andThen(AutoClimb.getAutoClimbCommand(drive, climber)));

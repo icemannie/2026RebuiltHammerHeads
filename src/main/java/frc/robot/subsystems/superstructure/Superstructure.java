@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.superstructure;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -13,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.intake.Intakes;
@@ -21,7 +24,6 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
 import frc.robot.util.HubTracker;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
@@ -33,19 +35,33 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> poseSupplier;
 
     @AutoLogOutput
-    private Goal goal = Goal.IDLE;
-
-    @AutoLogOutput
-    private Goal nonCollectingGoal = goal;
+    private Goal goal = Goal.SCORING;
 
     @AutoLogOutput
     public final Trigger inAllianceZoneTrigger = new Trigger(this::inAllianceZone);
 
+    /**
+     * Will trigger when hub is active, or when there is less than ACTIVE_PRESHOOT_TIME until the next active period
+     * 100 seconds is an arbitrarily long time so as to not trigger shooting when timeRemainingInCurrentShift gives Optional.empty()
+     */
     @AutoLogOutput
-    public final Trigger activeHubTrigger = new Trigger(HubTracker::isActive).or(() -> HubTracker.getMatchTime() < 0);
+    public final Trigger activeHubTrigger = new Trigger(HubTracker::isActive)
+            .or(() -> HubTracker.getMatchTime() < 0)
+            .or(() -> HubTracker.isActiveNext()
+                    && HubTracker.timeRemainingInCurrentShift()
+                            .orElse(Seconds.of(100))
+                            .lte(TurretConstants.ACTIVE_PRESHOOT_TIME));
 
     @AutoLogOutput
-    public final Trigger onLeftSideTrigger;
+    public final Trigger activeInZoneTrigger =
+            inAllianceZoneTrigger.and(DriverStation::isTeleop).and(activeHubTrigger);
+
+    @AutoLogOutput
+    public final Trigger inactiveInZoneTrigger =
+            inAllianceZoneTrigger.and(DriverStation::isTeleop).and(activeHubTrigger.negate());
+
+    @AutoLogOutput
+    public final Trigger leaveZoneTrigger = inAllianceZoneTrigger.negate().and(DriverStation::isTeleop);
 
     private final Map<Goal, Supplier<Command>> goalCommands;
 
@@ -56,11 +72,6 @@ public class Superstructure extends SubsystemBase {
         this.indexer = indexer;
         this.poseSupplier = poseSupplier;
 
-        onLeftSideTrigger = new Trigger(() -> (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
-                        && poseSupplier.get().getMeasureY().gt(FieldConstants.FIELD_WIDTH.div(2)))
-                || (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                        && poseSupplier.get().getMeasureY().lte(FieldConstants.FIELD_WIDTH.div(2))));
-
         goalCommands = Map.of(
                 Goal.SCORING,
                 () -> Commands.sequence(
@@ -70,9 +81,9 @@ public class Superstructure extends SubsystemBase {
                         .withName("Start scoring"),
                 Goal.PASSING,
                 () -> Commands.sequence(
-                                this.turret.setGoal(TurretGoal.PASSING),
+                                this.turret.setGoal(TurretGoal.PASSING).onlyIf(inAllianceZoneTrigger.negate()),
                                 this.intake.setGoal(IntakesGoal.AUTOSWITCH),
-                                this.indexer.setGoal(IndexerGoal.ACTIVE))
+                                this.indexer.setGoal(IndexerGoal.ACTIVE).onlyIf(inAllianceZoneTrigger.negate()))
                         .withName("Start passing"),
                 Goal.COLLECTING,
                 () -> Commands.sequence(
@@ -88,17 +99,14 @@ public class Superstructure extends SubsystemBase {
                         .withName("Start expanded"),
                 Goal.IDLE,
                 () -> Commands.sequence(
-                                this.turret.setGoal(TurretGoal.OFF),
+                                this.turret.setGoal(TurretGoal.IDLE),
                                 this.intake.setGoal(IntakesGoal.STOW),
                                 this.indexer.setGoal(IndexerGoal.OFF))
                         .withName("Idle"));
 
-        inAllianceZoneTrigger
-                .and(DriverStation::isTeleop)
-                .and(activeHubTrigger)
-                .onTrue(stopCollecting().onlyIf(() -> goal == Goal.COLLECTING).andThen(this.setGoal(Goal.SCORING)));
-        inAllianceZoneTrigger.and(activeHubTrigger.negate()).onTrue(this.setGoal(Goal.COLLECTING));
-        inAllianceZoneTrigger.negate().and(DriverStation::isTeleop).onTrue(this.setGoal(Goal.PASSING));
+        activeInZoneTrigger.onTrue(this.setGoal(Goal.SCORING));
+        inactiveInZoneTrigger.onTrue(this.setGoal(Goal.COLLECTING));
+        leaveZoneTrigger.onTrue(this.setGoal(Goal.PASSING).onlyIf(() -> this.goal != Goal.COLLECTING));
     }
 
     private boolean inAllianceZone() {
@@ -112,28 +120,22 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command setGoal(Goal newGoal) {
-        return Commands.either(
-                        this.runOnce(() -> nonCollectingGoal = newGoal),
-                        this.runOnce(() -> this.goal = newGoal)
-                                .andThen(goalCommands.get(newGoal).get()),
-                        () -> (this.goal == Goal.COLLECTING && newGoal != Goal.COLLECTING && newGoal != Goal.EXPANDED)
-                                || (this.goal == Goal.EXPANDED && newGoal != Goal.EXPANDED))
+        return this.runOnce(() -> this.goal = newGoal)
+                .andThen(goalCommands.get(newGoal).get())
                 .withName("Set goal");
+    }
+
+    public Command toggleCollecting() {
+        return Commands.either(stopCollecting(), this.setGoal(Goal.COLLECTING), () -> this.goal == Goal.COLLECTING);
+    }
+
+    /** Handle state logic for transitioning out of COLLECTING */
+    public Command stopCollecting() {
+        return Commands.either(this.setGoal(Goal.SCORING), this.setGoal(Goal.PASSING), activeInZoneTrigger);
     }
 
     public Goal getGoal() {
         return goal;
-    }
-
-    public Command startCollecting() {
-        return Commands.defer(
-                () -> this.setGoal(Goal.COLLECTING).beforeStarting(() -> nonCollectingGoal = goal), Set.of(this));
-    }
-
-    public Command stopCollecting() {
-        return Commands.defer(
-                () -> this.setGoal(nonCollectingGoal).beforeStarting(() -> this.goal = nonCollectingGoal),
-                Set.of(this));
     }
 
     @Override
