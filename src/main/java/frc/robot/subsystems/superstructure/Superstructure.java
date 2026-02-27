@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.superstructure;
 
-import static edu.wpi.first.units.Units.Seconds;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -15,14 +13,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.intake.Intakes;
 import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
-import frc.robot.util.HubTracker;
+import frc.robot.util.HubShiftUtil;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -45,12 +42,8 @@ public class Superstructure extends SubsystemBase {
      * 100 seconds is an arbitrarily long time so as to not trigger shooting when timeRemainingInCurrentShift gives Optional.empty()
      */
     @AutoLogOutput
-    public final Trigger activeHubTrigger = new Trigger(HubTracker::isActive)
-            .or(() -> HubTracker.getMatchTime() < 0)
-            .or(() -> HubTracker.isActiveNext()
-                    && HubTracker.timeRemainingInCurrentShift()
-                            .orElse(Seconds.of(100))
-                            .lte(TurretConstants.ACTIVE_PRESHOOT_TIME));
+    public final Trigger activeHubTrigger =
+            new Trigger(() -> HubShiftUtil.getShiftedShiftInfo().active());
 
     @AutoLogOutput
     public final Trigger activeInZoneTrigger =

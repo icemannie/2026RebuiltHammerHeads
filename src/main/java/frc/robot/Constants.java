@@ -501,7 +501,7 @@ public final class Constants {
             TOF_MAP.put(1.55, 1.23);
         }
 
-        public static final Time ACTIVE_PRESHOOT_TIME = Seconds.of(1);
+        public static final Time ACTIVE_PRESHOOT_TIME = Seconds.of(2);
     }
 
     public static class IntakeConstants {
