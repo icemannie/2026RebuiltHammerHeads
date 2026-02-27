@@ -44,6 +44,8 @@ public class AutoCreator {
     private enum StartEndPoint {
         TRENCH_START_LEFT("Trench Start Left", MetersPerSecond.of(0)),
         TRENCH_START_RIGHT("Trench Start Right", MetersPerSecond.of(0)),
+        TRENCH_MID_START_LEFT("Trench Mid Start Left", MetersPerSecond.of(0)),
+        TRENCH_MID_START_RIGHT("Trench Mid Start Right", MetersPerSecond.of(0)),
         TRENCH_RIGHT("Trench Right", AutoConstants.HANDOFF_VELOCITY),
         TRENCH_LEFT("Trench Left", AutoConstants.HANDOFF_VELOCITY),
         CLIMB_RIGHT("Climb Right", MetersPerSecond.of(0)),
@@ -244,6 +246,8 @@ public class AutoCreator {
         startOptionsPub.set(new String[] {
             StartEndPoint.TRENCH_START_LEFT.name,
             StartEndPoint.TRENCH_START_RIGHT.name,
+            StartEndPoint.TRENCH_MID_START_LEFT.name,
+            StartEndPoint.TRENCH_MID_START_RIGHT.name,
             StartEndPoint.BUMP_START_LEFT.name,
             StartEndPoint.BUMP_START_RIGHT.name
         });
@@ -367,6 +371,8 @@ public class AutoCreator {
                 }
             } else if (!((path.start == StartEndPoint.TRENCH_START_LEFT && path.end == StartEndPoint.TRENCH_LEFT)
                     || (path.start == StartEndPoint.TRENCH_START_RIGHT && path.end == StartEndPoint.TRENCH_RIGHT)
+                    || (path.start == StartEndPoint.TRENCH_MID_START_LEFT && path.end == StartEndPoint.TRENCH_LEFT)
+                    || (path.start == StartEndPoint.TRENCH_MID_START_RIGHT && path.end == StartEndPoint.TRENCH_RIGHT)
                     || (path.start == StartEndPoint.BUMP_START_LEFT && path.end == StartEndPoint.BUMP_LEFT)
                     || (path.start == StartEndPoint.BUMP_START_RIGHT && path.end == StartEndPoint.BUMP_RIGHT))) {
                 toAdd = toAdd.alongWith(Commands.waitUntil(superstructure.inAllianceZoneTrigger)
