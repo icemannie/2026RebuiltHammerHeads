@@ -40,7 +40,9 @@ import java.util.EnumMap;
 import java.util.List;
 import org.json.simple.parser.ParseException;
 
+/** Builds autos from PathPlanner paths selected using SharkPlanner */
 public class AutoCreator {
+    /** A set waypoint that can be the start or end of a path */
     private enum StartEndPoint {
         TRENCH_START_LEFT("Trench Start Left", MetersPerSecond.of(0)),
         TRENCH_START_RIGHT("Trench Start Right", MetersPerSecond.of(0)),
@@ -64,7 +66,7 @@ public class AutoCreator {
         OUTPOST("Outpost", MetersPerSecond.of(0));
 
         private String name;
-        private LinearVelocity handoffVelocity;
+        private LinearVelocity handoffVelocity; // what velocity the ideal start/end state for this point should have
 
         private StartEndPoint(String name, LinearVelocity handoffVelocity) {
             this.name = name;
@@ -81,14 +83,15 @@ public class AutoCreator {
         }
     }
 
+    /** Wrapper of a PathPlanner path to get useful information */
     private static class AutoPath {
         protected final StartEndPoint start;
         protected final StartEndPoint end;
         protected final String name;
-        protected final boolean collect;
-        protected final double dumpTime;
-        private PathPlannerPath pathPlannerPath = null;
-        private PathPlannerTrajectory idealTrajectory = null;
+        protected final boolean collect; // whether the path should collect instead of passing (only applies to collection paths)
+        protected final double dumpTime; // time to spend still at the end of the path to shoot fuel
+        private PathPlannerPath pathPlannerPath = null; // for caching
+        private PathPlannerTrajectory idealTrajectory = null; // for caching
 
         private AutoPath(StartEndPoint start, StartEndPoint end, String name, boolean collect, double dumpTime) {
             this.start = start;
@@ -98,6 +101,7 @@ public class AutoCreator {
             this.dumpTime = dumpTime;
         }
 
+        // parse path file name
         protected static AutoPath fromString(String s) {
             if (s.startsWith("Collect")) {
                 return fromCollectString(s);
@@ -118,6 +122,7 @@ public class AutoCreator {
             return new AutoPath(start, end, s, false, dumpTime);
         }
 
+        /** parse file name for collection paths (automatically called by fromString) */
         protected static AutoPath fromCollectString(String s) {
             boolean collect = false;
 
@@ -140,6 +145,7 @@ public class AutoCreator {
             return new AutoPath(startEnd, startEnd, s, collect, 0);
         }
 
+        /** returns {@link PathPlannerPath} represented by this AutoPath */
         protected PathPlannerPath getPathPlannerPath() {
             if (pathPlannerPath != null) {
                 return pathPlannerPath;
@@ -189,7 +195,8 @@ public class AutoCreator {
             return states;
         }
 
-        private double getTotalTime() {
+        /** get the total time it would take to complete the ideal trajectory */
+        protected double getTotalTime() {
             if (idealTrajectory == null) {
                 idealTrajectory = getPathPlannerPath()
                         .getIdealTrajectory(AutoConstants.PP_CONFIG)
@@ -199,17 +206,21 @@ public class AutoCreator {
         }
     }
 
-    private EnumMap<StartEndPoint, List<AutoPath>> autoPathsByStartPoint = new EnumMap<>(StartEndPoint.class);
-    private ArrayList<AutoPath> selectedAutoPaths = new ArrayList<>();
-    private String lastAutoSelection = "";
+    private EnumMap<StartEndPoint, List<AutoPath>> autoPathsByStartPoint = new EnumMap<>(StartEndPoint.class); // determines which start points can start which paths
+    private ArrayList<AutoPath> selectedAutoPaths = new ArrayList<>(); // paths selected by SharkPlanner
+    private String lastAutoSelection = ""; // cached auto selection to determine value change
     private ArrayList<PathPlannerTrajectoryState> trajStates = new ArrayList<>();
-    private final StringArrayPublisher autoOptionsPub = AutoConstants.AUTO_OPTIONS.publish();
-    private final DoubleArrayPublisher autoOptionTimesPub = AutoConstants.AUTO_OPTION_TIMES.publish();
-    private final StringArrayPublisher startOptionsPub = AutoConstants.START_OPTIONS.publish();
+    private final StringArrayPublisher autoOptionsPub = AutoConstants.AUTO_OPTIONS.publish(); // available auto paths
+    private final DoubleArrayPublisher autoOptionTimesPub = AutoConstants.AUTO_OPTION_TIMES.publish(); // times corresponding to each available path
+    private final StringArrayPublisher startOptionsPub = AutoConstants.START_OPTIONS.publish(); // available start points
     private final StructArrayPublisher<Translation2d> trajPub = AutoConstants.TRAJECTORY.publish();
     private final DoubleArrayPublisher trajTimePub = AutoConstants.TRAJECTORY_TIMESTAMPS.publish();
-    private final DoublePublisher timestampPub = AutoConstants.TIMESTAMP.publish();
+    private final DoublePublisher timestampPub = AutoConstants.TIMESTAMP.publish(); // current timestamp
 
+    /**
+     * Load PathPlannerPaths from the rio's deploy directory
+     * @throws RuntimeException when the paths fail to load
+     */
     public void loadPathplannerPaths() {
         File pathplannerDir = new File(Filesystem.getDeployDirectory(), "pathplanner/paths");
         for (String s : pathplannerDir.list()) System.out.println(s);
@@ -235,9 +246,9 @@ public class AutoCreator {
                     point,
                     autoPaths.stream().filter(path -> path.start == point).toList());
         }
-        return;
     }
 
+    /** Builds autos from PathPlanner paths selected using SharkPlanner */
     public AutoCreator() {
         loadPathplannerPaths();
         autoOptionsPub.set(new String[0]);
@@ -263,6 +274,7 @@ public class AutoCreator {
         return arr;
     }
 
+    /** updates subscribers and publishes values to NetworkTables, recalculating auto paths if necessary */
     public void updateNT() {
         String selected = AutoConstants.AUTO_SELECTION.get();
         if (selected == lastAutoSelection) {
@@ -278,6 +290,7 @@ public class AutoCreator {
         try {
             StartEndPoint selectedStart = StartEndPoint.fromString(parts[0].trim());
 
+            // only start point
             if (parts.length == 1) {
                 List<AutoPath> autoPaths = autoPathsByStartPoint.get(selectedStart);
                 autoOptionsPub.set(autoPathsToStringArray(autoPaths));
@@ -289,12 +302,13 @@ public class AutoCreator {
                 return;
             }
 
+            // update auto paths
             selectedAutoPaths.clear();
             for (int i = 1; i < parts.length; i++) {
                 selectedAutoPaths.add(AutoPath.fromString(parts[i].trim()));
             }
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()); // thrown when StartEndPoint doesn't exist
             return;
         }
 
@@ -305,6 +319,7 @@ public class AutoCreator {
             return;
         }
 
+        // update NT values
         List<AutoPath> autoPaths = autoPathsByStartPoint.get(selectedAutoPaths.get(selectedAutoPaths.size() - 1).end);
         autoOptionsPub.set(autoPathsToStringArray(autoPaths));
         autoOptionTimesPub.set(autoPaths.stream()
@@ -339,6 +354,9 @@ public class AutoCreator {
         return timestamps;
     }
 
+    /**
+     * Builds auto from the currently selected paths in SharkPlanner
+     */
     public Command buildAuto(
             Drive drive,
             Intakes intakes,
@@ -360,6 +378,7 @@ public class AutoCreator {
                             turret.setGoal(TurretGoal.PASSING).asProxy());
                 }
 
+                // deploy appropriate intake
                 if (path.start == StartEndPoint.TRENCH_LEFT) {
                     toAdd = toAdd.alongWith(intakes.deployLeft());
                 } else if (path.start == StartEndPoint.TRENCH_RIGHT) {
@@ -374,7 +393,8 @@ public class AutoCreator {
                     || (path.start == StartEndPoint.TRENCH_MID_START_LEFT && path.end == StartEndPoint.TRENCH_LEFT)
                     || (path.start == StartEndPoint.TRENCH_MID_START_RIGHT && path.end == StartEndPoint.TRENCH_RIGHT)
                     || (path.start == StartEndPoint.BUMP_START_LEFT && path.end == StartEndPoint.BUMP_LEFT)
-                    || (path.start == StartEndPoint.BUMP_START_RIGHT && path.end == StartEndPoint.BUMP_RIGHT))) {
+                    || (path.start == StartEndPoint.BUMP_START_RIGHT && path.end == StartEndPoint.BUMP_RIGHT))) { // if not passing through trench or over bump
+                // set turret to score when possible
                 toAdd = toAdd.alongWith(Commands.waitUntil(superstructure.inAllianceZoneTrigger)
                         .andThen(turret.setGoal(TurretGoal.SCORING)
                                 .asProxy()
@@ -386,6 +406,7 @@ public class AutoCreator {
                 toAdd = toAdd.andThen(Commands.waitSeconds(path.dumpTime));
             }
 
+            // add climbing to the end if applicable
             if (path.end == StartEndPoint.CLIMB_LEFT || path.end == StartEndPoint.CLIMB_RIGHT) {
                 toAdd = toAdd.alongWith(climber.extend(), intakes.setGoal(IntakesGoal.STOW))
                         .andThen(
@@ -394,6 +415,7 @@ public class AutoCreator {
                                 AutoClimb.getAutoClimbCommand(drive, climber));
             }
 
+            // wait for alignment to extend climber
             if (path.end == StartEndPoint.BACK_CLIMB_LEFT || path.end == StartEndPoint.BACK_CLIMB_RIGHT) {
                 toAdd = toAdd.alongWith(intakes.setGoal(IntakesGoal.STOW))
                         .andThen(
@@ -413,6 +435,7 @@ public class AutoCreator {
             commands.add(toAdd);
         }
 
+        // add dump at start if necessary
         if (AutoConstants.DUMP_AT_START.get()) {
             commands.add(
                     0,
@@ -428,6 +451,7 @@ public class AutoCreator {
                             .alongWith(turret.setGoal(TurretGoal.IDLE).asProxy()));
         }
 
+        // turn commands ArrayList into a sequential command group
         return Commands.sequence(commands.toArray(Command[]::new));
     }
 }

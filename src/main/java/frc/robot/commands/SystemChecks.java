@@ -14,6 +14,7 @@ import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
 
+/** Class to run various system checks on the robot */
 public class SystemChecks {
     private final Turret turret;
     private final Intakes intakes;
@@ -32,10 +33,12 @@ public class SystemChecks {
         SmartDashboard.putData("System Checks/Climber", climber());
     }
 
+    /** Check turret turn, then hood, then flywheels */
     public Command turret() {
         return Commands.sequence(turretTurn(), turretHood(), turretFlywheels());
     }
 
+    /** Turns turret to 0, then 45 degrees, then -45 degrees, then back to 0 */
     public Command turretTurn() {
         return Commands.sequence(
                 turret.setTurnPosition(Degrees.of(0)),
@@ -47,6 +50,7 @@ public class SystemChecks {
                 turret.setTurnPosition(Degrees.of(0)));
     }
 
+    /** Zeroes hood, then moves to 30 degrees, then back to min */
     public Command turretHood() {
         return Commands.sequence(
                 turret.zeroHoodSequence(),
@@ -56,11 +60,13 @@ public class SystemChecks {
                 turret.setHoodPosition(MIN_HOOD_ANGLE));
     }
 
+    /** Spins flywheels up to 2500 RPM for 3 seconds, then turns them off */
     public Command turretFlywheels() {
         return Commands.sequence(
                 turret.setFlywheelSpeed(RPM.of(2500)), Commands.waitSeconds(3), turret.setGoal(TurretGoal.OFF));
     }
 
+    /** Zeroes both intakes then tests left then right */
     public Command intakes() {
         return Commands.sequence(
                 intakes.left.zeroSequence(),
@@ -71,18 +77,22 @@ public class SystemChecks {
                 intakes.setGoal(IntakesGoal.OFF));
     }
 
+    /** Deploy left intake, then bring it back in */
     public Command leftIntake() {
         return Commands.sequence(intakes.deployLeft(), Commands.waitSeconds(1), intakes.setGoal(IntakesGoal.STOW));
     }
-
+    
+    /** Deploy right intake, then bring it back in */
     public Command rightIntake() {
         return Commands.sequence(intakes.deployRight(), Commands.waitSeconds(1), intakes.setGoal(IntakesGoal.STOW));
     }
 
+    /** Activate indexer for 3 seconds */
     public Command indexer() {
         return Commands.sequence(indexer.activate(), Commands.waitSeconds(3), indexer.stop());
     }
 
+    /** Zero climber, then extend, then stow */
     public Command climber() {
         return Commands.sequence(
                 climber.zero(), Commands.waitSeconds(1), climber.extend(), Commands.waitSeconds(1), climber.stow());

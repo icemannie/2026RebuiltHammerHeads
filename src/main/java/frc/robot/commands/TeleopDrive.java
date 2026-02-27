@@ -14,7 +14,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -59,8 +58,6 @@ public class TeleopDrive extends Command {
     @AutoLogOutput
     private DriveMode currentDriveMode = DriveMode.NORMAL;
 
-    private ChassisSpeeds desiredFieldSpeeds = new ChassisSpeeds();
-
     /** Creates a new TeleopDrive. */
     public TeleopDrive(Drive drive, CommandXboxController controller) {
         this.drive = drive;
@@ -80,10 +77,7 @@ public class TeleopDrive extends Command {
         inTrenchZoneTrigger.onTrue(updateDriveMode(DriveMode.TRENCH_LOCK));
         inBumpZoneTrigger.onTrue(updateDriveMode(DriveMode.BUMP_LOCK));
         inTrenchZoneTrigger.or(inBumpZoneTrigger).onFalse(updateDriveMode(DriveMode.NORMAL));
-        // for (int i = 0; i < 4; i++) {
-        //     Logger.recordOutput("Trench" + i, FieldConstants.TRENCH_ZONES[i]);
-        //     Logger.recordOutput("Bump" + i, FieldConstants.BUMP_ZONES[i]);
-        // }
+
         addRequirements(drive);
     }
 
@@ -148,8 +142,6 @@ public class TeleopDrive extends Command {
 
         double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), ControllerConstants.CONTROLLER_DEADBAND);
         omega = Math.copySign(omega * omega, omega); // square for more precise rotation control
-
-        this.desiredFieldSpeeds = new ChassisSpeeds(linearVelocity.getX(), linearVelocity.getY(), omega);
 
         switch (currentDriveMode) {
             case NORMAL:

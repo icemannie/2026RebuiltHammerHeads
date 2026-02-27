@@ -15,21 +15,30 @@ import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Set;
 
-// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
-// information, see:
-// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+/** Command group to automatically align and then climb */
 public class AutoClimb extends SequentialCommandGroup {
-    /** Creates a new AutoClimb. */
+    /**
+     * Creates a new AutoClimb command group
+     * @param position position to climb from
+     * @param drive drive subsystem
+     * @param climber climber subsystem
+     * @param isAuto whether the climber should climb to the auto climb position
+     */
     public AutoClimb(ClimbPosition position, Drive drive, Climber climber, boolean isAuto) {
-        // Add your commands in the addCommands() call, e.g.
-        // addCommands(new FooCommand(), new BarCommand());
         addCommands(
                 climber.extend(), new AlignToClimb(position, drive), isAuto ? climber.autoClimb() : climber.climb());
     }
 
+    /**
+     * Auto climb to the closest position
+     * @param drive drive subsystem
+     * @param climber climber subsystem
+     * @return a deferred {@link AutoClimb} command group to climb to the nearest position (at time of scheduling)
+     */
     public static Command getAutoClimbCommand(Drive drive, Climber climber) {
         return Commands.defer(
                 () -> {
+                    // determine closest climb position
                     Pose2d pose = drive.getPose();
                     if (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Red) {
                         pose = FlippingUtil.flipFieldPose(pose);
@@ -44,7 +53,10 @@ public class AutoClimb extends SequentialCommandGroup {
                                                     .getPose()
                                                     .getY())
                                     / 2.0;
+
                     boolean isAuto = DriverStation.isAutonomous();
+
+                    // based on closeset climb position, create new AutoClimb command group
                     if (front && left) {
                         return new AutoClimb(ClimbPosition.FRONT_LEFT, drive, climber, isAuto);
                     } else if (front) {

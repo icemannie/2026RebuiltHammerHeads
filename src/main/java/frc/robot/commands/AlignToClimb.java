@@ -20,7 +20,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.TunableControls.TunablePIDController;
 import org.littletonrobotics.junction.Logger;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
+/** Command to align to a given climb position (front/back + left/right) */
 public class AlignToClimb extends Command {
     private final TunablePIDController translationController =
             new TunablePIDController(CLIMB_ALIGN_CONSTANTS_TRANSLATION);
@@ -31,7 +31,11 @@ public class AlignToClimb extends Command {
 
     private final Drive drive;
 
-    /** Creates a new AlignToClimb. */
+    /**
+     * Creates a new AlignToClimb command
+     * @param position which climb position to align to
+     * @param drive drive subsystem
+     */
     public AlignToClimb(ClimbPosition position, Drive drive) {
         this.position = position;
         this.drive = drive;
@@ -45,13 +49,18 @@ public class AlignToClimb extends Command {
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
+        // find  target pose from climb position, flipping if necessary
         this.targetPose = position.getPose();
         if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
             this.targetPose = FlippingUtil.flipFieldPose(targetPose);
         }
 
+        // reset PID controllers
         translationController.setSetpoint(0);
+        translationController.reset();
+
         rotationController.setSetpoint(targetPose.getRotation().getRadians());
+        rotationController.reset();
 
         Logger.recordOutput("Align/Target", targetPose);
     }
@@ -59,9 +68,12 @@ public class AlignToClimb extends Command {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
+        // determine direction to move in
         Pose2d pose = drive.getPose();
         Translation2d direction = targetPose.getTranslation().minus(pose.getTranslation());
         direction = direction.div(direction.getNorm());
+
+        // apply PID control along direction vector
         double translationOutput =
                 -translationController.calculate(pose.getTranslation().getDistance(targetPose.getTranslation()));
 
