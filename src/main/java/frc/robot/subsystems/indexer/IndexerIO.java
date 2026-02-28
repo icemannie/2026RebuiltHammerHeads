@@ -13,11 +13,13 @@ public interface IndexerIO {
         public boolean spinMotorConnected = false;
         public AngularVelocity spinVelocity = RadiansPerSecond.of(0.0);
         public Current spinCurrent = Amps.of(0.0);
+        public Current spinSupplyCurrent = Amps.of(0.0);
         public Voltage spinAppliedVolts = Volts.of(0.0);
 
         public boolean feedMotorConnected = false;
         public AngularVelocity feedVelocity = RadiansPerSecond.of(0.0);
         public Current feedCurrent = Amps.of(0.0);
+        public Current feedSupplyCurrent = Amps.of(0.0);
         public Voltage feedAppliedVolts = Volts.of(0.0);
     }
 

@@ -50,12 +50,14 @@ public class TurretIOTalonFX implements TurretIO {
     private final StatusSignal<AngularVelocity> turnVelocity;
     private final StatusSignal<Voltage> turnAppliedVolts;
     private final StatusSignal<Current> turnCurrent;
+    private final StatusSignal<Current> turnSupplyCurrent;
 
     private final StatusSignal<Angle> hoodPosition;
     private final StatusSignal<Double> hoodSetpoint;
     private final StatusSignal<AngularVelocity> hoodVelocity;
     private final StatusSignal<Voltage> hoodAppliedVolts;
     private final StatusSignal<Current> hoodCurrent;
+    private final StatusSignal<Current> hoodSupplyCurrent;
 
     private final StatusSignal<AngularVelocity> flywheelSpeed;
     private final StatusSignal<AngularAcceleration> flywheelAccel;
@@ -63,6 +65,9 @@ public class TurretIOTalonFX implements TurretIO {
     private final StatusSignal<Double> flywheelSetpointAccel;
     private final StatusSignal<Voltage> flywheelAppliedVolts;
     private final StatusSignal<Current> flywheelCurrent;
+    private final StatusSignal<Current> flywheelFollowerCurrent;
+    private final StatusSignal<Current> flywheelSupplyCurrent;
+    private final StatusSignal<Current> flywheelFollowerSupplyCurrent;
 
     private final PositionVoltage turnPositionRequest = new PositionVoltage(0);
     private final PositionVoltage hoodPositionRequest = new PositionVoltage(0);
@@ -127,12 +132,14 @@ public class TurretIOTalonFX implements TurretIO {
         turnVelocity = turnMotor.getVelocity();
         turnAppliedVolts = turnMotor.getMotorVoltage();
         turnCurrent = turnMotor.getStatorCurrent();
+        turnSupplyCurrent = turnMotor.getSupplyCurrent();
 
         hoodPosition = hoodMotor.getPosition();
         hoodSetpoint = hoodMotor.getClosedLoopReference();
         hoodVelocity = hoodMotor.getVelocity();
         hoodAppliedVolts = hoodMotor.getMotorVoltage();
         hoodCurrent = hoodMotor.getStatorCurrent();
+        hoodSupplyCurrent = hoodMotor.getSupplyCurrent();
 
         flywheelSpeed = flywheelMotor.getVelocity();
         flywheelAccel = flywheelMotor.getAcceleration();
@@ -140,6 +147,9 @@ public class TurretIOTalonFX implements TurretIO {
         flywheelSetpointAccel = flywheelMotor.getClosedLoopReferenceSlope();
         flywheelAppliedVolts = flywheelMotor.getMotorVoltage();
         flywheelCurrent = flywheelMotor.getTorqueCurrent();
+        flywheelSupplyCurrent = flywheelMotor.getSupplyCurrent();
+        flywheelFollowerCurrent = flywheelFollowerMotor.getTorqueCurrent();
+        flywheelFollowerSupplyCurrent = flywheelFollowerMotor.getSupplyCurrent();
 
         PhoenixUtil.registerStatusSignals(
                 Hertz.of(50),
@@ -148,17 +158,22 @@ public class TurretIOTalonFX implements TurretIO {
                 turnVelocity,
                 turnAppliedVolts,
                 turnCurrent,
+                turnSupplyCurrent,
                 hoodPosition,
                 hoodSetpoint,
                 hoodVelocity,
                 hoodAppliedVolts,
                 hoodCurrent,
+                hoodSupplyCurrent,
                 flywheelSpeed,
                 flywheelAccel,
                 flywheelSetpointSpeed,
                 flywheelSetpointAccel,
                 flywheelAppliedVolts,
-                flywheelCurrent);
+                flywheelCurrent,
+                flywheelSupplyCurrent,
+                flywheelFollowerCurrent,
+                flywheelFollowerSupplyCurrent);
         turnMotor.optimizeBusUtilization();
         hoodMotor.optimizeBusUtilization();
         flywheelMotor.optimizeBusUtilization();
@@ -169,21 +184,23 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        inputs.turnMotorConnected =
-                BaseStatusSignal.isAllGood(turnPosition, turnSetpoint, turnVelocity, turnAppliedVolts, turnCurrent);
+        inputs.turnMotorConnected = BaseStatusSignal.isAllGood(
+                turnPosition, turnSetpoint, turnVelocity, turnAppliedVolts, turnCurrent, turnSupplyCurrent);
         inputs.turnPosition = turnPosition.getValue();
         inputs.turnSetpoint = Rotations.of(turnSetpoint.getValueAsDouble());
         inputs.turnVelocity = turnVelocity.getValue();
         inputs.turnAppliedVolts = turnAppliedVolts.getValue();
         inputs.turnCurrent = turnCurrent.getValue();
+        inputs.turnSupplyCurrent = turnSupplyCurrent.getValue();
 
-        inputs.hoodMotorConnected =
-                BaseStatusSignal.isAllGood(hoodPosition, hoodSetpoint, hoodVelocity, hoodAppliedVolts, hoodCurrent);
+        inputs.hoodMotorConnected = BaseStatusSignal.isAllGood(
+                hoodPosition, hoodSetpoint, hoodVelocity, hoodAppliedVolts, hoodCurrent, hoodSupplyCurrent);
         inputs.hoodPosition = hoodPosition.getValue();
         inputs.hoodSetpoint = Rotations.of(hoodSetpoint.getValueAsDouble());
         inputs.hoodVelocity = hoodVelocity.getValue();
         inputs.hoodAppliedVolts = hoodAppliedVolts.getValue();
         inputs.hoodCurrent = hoodCurrent.getValue();
+        inputs.hoodSupplyCurrent = hoodSupplyCurrent.getValue();
 
         inputs.flywheelMotorConnected = BaseStatusSignal.isAllGood(
                 flywheelSpeed,
@@ -191,13 +208,17 @@ public class TurretIOTalonFX implements TurretIO {
                 flywheelSetpointSpeed,
                 flywheelSetpointAccel,
                 flywheelAppliedVolts,
-                flywheelCurrent);
+                flywheelCurrent,
+                flywheelSupplyCurrent,
+                flywheelFollowerCurrent,
+                flywheelFollowerSupplyCurrent);
         inputs.flywheelSpeed = flywheelSpeed.getValue();
         inputs.flywheelAccel = flywheelAccel.getValue();
         inputs.flywheelSetpointSpeed = RotationsPerSecond.of(flywheelSetpointSpeed.getValueAsDouble());
         inputs.flywheelSetpointAccel = RotationsPerSecondPerSecond.of(flywheelSetpointAccel.getValueAsDouble());
         inputs.flywheelAppliedVolts = flywheelAppliedVolts.getValue();
-        inputs.flywheelCurrent = flywheelCurrent.getValue();
+        inputs.flywheelCurrent = flywheelCurrent.getValue().plus(flywheelFollowerCurrent.getValue());
+        inputs.flywheelSupplyCurrent = flywheelCurrent.getValue().plus(flywheelFollowerSupplyCurrent.getValue());
     }
 
     @Override

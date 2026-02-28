@@ -27,11 +27,13 @@ public interface IntakeIO {
         public Distance rackSetpoint = Meters.of(0.0);
         public LinearVelocity rackSetpointVelocity = MetersPerSecond.of(0.0);
         public Current rackCurrent = Amps.of(0.0);
+        public Current rackSupplyCurrent = Amps.of(0.0);
         public Voltage rackAppliedVolts = Volts.of(0.0);
 
         public boolean spinMotorConnected = false;
         public AngularVelocity spinVelocity = RadiansPerSecond.of(0.0);
         public Current spinCurrent = Amps.of(0.0);
+        public Current spinSupplyCurrent = Amps.of(0.0);
         public Voltage spinAppliedVolts = Volts.of(0.0);
     }
 

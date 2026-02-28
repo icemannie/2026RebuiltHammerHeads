@@ -24,6 +24,7 @@ public interface TurretIO {
         public boolean turnMotorConnected = false;
         public Voltage turnAppliedVolts = Volts.of(0.0);
         public Current turnCurrent = Amps.of(0.0);
+        public Current turnSupplyCurrent = Amps.of(0.0);
         public Angle turnPosition = Radians.of(0.0);
         public Angle turnSetpoint = Radians.of(0.0);
         public AngularVelocity turnVelocity = RadiansPerSecond.of(0.0);
@@ -31,6 +32,7 @@ public interface TurretIO {
         public boolean hoodMotorConnected = false;
         public Voltage hoodAppliedVolts = Volts.of(0.0);
         public Current hoodCurrent = Amps.of(0.0);
+        public Current hoodSupplyCurrent = Amps.of(0.0);
         public Angle hoodPosition = Radians.of(0.0);
         public Angle hoodSetpoint = Radians.of(0.0);
         public AngularVelocity hoodVelocity = RadiansPerSecond.of(0.0);
@@ -38,6 +40,7 @@ public interface TurretIO {
         public boolean flywheelMotorConnected = false;
         public Voltage flywheelAppliedVolts = Volts.of(0.0);
         public Current flywheelCurrent = Amps.of(0.0);
+        public Current flywheelSupplyCurrent = Amps.of(0.0);
         public AngularVelocity flywheelSpeed = RadiansPerSecond.of(0.0);
         public AngularAcceleration flywheelAccel = RadiansPerSecondPerSecond.of(0.0);
         public AngularVelocity flywheelSetpointSpeed = RadiansPerSecond.of(0.0);

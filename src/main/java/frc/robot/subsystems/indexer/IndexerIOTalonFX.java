@@ -31,10 +31,12 @@ public class IndexerIOTalonFX implements IndexerIO {
 
     private final StatusSignal<AngularVelocity> spinVelocity;
     private final StatusSignal<Current> spinCurrent;
+    private final StatusSignal<Current> spinSupplyCurrent;
     private final StatusSignal<Voltage> spinAppliedVolts;
 
     private final StatusSignal<AngularVelocity> feedVelocity;
     private final StatusSignal<Current> feedCurrent;
+    private final StatusSignal<Current> feedSupplyCurrent;
     private final StatusSignal<Voltage> feedAppliedVolts;
 
     public IndexerIOTalonFX() {
@@ -53,14 +55,24 @@ public class IndexerIOTalonFX implements IndexerIO {
 
         spinVelocity = spinMotor.getVelocity();
         spinCurrent = spinMotor.getStatorCurrent();
+        spinSupplyCurrent = spinMotor.getSupplyCurrent();
         spinAppliedVolts = spinMotor.getMotorVoltage();
 
         feedVelocity = feedMotor.getVelocity();
         feedCurrent = feedMotor.getStatorCurrent();
+        feedSupplyCurrent = feedMotor.getSupplyCurrent();
         feedAppliedVolts = feedMotor.getMotorVoltage();
 
         PhoenixUtil.registerStatusSignals(
-                Hertz.of(50), spinVelocity, spinCurrent, spinAppliedVolts, feedVelocity, feedCurrent, feedAppliedVolts);
+                Hertz.of(50),
+                spinVelocity,
+                spinCurrent,
+                spinSupplyCurrent,
+                spinAppliedVolts,
+                feedVelocity,
+                feedCurrent,
+                feedSupplyCurrent,
+                feedAppliedVolts);
 
         spinMotor.optimizeBusUtilization();
         feedMotor.optimizeBusUtilization();
@@ -68,14 +80,18 @@ public class IndexerIOTalonFX implements IndexerIO {
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
-        inputs.spinMotorConnected = BaseStatusSignal.isAllGood(spinVelocity, spinCurrent, spinAppliedVolts);
+        inputs.spinMotorConnected =
+                BaseStatusSignal.isAllGood(spinVelocity, spinCurrent, spinSupplyCurrent, spinAppliedVolts);
         inputs.spinVelocity = spinVelocity.getValue();
         inputs.spinCurrent = spinCurrent.getValue();
+        inputs.spinSupplyCurrent = spinSupplyCurrent.getValue();
         inputs.spinAppliedVolts = spinAppliedVolts.getValue();
 
-        inputs.feedMotorConnected = BaseStatusSignal.isAllGood(feedVelocity, feedCurrent, feedAppliedVolts);
+        inputs.feedMotorConnected =
+                BaseStatusSignal.isAllGood(feedVelocity, feedCurrent, feedSupplyCurrent, feedAppliedVolts);
         inputs.feedVelocity = feedVelocity.getValue();
         inputs.feedCurrent = feedCurrent.getValue();
+        inputs.feedSupplyCurrent = feedSupplyCurrent.getValue();
         inputs.feedAppliedVolts = feedAppliedVolts.getValue();
     }
 

@@ -60,10 +60,12 @@ public class IntakeIOTalonFXDual implements IntakeIO {
     private final StatusSignal<Double> rackSetpoint;
     private final StatusSignal<Double> rackSetpointVelocity;
     private final StatusSignal<Current> rackCurrent;
+    private final StatusSignal<Current> rackSupplyCurrent;
     private final StatusSignal<Voltage> rackAppliedVolts;
 
     private final StatusSignal<AngularVelocity> spinVelocity;
     private final StatusSignal<Current> spinCurrent;
+    private final StatusSignal<Current> spinSupplyCurrent;
     private final StatusSignal<Voltage> spinAppliedVolts;
 
     private final DifferentialMotionMagicVoltage rackPositionRequest = new DifferentialMotionMagicVoltage(0, 0);
@@ -115,10 +117,12 @@ public class IntakeIOTalonFXDual implements IntakeIO {
         this.rackSetpoint = diffMech.getAverageClosedLoopReference();
         this.rackSetpointVelocity = diffMech.getAverageClosedLoopReferenceSlope();
         this.rackCurrent = diffMech.getLeader().getTorqueCurrent();
+        this.rackSupplyCurrent = diffMech.getLeader().getSupplyCurrent();
         this.rackAppliedVolts = diffMech.getLeader().getMotorVoltage();
 
         this.spinVelocity = spinMotor.getVelocity();
         this.spinCurrent = spinMotor.getStatorCurrent();
+        this.spinSupplyCurrent = spinMotor.getSupplyCurrent();
         this.spinAppliedVolts = spinMotor.getMotorVoltage();
 
         PhoenixUtil.registerStatusSignals(
@@ -128,9 +132,11 @@ public class IntakeIOTalonFXDual implements IntakeIO {
                 rackSetpoint,
                 rackSetpointVelocity,
                 rackCurrent,
+                rackSupplyCurrent,
                 rackAppliedVolts,
                 spinVelocity,
                 spinCurrent,
+                spinSupplyCurrent,
                 spinAppliedVolts);
         // diffMech.getLeader().optimizeBusUtilization();
         // diffMech.getFollower().optimizeBusUtilization();
@@ -148,7 +154,13 @@ public class IntakeIOTalonFXDual implements IntakeIO {
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
         inputs.rackMotorConnected = BaseStatusSignal.isAllGood(
-                rackPosition, rackVelocity, rackSetpoint, rackSetpointVelocity, rackCurrent, rackAppliedVolts);
+                rackPosition,
+                rackVelocity,
+                rackSetpoint,
+                rackSetpointVelocity,
+                rackCurrent,
+                rackSupplyCurrent,
+                rackAppliedVolts);
         inputs.rackPosition = rotorAngleToDistance(rackPosition.getValue());
         inputs.rackVelocity = rotorAngleToDistance(
                         Radians.of(rackVelocity.getValue().in(RadiansPerSecond)))
@@ -157,11 +169,14 @@ public class IntakeIOTalonFXDual implements IntakeIO {
         inputs.rackSetpointVelocity = rotorAngleToDistance(Rotations.of(rackSetpointVelocity.getValue()))
                 .per(Second);
         inputs.rackCurrent = rackCurrent.getValue();
+        inputs.rackSupplyCurrent = rackSupplyCurrent.getValue();
         inputs.rackAppliedVolts = rackAppliedVolts.getValue();
 
-        inputs.spinMotorConnected = BaseStatusSignal.isAllGood(spinVelocity, spinCurrent, spinAppliedVolts);
+        inputs.spinMotorConnected =
+                BaseStatusSignal.isAllGood(spinVelocity, spinCurrent, spinSupplyCurrent, spinAppliedVolts);
         inputs.spinVelocity = spinVelocity.getValue();
         inputs.spinCurrent = spinCurrent.getValue();
+        inputs.spinSupplyCurrent = spinSupplyCurrent.getValue();
         inputs.spinAppliedVolts = spinAppliedVolts.getValue();
     }
 

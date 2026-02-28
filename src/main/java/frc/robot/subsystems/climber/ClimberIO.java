@@ -19,12 +19,14 @@ public interface ClimberIO {
         public Angle frontPosition = Radians.of(0);
         public AngularVelocity frontVelocity = RadiansPerSecond.of(0);
         public Current frontTorqueCurrent = Amps.of(0);
+        public Current frontSupplyCurrent = Amps.of(0);
         public Voltage frontAppliedVoltage = Volts.of(0);
 
         public boolean backConnected = false;
         public Angle backPosition = Radians.of(0);
         public AngularVelocity backVelocity = RadiansPerSecond.of(0);
         public Current backTorqueCurrent = Amps.of(0);
+        public Current backSupplyCurrent = Amps.of(0);
         public Voltage backAppliedVoltage = Volts.of(0);
 
         public Angle averagePosition = Radians.of(0);
