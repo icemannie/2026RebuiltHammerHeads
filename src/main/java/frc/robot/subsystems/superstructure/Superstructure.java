@@ -23,6 +23,7 @@ import frc.robot.util.HubShiftUtil;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 public class Superstructure extends SubsystemBase {
     private final Turret turret;
@@ -133,7 +134,7 @@ public class Superstructure extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
+        Logger.recordOutput("Superstructure/Shift Time", HubShiftUtil.getOfficialShiftInfo().remainingTime());
     }
 
     public static enum Goal {
