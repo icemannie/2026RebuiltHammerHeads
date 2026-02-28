@@ -68,7 +68,6 @@ import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.FuelSim;
 import frc.robot.util.Zones;
 import java.util.function.BooleanSupplier;
@@ -172,21 +171,34 @@ public class RobotContainer {
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
                 indexer = new Indexer(new IndexerIOSim());
                 climber = new Climber(new ClimberIOSim());
+                // vision = new Vision(
+                //         drive::addVisionMeasurement,
+                //         new VisionIOPhotonVisionSim(
+                //                 VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0],
+                // drive::getPose),
+                //         new VisionIOPhotonVisionSim(
+                //                 VisionConstants.CAMERA_NAMES[1], VisionConstants.CAMERA_TRANSFORMS[1],
+                // drive::getPose),
+                //         new VisionIOPhotonVisionSim(
+                //                 VisionConstants.CAMERA_NAMES[2], VisionConstants.CAMERA_TRANSFORMS[2],
+                // drive::getPose),
+                //         new VisionIOPhotonVisionSim(
+                //                 VisionConstants.CAMERA_NAMES[3], VisionConstants.CAMERA_TRANSFORMS[3],
+                // drive::getPose),
+                //         new VisionIOPhotonVisionSim(
+                //                 VisionConstants.CAMERA_NAMES[4], VisionConstants.CAMERA_TRANSFORMS[4],
+                // drive::getPose),
+                //         new VisionIOPhotonVisionSim(
+                //                 VisionConstants.CAMERA_NAMES[5], VisionConstants.CAMERA_TRANSFORMS[5],
+                // drive::getPose));
                 vision = new Vision(
                         drive::addVisionMeasurement,
-                        new VisionIOPhotonVisionSim(
-                                VisionConstants.CAMERA_NAMES[0], VisionConstants.CAMERA_TRANSFORMS[0], drive::getPose),
-                        new VisionIOPhotonVisionSim(
-                                VisionConstants.CAMERA_NAMES[1], VisionConstants.CAMERA_TRANSFORMS[1], drive::getPose),
-                        new VisionIOPhotonVisionSim(
-                                VisionConstants.CAMERA_NAMES[2], VisionConstants.CAMERA_TRANSFORMS[2], drive::getPose),
-                        new VisionIOPhotonVisionSim(
-                                VisionConstants.CAMERA_NAMES[3], VisionConstants.CAMERA_TRANSFORMS[3], drive::getPose),
-                        new VisionIOPhotonVisionSim(
-                                VisionConstants.CAMERA_NAMES[4], VisionConstants.CAMERA_TRANSFORMS[4], drive::getPose),
-                        new VisionIOPhotonVisionSim(
-                                VisionConstants.CAMERA_NAMES[5], VisionConstants.CAMERA_TRANSFORMS[5], drive::getPose));
-
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {});
                 configureFuelSimRobot(turretSim::canIntake, turretSim::intakeFuel);
                 break;
 
@@ -312,8 +324,10 @@ public class RobotContainer {
     }
 
     private void configureFuelSim() {
-        fuelSim = new FuelSim();
+        fuelSim = new FuelSim("/AdvantageKit");
         fuelSim.spawnStartingFuel();
+        fuelSim.setSubticks(1);
+        fuelSim.setLoggingFrequency(20);
 
         fuelSim.start();
         SmartDashboard.putData(Commands.runOnce(() -> {

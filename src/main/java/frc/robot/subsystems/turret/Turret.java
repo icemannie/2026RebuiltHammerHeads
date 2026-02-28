@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Robot;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.Zones;
@@ -235,8 +236,14 @@ public class Turret extends SubsystemBase {
     private void calculateShot(Pose2d robotPose) {
         ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
 
-        ShotData calculatedShot = TurretCalculator.iterativeMovingShotFromMap(
-                robotPose, fieldSpeeds, currentTarget, LOOKAHEAD_ITERATIONS);
+        ShotData calculatedShot;
+        if (Robot.isReal()) {
+            calculatedShot = TurretCalculator.iterativeMovingShotFromMap(
+                    robotPose, fieldSpeeds, currentTarget, LOOKAHEAD_ITERATIONS);
+        } else {
+            calculatedShot = TurretCalculator.iterativeMovingShotFromFunnelClearance(
+                    robotPose, fieldSpeeds, currentTarget, LOOKAHEAD_ITERATIONS);
+        }
         Angle azimuthAngle =
                 TurretCalculator.calculateAzimuthAngle(robotPose, calculatedShot.target(), inputs.turnPosition);
         AngularVelocity azimuthVelocity = RadiansPerSecond.of(-fieldSpeeds.omegaRadiansPerSecond);

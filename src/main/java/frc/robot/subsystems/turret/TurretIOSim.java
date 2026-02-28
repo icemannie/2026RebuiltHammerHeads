@@ -46,7 +46,7 @@ public class TurretIOSim implements TurretIO {
         inputs.hoodPosition = hoodAngle;
         inputs.flywheelSpeed = RadiansPerSecond.of(flywheelAccelLimiter.calculate(flywheelGoal.in(RadiansPerSecond)));
 
-        if (shootTimer.advanceIfElapsed(0.25) && DriverStation.isEnabled()) {
+        if (shootTimer.advanceIfElapsed(0.1) && DriverStation.isEnabled()) {
             launchFuel();
         }
     }
