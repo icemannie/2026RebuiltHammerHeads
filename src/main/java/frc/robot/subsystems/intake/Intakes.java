@@ -27,7 +27,7 @@ public class Intakes extends SubsystemBase {
     private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
     @AutoLogOutput
-    private IntakesGoal goal = IntakesGoal.OFF;
+    private IntakesGoal goal = IntakesGoal.IDLE;
 
     @AutoLogOutput
     public Trigger deployLeftTrigger = new Trigger(this::travelingLeft)
@@ -59,9 +59,7 @@ public class Intakes extends SubsystemBase {
         SmartDashboard.putData("Intakes/Stow Right", right.stow());
         SmartDashboard.putData("Intakes/Autoswitch", setGoal(IntakesGoal.AUTOSWITCH));
         SmartDashboard.putData("Intakes/Stow All", setGoal(IntakesGoal.STOW));
-        SmartDashboard.putData("Intakes/Disable", setGoal(IntakesGoal.OFF));
-
-        SmartDashboard.putData("EStops/Intakes", setGoal(IntakesGoal.ESTOP));
+        SmartDashboard.putData("Intakes/Disable", setGoal(IntakesGoal.IDLE));
     }
 
     public boolean travelingLeft() {
@@ -80,14 +78,11 @@ public class Intakes extends SubsystemBase {
                                 Commands.none(),
                                 IntakesGoal.MANUAL,
                                 Commands.none(),
-                                IntakesGoal.OFF,
+                                IntakesGoal.IDLE,
                                 left.off().alongWith(right.off()),
                                 IntakesGoal.STOW,
-                                left.stow().alongWith(right.stow()),
-                                IntakesGoal.ESTOP,
-                                left.off().alongWith(right.off())),
-                        () -> goal))
-                .onlyIf(() -> this.goal != IntakesGoal.ESTOP);
+                                left.stow().alongWith(right.stow())),
+                        () -> goal));
     }
 
     public IntakesGoal getGoal() {
@@ -121,8 +116,7 @@ public class Intakes extends SubsystemBase {
         AUTOSWITCH,
         MANUAL,
         STOW,
-        OFF,
-        ESTOP
+        IDLE
     }
 
     public enum IntakeSide {

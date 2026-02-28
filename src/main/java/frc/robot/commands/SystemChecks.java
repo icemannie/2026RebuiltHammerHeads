@@ -74,7 +74,7 @@ public class SystemChecks {
                 leftIntake(),
                 rightIntake(),
                 Commands.waitSeconds(0.5),
-                intakes.setGoal(IntakesGoal.OFF));
+                intakes.setGoal(IntakesGoal.IDLE));
     }
 
     /** Deploy left intake, then bring it back in */

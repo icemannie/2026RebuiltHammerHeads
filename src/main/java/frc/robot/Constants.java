@@ -454,6 +454,12 @@ public final class Constants {
 
         public static final AngularVelocity FLYWHEEL_FUDGE_AMOUNT = RPM.of(10);
 
+        public static final AngularVelocity FLYWHEEL_SCORING_OVERRIDE = RPM.of(2700);
+        public static final Angle HOOD_SCORING_OVERRIDE = Degrees.of(25);
+
+        public static final AngularVelocity FLYWHEEL_PASSING_OVERRIDE = RPM.of(2800);
+        public static final Angle HOOD_PASSING_OVERRIDE = Degrees.of(27);
+
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
                 Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
         public static final Translation3d PASSING_SPOT_CENTER =

@@ -7,6 +7,7 @@ package frc.robot.subsystems.turret;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.Constants.TurretConstants.*;
 
@@ -107,7 +108,7 @@ public class Turret extends SubsystemBase {
                         .transformBy(ROBOT_TO_TURRET_TRANSFORM),
                 fieldSpeedsSupplier);
 
-        SmartDashboard.putData("EStops/Turret", setGoal(TurretGoal.ESTOP));
+        SmartDashboard.putData("EStops/Turret", setGoal(TurretGoal.DISABLED));
         SmartDashboard.putData("Turret/Fudge Up", increaseFudgeFactor());
         SmartDashboard.putData("Turret/Fudge Down", decreaseFudgeFactor());
     }
@@ -115,13 +116,12 @@ public class Turret extends SubsystemBase {
     public Command setGoal(TurretGoal goal) {
         return this.runOnce(() -> {
                     // don't interrupt ducking with another goal
-                    if (goal != TurretGoal.ESTOP
+                    if (goal != TurretGoal.DISABLED
                             && this.goal == TurretGoal.DUCKING
                             && underTrenchTrigger.getAsBoolean()) {
                         this.nonDuckingGoal = goal;
                         return;
-                    }
-                    if (this.goal == TurretGoal.ESTOP) {
+                    } else if (this.goal == TurretGoal.DISABLED || this.goal == TurretGoal.MANUAL_OVERRIDE) {
                         return;
                     }
                     this.goal = goal;
@@ -154,10 +154,15 @@ public class Turret extends SubsystemBase {
                             io.stopHood();
                             io.stopTurn();
                             break;
-                        case ESTOP:
+                        case DISABLED:
                             io.stopFlywheel();
                             io.stopHood();
                             io.stopTurn();
+                            break;
+                        case MANUAL_OVERRIDE:
+                            io.stopFlywheel();
+                            io.setHoodAngle(MIN_HOOD_ANGLE);
+                            io.setTurnSetpoint(Radians.of(0), RadiansPerSecond.of(0));
                             break;
                     }
                 })
@@ -221,6 +226,38 @@ public class Turret extends SubsystemBase {
         return inputs.turnPosition.isNear(MIN_TURN_ANGLE, TURNAROUND_ZONE);
     }
 
+    public Command disable() {
+        return this.runOnce(() -> goal = TurretGoal.DISABLED).andThen(Commands.idle()).finallyDo(() -> goal = TurretGoal.OFF).withName("Disable Turret");
+    }
+
+    public Command manualOverride() {
+        return setGoal(TurretGoal.MANUAL_OVERRIDE).andThen(Commands.idle()).finallyDo(() -> goal = TurretGoal.OFF).withName("Turret Manual Override");
+    }
+
+    public Command manualScore() {
+        return Commands.startEnd(() -> {
+            io.setFlywheelSpeed(FLYWHEEL_SCORING_OVERRIDE.plus(flywheelFudgeFactor));
+            io.setHoodAngle(HOOD_SCORING_OVERRIDE);
+            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+        }, () -> {
+            io.stopFlywheel();
+            io.setHoodAngle(Radians.zero());
+            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+        }).onlyIf(() -> goal == TurretGoal.MANUAL_OVERRIDE).withName("Turret Manual Score");
+    }
+
+    public Command manualPass() {
+        return Commands.startEnd(() -> {
+            io.setFlywheelSpeed(FLYWHEEL_PASSING_OVERRIDE.plus(flywheelFudgeFactor));
+            io.setHoodAngle(HOOD_PASSING_OVERRIDE);
+            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+        }, () -> {
+            io.stopFlywheel();
+            io.setHoodAngle(Radians.zero());
+            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+        }).onlyIf(() -> goal == TurretGoal.MANUAL_OVERRIDE).withName("Turret Manual Pass");
+    }
+
     @Override
     public void periodic() {
         io.updateInputs(inputs);
@@ -228,19 +265,22 @@ public class Turret extends SubsystemBase {
 
         Pose2d pose = poseSupplier.get();
 
-        if (goal == TurretGoal.SCORING || goal == TurretGoal.PASSING) {
-            calculateShot(pose);
-        }
-
-        if (goal == TurretGoal.PASSING) {
-            setTarget(getPassingTarget(pose));
-        }
-
-        if (goal == TurretGoal.TUNING) {
-            io.setFlywheelSpeed(RPM.of(tuningFlywheelSpeed.get()));
-            io.setHoodAngle(Degrees.of(tuningHoodAngle.get()));
-            io.setTurnSetpoint(
-                    TurretCalculator.calculateAzimuthAngle(pose, currentTarget, inputs.turnPosition), RPM.zero());
+        switch (goal) {
+            case SCORING:
+                calculateShot(pose);
+                break;
+            case PASSING:
+                calculateShot(pose);
+                setTarget(getPassingTarget(pose));
+                break;
+            case TUNING:
+                io.setFlywheelSpeed(RPM.of(tuningFlywheelSpeed.get()));
+                io.setHoodAngle(Degrees.of(tuningHoodAngle.get()));
+                io.setTurnSetpoint(
+                        TurretCalculator.calculateAzimuthAngle(pose, currentTarget, inputs.turnPosition), RPM.zero());
+                break;
+            default:
+                break;
         }
 
         Logger.recordOutput("Turret/Distance To Target", TurretCalculator.getDistanceToTarget(pose, currentTarget));
@@ -317,6 +357,7 @@ public class Turret extends SubsystemBase {
         TUNING,
         DUCKING,
         OFF,
-        ESTOP
+        MANUAL_OVERRIDE,
+        DISABLED
     }
 }

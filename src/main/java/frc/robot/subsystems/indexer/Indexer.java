@@ -27,13 +27,13 @@ public class Indexer extends SubsystemBase {
     private final IndexerVisualizer visualizer;
 
     @AutoLogOutput
-    private IndexerGoal goal = IndexerGoal.OFF;
+    private IndexerGoal goal = IndexerGoal.IDLE;
 
     public Indexer(IndexerIO io) {
         this.io = io;
         this.visualizer = new IndexerVisualizer();
 
-        SmartDashboard.putData("EStops/Indexer", setGoal(IndexerGoal.ESTOP));
+        SmartDashboard.putData("Overrides/Indexer", disable());
     }
 
     @Override
@@ -53,18 +53,20 @@ public class Indexer extends SubsystemBase {
         return Commands.defer(
                 () -> {
                     Command toSchedule = Commands.none();
-                    if (goal == IndexerGoal.ESTOP) {
-                        return toSchedule;
-                    }
+
                     if (goal == IndexerGoal.ACTIVE && this.goal != IndexerGoal.ACTIVE) {
                         toSchedule = activate();
-                    } else if (goal == IndexerGoal.OFF) {
+                    } else if (goal == IndexerGoal.IDLE) {
                         toSchedule = stop();
                     }
                     this.goal = goal;
                     return toSchedule;
                 },
-                Set.of(this));
+                Set.of(this)).onlyIf(() -> this.goal != IndexerGoal.DISABLED);
+    }
+
+    public Command disable() {
+        return this.runOnce(() -> goal = IndexerGoal.DISABLED).andThen(Commands.idle()).finallyDo(() -> goal = IndexerGoal.IDLE).withName("Disable Indexer");
     }
 
     public IndexerGoal getGoal() {
@@ -96,7 +98,7 @@ public class Indexer extends SubsystemBase {
 
     public enum IndexerGoal {
         ACTIVE,
-        OFF,
-        ESTOP
+        IDLE,
+        DISABLED // manual override
     }
 }

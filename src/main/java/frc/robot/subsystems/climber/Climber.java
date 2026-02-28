@@ -31,6 +31,8 @@ public class Climber extends SubsystemBase {
 
     private final ClimberVisualizer visualizer = new ClimberVisualizer();
 
+    private boolean disabled = false;
+
     public Climber(ClimberIO io) {
         this.io = io;
 
@@ -66,7 +68,7 @@ public class Climber extends SubsystemBase {
                         Commands.waitUntil(() -> inputs.averagePosition.lte(CLIMB_POSITION)),
                         setVoltage(Volts.of(-0.5)),
                         Commands.idle())
-                .finallyDo(io::stop);
+                .finallyDo(io::stop).unless(() -> disabled);
     }
 
     public Command autoClimb() {
@@ -75,7 +77,7 @@ public class Climber extends SubsystemBase {
                         Commands.waitUntil(() -> inputs.averagePosition.lte(AUTO_CLIMB_POSITION)),
                         setVoltage(Volts.of(-0.5)),
                         Commands.idle())
-                .finallyDo(io::stop);
+                .finallyDo(io::stop).unless(() -> disabled);
     }
 
     public Command stow() {
@@ -90,7 +92,7 @@ public class Climber extends SubsystemBase {
                                 Commands.waitUntil(() -> inputs.backPosition.lte(STOW_POSITION))
                                         .finallyDo(io::stopBack)),
                         stop())
-                .finallyDo(io::stop);
+                .finallyDo(io::stop).unless(() -> disabled);
     }
 
     public Command extend() {
@@ -102,7 +104,7 @@ public class Climber extends SubsystemBase {
                                 Commands.waitUntil(() -> inputs.backPosition.gte(EXTEND_POSITION_BACK))
                                         .finallyDo(io::stopBack)),
                         stop())
-                .finallyDo(io::stop);
+                .finallyDo(io::stop).unless(() -> disabled);
     }
 
     public Command zero() {
@@ -123,6 +125,10 @@ public class Climber extends SubsystemBase {
                                         .finallyDo(() -> io.stopBack())),
                         Commands.waitSeconds(0.4),
                         this.runOnce(io::zeroPosition))
-                .finallyDo(io::stop);
+                .finallyDo(io::stop).unless(() -> disabled);
+    }
+
+    public Command disable() {
+        return this.runOnce(() -> disabled = true).andThen(Commands.idle()).finallyDo(() -> disabled = false).withName("Disable Climber");
     }
 }

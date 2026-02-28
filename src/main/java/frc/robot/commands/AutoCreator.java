@@ -374,7 +374,7 @@ public class AutoCreator {
             if (path.name.contains("Collect")) {
                 if (path.collect) {
                     toAdd = toAdd.alongWith(
-                            indexer.setGoal(IndexerGoal.OFF),
+                            indexer.setGoal(IndexerGoal.IDLE),
                             turret.setGoal(TurretGoal.IDLE).asProxy());
                 } else {
                     toAdd = toAdd.alongWith(
@@ -452,7 +452,7 @@ public class AutoCreator {
         } else {
             commands.add(
                     0,
-                    indexer.setGoal(IndexerGoal.OFF)
+                    indexer.setGoal(IndexerGoal.IDLE)
                             .alongWith(turret.setGoal(TurretGoal.IDLE).asProxy()));
         }
 

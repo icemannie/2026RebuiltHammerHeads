@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +34,8 @@ public class Vision extends SubsystemBase {
     private final VisionIO[] io;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
+
+    private boolean disabled = false;
 
     public Vision(VisionConsumer consumer, VisionIO... io) {
         this.consumer = consumer;
@@ -130,10 +134,12 @@ public class Vision extends SubsystemBase {
                 double angularStdDev = ANGULAR_STD_DEV_BASELINE * stdDevFactor;
 
                 // Send vision observation
-                consumer.accept(
-                        observation.pose().toPose2d(),
-                        observation.timestamp(),
-                        VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+                if (!disabled) {
+                    consumer.accept(
+                            observation.pose().toPose2d(),
+                            observation.timestamp(),
+                            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+                }
             }
 
             // Log camera metadata
@@ -157,6 +163,10 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[0]));
         Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[0]));
         Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[0]));
+    }
+
+    public Command disable() {
+        return this.runOnce(() -> disabled = true).andThen(Commands.idle()).finallyDo(() -> disabled = false).withName("Disable Vision");
     }
 
     @FunctionalInterface

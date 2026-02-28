@@ -83,19 +83,19 @@ public class Superstructure extends SubsystemBase {
                 () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
                                 this.intake.setGoal(IntakesGoal.MANUAL),
-                                this.indexer.setGoal(IndexerGoal.OFF))
+                                this.indexer.setGoal(IndexerGoal.IDLE))
                         .withName("Start collecting"),
                 Goal.EXPANDED,
                 () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
-                                this.intake.setGoal(IntakesGoal.OFF),
-                                this.indexer.setGoal(IndexerGoal.OFF))
+                                this.intake.setGoal(IntakesGoal.IDLE),
+                                this.indexer.setGoal(IndexerGoal.IDLE))
                         .withName("Start expanded"),
                 Goal.IDLE,
                 () -> Commands.sequence(
                                 this.turret.setGoal(TurretGoal.IDLE),
                                 this.intake.setGoal(IntakesGoal.STOW),
-                                this.indexer.setGoal(IndexerGoal.OFF))
+                                this.indexer.setGoal(IndexerGoal.IDLE))
                         .withName("Idle"));
 
         activeInZoneTrigger.onTrue(this.setGoal(Goal.SCORING));

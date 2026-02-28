@@ -23,6 +23,7 @@ import static frc.robot.Constants.IntakeConstants.ZEROING_VOLTAGE;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -95,10 +96,12 @@ public class Intake extends SubsystemBase {
 
         spinStallTrigger
                 .or(rackStallTrigger)
-                .and(() -> this.goal != IntakeGoal.ZEROING && this.goal != IntakeGoal.OFF)
+                .and(() -> this.goal != IntakeGoal.ZEROING && this.goal != IntakeGoal.IDLE)
                 .onTrue(unjam());
         deployedTrigger.onTrue(setGoal(IntakeGoal.DEPLOYED));
         stowedTrigger.onTrue(setGoal(IntakeGoal.STOWED));
+
+        SmartDashboard.putData("Overrides/Intakes/" + side.name(), disable());
     }
 
     private boolean spinStalled() {
@@ -143,7 +146,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command off() {
-        return this.setGoal(IntakeGoal.OFF);
+        return this.setGoal(IntakeGoal.IDLE);
     }
 
     private Command unjam() {
@@ -175,29 +178,38 @@ public class Intake extends SubsystemBase {
 
     private Command setGoal(IntakeGoal goal) {
         return Commands.runOnce(() -> {
-            this.goal = goal;
-            switch (goal) {
-                case DEPLOYED:
-                    io.stopRack();
-                    break;
-                case DEPLOYING:
-                    io.setSpinOutput(Volts.of(spinVoltage.get()));
-                    io.setRackPosition(Inches.of(deployPos.get()));
-                    break;
-                case OFF:
-                    io.stopRack();
-                    io.stopSpin();
-                    break;
-                case STOWED:
-                    break;
-                case STOWING:
-                    io.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
-                    io.setRackPosition(STOW_POS);
-                    break;
-                case ZEROING:
-                    break;
-            }
-        });
+                    this.goal = goal;
+                    switch (goal) {
+                        case DEPLOYED:
+                            io.stopRack();
+                            break;
+                        case DEPLOYING:
+                            io.setSpinOutput(Volts.of(spinVoltage.get()));
+                            io.setRackPosition(Inches.of(deployPos.get()));
+                            break;
+                        case IDLE:
+                            io.stopRack();
+                            io.stopSpin();
+                            break;
+                        case STOWED:
+                            break;
+                        case STOWING:
+                            io.setSpinOutput(Volts.of(reverseSpinVoltage.get()));
+                            io.setRackPosition(STOW_POS);
+                            break;
+                        case ZEROING:
+                            break;
+                        case DISABLED:
+                            io.stopRack();
+                            io.stopSpin();
+                            break;
+                    }
+                })
+                .onlyIf(() -> this.goal != IntakeGoal.DISABLED);
+    }
+
+    public Command disable() {
+        return this.runOnce(() -> goal = IntakeGoal.DISABLED).andThen(Commands.idle()).finallyDo(() -> goal = IntakeGoal.IDLE).withName("Disable Intake "+side.name());
     }
 
     public IntakeGoal getGoal() {
@@ -252,6 +264,7 @@ public class Intake extends SubsystemBase {
         STOWED,
         STOWING,
         ZEROING,
-        OFF
+        IDLE,
+        DISABLED
     }
 }
