@@ -134,7 +134,8 @@ public class Superstructure extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Superstructure/Shift Time", HubShiftUtil.getOfficialShiftInfo().remainingTime());
+        Logger.recordOutput(
+                "Superstructure/Shift Time", HubShiftUtil.getOfficialShiftInfo().remainingTime());
     }
 
     public static enum Goal {

@@ -452,6 +452,8 @@ public final class Constants {
         public static final AngularVelocity HOOD_STALL_ANGULAR_VELOCITY = RadiansPerSecond.of(0.3);
         public static final Voltage HOOD_ZEROING_VOLTAGE = Volts.of(-1);
 
+        public static final AngularVelocity FLYWHEEL_FUDGE_AMOUNT = RPM.of(10);
+
         public static final Translation3d PASSING_SPOT_LEFT = new Translation3d(
                 Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
         public static final Translation3d PASSING_SPOT_CENTER =

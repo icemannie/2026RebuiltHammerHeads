@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -79,6 +80,9 @@ public class Turret extends SubsystemBase {
     @AutoLogOutput
     private TurretGoal nonDuckingGoal = goal;
 
+    @AutoLogOutput
+    private MutAngularVelocity flywheelFudgeFactor = RPM.of(0).mutableCopy();
+
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.io = io;
         this.inputs = new TurretIOInputsAutoLogged();
@@ -104,6 +108,8 @@ public class Turret extends SubsystemBase {
                 fieldSpeedsSupplier);
 
         SmartDashboard.putData("EStops/Turret", setGoal(TurretGoal.ESTOP));
+        SmartDashboard.putData("Turret/Fudge Up", increaseFudgeFactor());
+        SmartDashboard.putData("Turret/Fudge Down", decreaseFudgeFactor());
     }
 
     public Command setGoal(TurretGoal goal) {
@@ -156,6 +162,16 @@ public class Turret extends SubsystemBase {
                     }
                 })
                 .withName("Set Turret Goal");
+    }
+
+    private Command increaseFudgeFactor() {
+        return Commands.runOnce(() -> this.flywheelFudgeFactor.mut_plus(FLYWHEEL_FUDGE_AMOUNT))
+                .withName("Fudge Up");
+    }
+
+    private Command decreaseFudgeFactor() {
+        return Commands.runOnce(() -> this.flywheelFudgeFactor.mut_minus(FLYWHEEL_FUDGE_AMOUNT))
+                .withName("Fudge Down");
     }
 
     private Command duck() {
@@ -249,8 +265,8 @@ public class Turret extends SubsystemBase {
         AngularVelocity azimuthVelocity = RadiansPerSecond.of(-fieldSpeeds.omegaRadiansPerSecond);
         io.setTurnSetpoint(azimuthAngle, azimuthVelocity);
         io.setHoodAngle(calculatedShot.getHoodAngle());
-        io.setFlywheelSpeed(
-                TurretCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(), FLYWHEEL_RADIUS));
+        io.setFlywheelSpeed(TurretCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(), FLYWHEEL_RADIUS)
+                .plus(flywheelFudgeFactor));
 
         Logger.recordOutput("Turret/Shot", calculatedShot);
     }
