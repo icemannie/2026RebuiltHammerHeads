@@ -88,7 +88,8 @@ public class AutoCreator {
         protected final StartEndPoint start;
         protected final StartEndPoint end;
         protected final String name;
-        protected final boolean collect; // whether the path should collect instead of passing (only applies to collection paths)
+        protected final boolean
+                collect; // whether the path should collect instead of passing (only applies to collection paths)
         protected final double dumpTime; // time to spend still at the end of the path to shoot fuel
         private PathPlannerPath pathPlannerPath = null; // for caching
         private PathPlannerTrajectory idealTrajectory = null; // for caching
@@ -206,13 +207,16 @@ public class AutoCreator {
         }
     }
 
-    private EnumMap<StartEndPoint, List<AutoPath>> autoPathsByStartPoint = new EnumMap<>(StartEndPoint.class); // determines which start points can start which paths
+    private EnumMap<StartEndPoint, List<AutoPath>> autoPathsByStartPoint =
+            new EnumMap<>(StartEndPoint.class); // determines which start points can start which paths
     private ArrayList<AutoPath> selectedAutoPaths = new ArrayList<>(); // paths selected by SharkPlanner
     private String lastAutoSelection = ""; // cached auto selection to determine value change
     private ArrayList<PathPlannerTrajectoryState> trajStates = new ArrayList<>();
     private final StringArrayPublisher autoOptionsPub = AutoConstants.AUTO_OPTIONS.publish(); // available auto paths
-    private final DoubleArrayPublisher autoOptionTimesPub = AutoConstants.AUTO_OPTION_TIMES.publish(); // times corresponding to each available path
-    private final StringArrayPublisher startOptionsPub = AutoConstants.START_OPTIONS.publish(); // available start points
+    private final DoubleArrayPublisher autoOptionTimesPub =
+            AutoConstants.AUTO_OPTION_TIMES.publish(); // times corresponding to each available path
+    private final StringArrayPublisher startOptionsPub =
+            AutoConstants.START_OPTIONS.publish(); // available start points
     private final StructArrayPublisher<Translation2d> trajPub = AutoConstants.TRAJECTORY.publish();
     private final DoubleArrayPublisher trajTimePub = AutoConstants.TRAJECTORY_TIMESTAMPS.publish();
     private final DoublePublisher timestampPub = AutoConstants.TIMESTAMP.publish(); // current timestamp
@@ -393,7 +397,8 @@ public class AutoCreator {
                     || (path.start == StartEndPoint.TRENCH_MID_START_LEFT && path.end == StartEndPoint.TRENCH_LEFT)
                     || (path.start == StartEndPoint.TRENCH_MID_START_RIGHT && path.end == StartEndPoint.TRENCH_RIGHT)
                     || (path.start == StartEndPoint.BUMP_START_LEFT && path.end == StartEndPoint.BUMP_LEFT)
-                    || (path.start == StartEndPoint.BUMP_START_RIGHT && path.end == StartEndPoint.BUMP_RIGHT))) { // if not passing through trench or over bump
+                    || (path.start == StartEndPoint.BUMP_START_RIGHT
+                            && path.end == StartEndPoint.BUMP_RIGHT))) { // if not passing through trench or over bump
                 // set turret to score when possible
                 toAdd = toAdd.alongWith(Commands.waitUntil(superstructure.inAllianceZoneTrigger)
                         .andThen(turret.setGoal(TurretGoal.SCORING)

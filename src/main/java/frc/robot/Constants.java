@@ -36,6 +36,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -769,6 +770,9 @@ public final class Constants {
                         Amps.of(SwerveConstants.DRIVE_CONFIGS.CurrentLimits.StatorCurrentLimit),
                         1),
                 SwerveConstants.GET_MODULE_POSITIONS.get());
+
+        public static final PIDConstants PP_TRANSLATION_CONSTANTS = new PIDConstants(3, 0.05);
+        public static final PIDConstants PP_ROTATION_CONSTANTS = new PIDConstants(2, 0.05);
 
         public static final PathConstraints CONSTRAINTS = new PathConstraints(
                 MetersPerSecond.of(3),

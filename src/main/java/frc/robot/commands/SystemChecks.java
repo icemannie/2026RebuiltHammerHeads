@@ -81,7 +81,7 @@ public class SystemChecks {
     public Command leftIntake() {
         return Commands.sequence(intakes.deployLeft(), Commands.waitSeconds(1), intakes.setGoal(IntakesGoal.STOW));
     }
-    
+
     /** Deploy right intake, then bring it back in */
     public Command rightIntake() {
         return Commands.sequence(intakes.deployRight(), Commands.waitSeconds(1), intakes.setGoal(IntakesGoal.STOW));

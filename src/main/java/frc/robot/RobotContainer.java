@@ -11,7 +11,6 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -227,13 +226,15 @@ public class RobotContainer {
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+        // configure autos
         autoCreator = new AutoCreator();
         AutoBuilder.configure(
                 drive::getPose,
                 drive::setPose,
                 drive::getChassisSpeeds,
                 (speeds, feedforwards) -> drive.runVelocity(speeds, feedforwards),
-                new PPHolonomicDriveController(new PIDConstants(3, 0.05), new PIDConstants(2, 0.05)),
+                new PPHolonomicDriveController(
+                        AutoConstants.PP_TRANSLATION_CONSTANTS, AutoConstants.PP_ROTATION_CONSTANTS),
                 AutoConstants.PP_CONFIG,
                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                 drive);
