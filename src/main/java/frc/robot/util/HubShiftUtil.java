@@ -84,12 +84,19 @@ public class HubShiftUtil {
         shiftTimer.restart();
     }
 
-    private static boolean[] getSchedule() {
+    private static boolean[] getSchedule(boolean override) {
         boolean[] currentSchedule;
         Alliance startAlliance = getFirstActiveAlliance();
-        currentSchedule =
-                startAlliance == DriverStation.getAlliance().orElse(Alliance.Blue) ? activeSchedule : inactiveSchedule;
+        boolean activeFirst = startAlliance == DriverStation.getAlliance().orElse(Alliance.Blue);
+        if (override) {
+            activeFirst = !activeFirst;
+        }
+        currentSchedule = activeFirst ? activeSchedule : inactiveSchedule;
         return currentSchedule;
+    }
+
+    private static boolean[] getSchedule() {
+        return getSchedule(false);
     }
 
     private static ShiftInfo getShiftInfo(boolean[] currentSchedule, double[] shiftStartTimes, double[] shiftEndTimes) {
@@ -146,8 +153,8 @@ public class HubShiftUtil {
         return getShiftInfo(getSchedule(), shiftStartTimes, shiftEndTimes);
     }
 
-    public static ShiftInfo getShiftedShiftInfo() {
-        boolean[] shiftSchedule = getSchedule();
+    public static ShiftInfo getShiftedShiftInfo(boolean override) {
+        boolean[] shiftSchedule = getSchedule(override);
         // Starting active
         if (shiftSchedule[1] == true) {
             double[] shiftedShiftStartTimes = {
@@ -165,5 +172,9 @@ public class HubShiftUtil {
             10.0, 35.0 + approachingActiveFudge, 60.0, 85.0 + approachingActiveFudge, 110.0, 140.0
         };
         return getShiftInfo(shiftSchedule, shiftedShiftStartTimes, shiftedShiftEndTimes);
+    }
+
+    public static ShiftInfo getShiftedShiftInfo() {
+        return getShiftedShiftInfo(false);
     }
 }

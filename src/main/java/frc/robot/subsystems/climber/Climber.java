@@ -41,6 +41,8 @@ public class Climber extends SubsystemBase {
         SmartDashboard.putData("Climb/Stow", stow());
         SmartDashboard.putData("Climb/Extend", extend());
         SmartDashboard.putData("Climb/Zero", zero());
+
+        SmartDashboard.putData("Overrides/Climber", disable());
     }
 
     @Override

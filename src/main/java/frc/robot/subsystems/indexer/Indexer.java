@@ -95,6 +95,7 @@ public class Indexer extends SubsystemBase {
     public void stop() {
         io.stopSpin();
         io.stopFeed();
+        this.goal = IndexerGoal.IDLE;
     }
 
     public enum IndexerGoal {

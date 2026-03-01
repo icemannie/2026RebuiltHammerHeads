@@ -7,6 +7,7 @@ package frc.robot.subsystems.superstructure;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -38,13 +39,16 @@ public class Superstructure extends SubsystemBase {
     @AutoLogOutput
     public final Trigger inAllianceZoneTrigger = new Trigger(this::inAllianceZone);
 
+    @AutoLogOutput
+    private boolean shiftOverride = false;
+
     /**
      * Will trigger when hub is active, or when there is less than ACTIVE_PRESHOOT_TIME until the next active period
      * 100 seconds is an arbitrarily long time so as to not trigger shooting when timeRemainingInCurrentShift gives Optional.empty()
      */
     @AutoLogOutput
     public final Trigger activeHubTrigger =
-            new Trigger(() -> HubShiftUtil.getShiftedShiftInfo().active());
+            new Trigger(() -> HubShiftUtil.getShiftedShiftInfo(shiftOverride).active());
 
     @AutoLogOutput
     public final Trigger activeInZoneTrigger =
@@ -101,6 +105,8 @@ public class Superstructure extends SubsystemBase {
         activeInZoneTrigger.onTrue(this.setGoal(Goal.SCORING));
         inactiveInZoneTrigger.onTrue(this.setGoal(Goal.COLLECTING));
         leaveZoneTrigger.onTrue(this.setGoal(Goal.PASSING).onlyIf(() -> this.goal != Goal.COLLECTING));
+
+        SmartDashboard.putData("Overrides/Shift", enableShiftOverride());
     }
 
     private boolean inAllianceZone() {
@@ -126,6 +132,11 @@ public class Superstructure extends SubsystemBase {
     /** Handle state logic for transitioning out of COLLECTING */
     public Command stopCollecting() {
         return Commands.either(this.setGoal(Goal.SCORING), this.setGoal(Goal.PASSING), activeInZoneTrigger);
+    }
+
+    public Command enableShiftOverride() {
+        return Commands.startEnd(() -> shiftOverride = true, () -> shiftOverride = false)
+                .withName("Override active first");
     }
 
     public Goal getGoal() {

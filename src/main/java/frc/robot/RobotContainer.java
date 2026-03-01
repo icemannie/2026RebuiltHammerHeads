@@ -49,6 +49,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
@@ -114,6 +115,8 @@ public class RobotContainer {
     private final Trigger climbTrigger = controller.y();
     private final Trigger extendTrigger = controller.start();
     private final Trigger stowTrigger = controller.back();
+    private final Trigger manualScoreTrigger = controller.leftBumper();
+    private final Trigger manualPassTrigger = controller.rightBumper();
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -160,7 +163,8 @@ public class RobotContainer {
 
             case SIM:
                 configureFuelSim();
-                TurretIOSim turretSim = new TurretIOSim(fuelSim);
+                indexer = new Indexer(new IndexerIOSim());
+                TurretIOSim turretSim = new TurretIOSim(fuelSim, () -> indexer.getGoal() == IndexerGoal.ACTIVE);
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(SwerveConstants.FrontLeft.MODULE_CONSTANTS),
@@ -169,7 +173,6 @@ public class RobotContainer {
                         new ModuleIOSim(SwerveConstants.BackRight.MODULE_CONSTANTS));
                 intakes = new Intakes(new IntakeIOSim(), new IntakeIOSim(), drive::getChassisSpeeds);
                 turret = new Turret(turretSim, drive::getPose, drive::getFieldSpeeds);
-                indexer = new Indexer(new IndexerIOSim());
                 climber = new Climber(new ClimberIOSim());
                 // vision = new Vision(
                 //         drive::addVisionMeasurement,
@@ -269,10 +272,14 @@ public class RobotContainer {
                         .beforeStarting(superstructure.setGoal(Goal.IDLE)));
         SmartDashboard.putData(
                 "Overrides/Manual Pass",
-                turret.manualPass().beforeStarting(indexer.activate()).finallyDo(indexer::stop));
+                turret.manualPass()
+                        .beforeStarting(indexer.setGoal(IndexerGoal.ACTIVE))
+                        .finallyDo(indexer::stop));
         SmartDashboard.putData(
                 "Overrides/Manual Score",
-                turret.manualScore().beforeStarting(indexer.activate()).finallyDo(indexer::stop));
+                turret.manualScore()
+                        .beforeStarting(indexer.setGoal(IndexerGoal.ACTIVE))
+                        .finallyDo(indexer::stop));
 
         systemChecks = new SystemChecks(turret, intakes, indexer, climber);
 
@@ -328,6 +335,15 @@ public class RobotContainer {
                 intakes.setGoal(IntakesGoal.STOW).andThen(AutoClimb.getAutoClimbCommand(drive, vision, climber)));
         extendTrigger.toggleOnTrue(intakes.setGoal(IntakesGoal.STOW).andThen(climber.extend()));
         stowTrigger.toggleOnTrue(climber.stow());
+
+        manualScoreTrigger.whileTrue(turret.manualScore()
+                .beforeStarting(indexer.setGoal(IndexerGoal.ACTIVE))
+                .finallyDo(indexer::stop)
+                .withName("Manual Score"));
+        manualPassTrigger.whileTrue(turret.manualPass()
+                .beforeStarting(indexer.setGoal(IndexerGoal.ACTIVE))
+                .finallyDo(indexer::stop)
+                .withName("Manual Pass"));
     }
 
     private void configureFuelSim() {

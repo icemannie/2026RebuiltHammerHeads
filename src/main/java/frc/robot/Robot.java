@@ -8,9 +8,13 @@
 package frc.robot;
 
 import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.Elastic;
+import frc.robot.util.HubShiftUtil;
 import frc.robot.util.PhoenixUtil;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -52,6 +56,7 @@ public class Robot extends LoggedRobot {
                 Logger.addDataReceiver(new NT4Publisher());
                 PortForwarder.add(5800, "photonvisionfront.local", 5800);
                 PortForwarder.add(5800, "photonvisionback.local", 5800);
+                WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
                 break;
 
             case SIM:
@@ -97,7 +102,11 @@ public class Robot extends LoggedRobot {
 
     /** This function is called once when the robot is disabled. */
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        if (isReal()) {
+            Elastic.selectTab("Disabled");
+        }
+    }
 
     /** This function is called periodically when disabled. */
     @Override
@@ -130,6 +139,10 @@ public class Robot extends LoggedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
+        HubShiftUtil.initialize();
+        if (isReal()) {
+            Elastic.selectTab("Teleop");
+        }
     }
 
     /** This function is called periodically during operator control. */
@@ -149,7 +162,9 @@ public class Robot extends LoggedRobot {
 
     /** This function is called once when the robot is first started up. */
     @Override
-    public void simulationInit() {}
+    public void simulationInit() {
+        Elastic.selectTab("Sim");
+    }
 
     /** This function is called periodically whilst in simulation. */
     @Override

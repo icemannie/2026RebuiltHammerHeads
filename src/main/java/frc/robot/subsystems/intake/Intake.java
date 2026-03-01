@@ -101,7 +101,7 @@ public class Intake extends SubsystemBase {
         deployedTrigger.onTrue(setGoal(IntakeGoal.DEPLOYED));
         stowedTrigger.onTrue(setGoal(IntakeGoal.STOWED));
 
-        SmartDashboard.putData("Overrides/Intakes/" + side.name(), disable());
+        SmartDashboard.putData("Overrides/" + side.name() + " Intake", disable());
     }
 
     private boolean spinStalled() {

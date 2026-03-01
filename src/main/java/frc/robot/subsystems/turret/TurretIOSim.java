@@ -13,6 +13,8 @@ import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.Constants.TurretConstants.FLYWHEEL_RADIUS;
 import static frc.robot.Constants.TurretConstants.ROBOT_TO_TURRET_TRANSFORM;
 
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -25,6 +27,7 @@ public class TurretIOSim implements TurretIO {
     private Angle turnPosition = Radians.zero();
     private Angle hoodAngle = Radians.zero();
     private AngularVelocity flywheelGoal = RadiansPerSecond.zero();
+    private BooleanSupplier shouldShoot;
 
     private SlewRateLimiter flywheelAccelLimiter =
             new SlewRateLimiter(RPM.of(4000).div(Seconds.of(2)).in(RadiansPerSecondPerSecond));
@@ -35,8 +38,9 @@ public class TurretIOSim implements TurretIO {
 
     private Timer shootTimer = new Timer();
 
-    public TurretIOSim(FuelSim fuelSim) {
+    public TurretIOSim(FuelSim fuelSim, BooleanSupplier shouldShoot) {
         this.fuelSim = fuelSim;
+        this.shouldShoot = shouldShoot;
         shootTimer.start();
     }
 
@@ -46,7 +50,7 @@ public class TurretIOSim implements TurretIO {
         inputs.hoodPosition = hoodAngle;
         inputs.flywheelSpeed = RadiansPerSecond.of(flywheelAccelLimiter.calculate(flywheelGoal.in(RadiansPerSecond)));
 
-        if (shootTimer.advanceIfElapsed(0.1) && DriverStation.isEnabled()) {
+        if (shootTimer.advanceIfElapsed(0.1) && DriverStation.isEnabled() && shouldShoot.getAsBoolean()) {
             launchFuel();
         }
     }

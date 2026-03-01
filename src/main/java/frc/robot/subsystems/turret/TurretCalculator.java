@@ -66,11 +66,11 @@ public class TurretCalculator {
     }
 
     public static AngularVelocity linearToAngularVelocity(LinearVelocity vel, Distance radius) {
-        return RadiansPerSecond.of(vel.in(MetersPerSecond) / radius.in(Meters));
+        return RadiansPerSecond.of(vel.in(MetersPerSecond) / radius.in(Meters) / 0.54);
     }
 
     public static LinearVelocity angularToLinearVelocity(AngularVelocity vel, Distance radius) {
-        return MetersPerSecond.of(vel.in(RadiansPerSecond) * radius.in(Meters));
+        return MetersPerSecond.of(vel.in(RadiansPerSecond) * radius.in(Meters) * 0.54);
     }
 
     // calculates the angle of a turret relative to the robot to hit a target

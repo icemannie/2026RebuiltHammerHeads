@@ -109,22 +109,22 @@ public class Turret extends SubsystemBase {
                         .transformBy(ROBOT_TO_TURRET_TRANSFORM),
                 fieldSpeedsSupplier);
 
-        SmartDashboard.putData("Overrides/Turret/Disable", disable());
-        SmartDashboard.putData("Overrides/Turret/Manual Pass", manualPass());
-        SmartDashboard.putData("Overrides/Turret/Manual Score", manualScore());
+        SmartDashboard.putData("Overrides/Turret Disable", disable());
+        SmartDashboard.putData("Overrides/Turret Manual", manualOverride());
         SmartDashboard.putData("Turret/Fudge Up", increaseFudgeFactor());
         SmartDashboard.putData("Turret/Fudge Down", decreaseFudgeFactor());
     }
 
     public Command setGoal(TurretGoal goal) {
         return this.runOnce(() -> {
+                    if (this.goal == TurretGoal.DISABLED || this.goal == TurretGoal.MANUAL_OVERRIDE) {
+                        return;
+                    }
                     // don't interrupt ducking with another goal
                     if (goal != TurretGoal.DISABLED
                             && this.goal == TurretGoal.DUCKING
                             && underTrenchTrigger.getAsBoolean()) {
                         this.nonDuckingGoal = goal;
-                        return;
-                    } else if (this.goal == TurretGoal.DISABLED || this.goal == TurretGoal.MANUAL_OVERRIDE) {
                         return;
                     }
                     this.goal = goal;
@@ -230,7 +230,7 @@ public class Turret extends SubsystemBase {
     }
 
     public Command disable() {
-        return this.runOnce(() -> goal = TurretGoal.DISABLED)
+        return setGoal(TurretGoal.DISABLED)
                 .andThen(Commands.idle())
                 .finallyDo(() -> goal = TurretGoal.OFF)
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
@@ -245,6 +245,7 @@ public class Turret extends SubsystemBase {
                         goal = TurretGoal.OFF;
                     }
                 })
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                 .withName("Turret Manual Override");
     }
 
