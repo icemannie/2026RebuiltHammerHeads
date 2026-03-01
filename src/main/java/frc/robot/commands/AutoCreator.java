@@ -33,6 +33,7 @@ import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.TurretGoal;
+import frc.robot.subsystems.vision.Vision;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -363,6 +364,7 @@ public class AutoCreator {
      */
     public Command buildAuto(
             Drive drive,
+            Vision vision,
             Intakes intakes,
             Indexer indexer,
             Turret turret,
@@ -417,7 +419,7 @@ public class AutoCreator {
                         .andThen(
                                 Commands.waitUntil(() ->
                                         DriverStation.getMatchTime() <= AutoConstants.CLIMB_TIME_REMAINING.in(Seconds)),
-                                AutoClimb.getAutoClimbCommand(drive, climber));
+                                AutoClimb.getAutoClimbCommand(drive, vision, climber));
             }
 
             // wait for alignment to extend climber
@@ -426,7 +428,7 @@ public class AutoCreator {
                         .andThen(
                                 Commands.waitUntil(() ->
                                         DriverStation.getMatchTime() <= AutoConstants.CLIMB_TIME_REMAINING.in(Seconds)),
-                                AutoClimb.getAutoClimbCommand(drive, climber));
+                                AutoClimb.getAutoClimbCommand(drive, vision, climber));
             }
 
             if (path.end == StartEndPoint.DEPOT) {

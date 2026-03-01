@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -108,7 +109,9 @@ public class Turret extends SubsystemBase {
                         .transformBy(ROBOT_TO_TURRET_TRANSFORM),
                 fieldSpeedsSupplier);
 
-        SmartDashboard.putData("EStops/Turret", setGoal(TurretGoal.DISABLED));
+        SmartDashboard.putData("Overrides/Turret/Disable", disable());
+        SmartDashboard.putData("Overrides/Turret/Manual Pass", manualPass());
+        SmartDashboard.putData("Overrides/Turret/Manual Score", manualScore());
         SmartDashboard.putData("Turret/Fudge Up", increaseFudgeFactor());
         SmartDashboard.putData("Turret/Fudge Down", decreaseFudgeFactor());
     }
@@ -227,35 +230,54 @@ public class Turret extends SubsystemBase {
     }
 
     public Command disable() {
-        return this.runOnce(() -> goal = TurretGoal.DISABLED).andThen(Commands.idle()).finallyDo(() -> goal = TurretGoal.OFF).withName("Disable Turret");
+        return this.runOnce(() -> goal = TurretGoal.DISABLED)
+                .andThen(Commands.idle())
+                .finallyDo(() -> goal = TurretGoal.OFF)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .withName("Disable Turret");
     }
 
     public Command manualOverride() {
-        return setGoal(TurretGoal.MANUAL_OVERRIDE).andThen(Commands.idle()).finallyDo(() -> goal = TurretGoal.OFF).withName("Turret Manual Override");
+        return setGoal(TurretGoal.MANUAL_OVERRIDE)
+                .andThen(Commands.idle())
+                .finallyDo(() -> {
+                    if (goal != TurretGoal.DISABLED) {
+                        goal = TurretGoal.OFF;
+                    }
+                })
+                .withName("Turret Manual Override");
     }
 
     public Command manualScore() {
-        return Commands.startEnd(() -> {
-            io.setFlywheelSpeed(FLYWHEEL_SCORING_OVERRIDE.plus(flywheelFudgeFactor));
-            io.setHoodAngle(HOOD_SCORING_OVERRIDE);
-            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
-        }, () -> {
-            io.stopFlywheel();
-            io.setHoodAngle(Radians.zero());
-            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
-        }).onlyIf(() -> goal == TurretGoal.MANUAL_OVERRIDE).withName("Turret Manual Score");
+        return Commands.startEnd(
+                        () -> {
+                            io.setFlywheelSpeed(FLYWHEEL_SCORING_OVERRIDE.plus(flywheelFudgeFactor));
+                            io.setHoodAngle(HOOD_SCORING_OVERRIDE);
+                            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+                        },
+                        () -> {
+                            io.stopFlywheel();
+                            io.setHoodAngle(Radians.zero());
+                            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+                        })
+                .onlyIf(() -> goal == TurretGoal.MANUAL_OVERRIDE)
+                .withName("Turret Manual Score");
     }
 
     public Command manualPass() {
-        return Commands.startEnd(() -> {
-            io.setFlywheelSpeed(FLYWHEEL_PASSING_OVERRIDE.plus(flywheelFudgeFactor));
-            io.setHoodAngle(HOOD_PASSING_OVERRIDE);
-            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
-        }, () -> {
-            io.stopFlywheel();
-            io.setHoodAngle(Radians.zero());
-            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
-        }).onlyIf(() -> goal == TurretGoal.MANUAL_OVERRIDE).withName("Turret Manual Pass");
+        return Commands.startEnd(
+                        () -> {
+                            io.setFlywheelSpeed(FLYWHEEL_PASSING_OVERRIDE.plus(flywheelFudgeFactor));
+                            io.setHoodAngle(HOOD_PASSING_OVERRIDE);
+                            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+                        },
+                        () -> {
+                            io.stopFlywheel();
+                            io.setHoodAngle(Radians.zero());
+                            io.setTurnSetpoint(Radians.zero(), RadiansPerSecond.zero());
+                        })
+                .onlyIf(() -> goal == TurretGoal.MANUAL_OVERRIDE)
+                .withName("Turret Manual Pass");
     }
 
     @Override

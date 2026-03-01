@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants.ClimberConstants.ClimbPosition;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.vision.Vision;
 import java.util.Set;
 
 /** Command group to automatically align and then climb */
@@ -24,9 +25,11 @@ public class AutoClimb extends SequentialCommandGroup {
      * @param climber climber subsystem
      * @param isAuto whether the climber should climb to the auto climb position
      */
-    public AutoClimb(ClimbPosition position, Drive drive, Climber climber, boolean isAuto) {
+    public AutoClimb(ClimbPosition position, Drive drive, Vision vision, Climber climber, boolean isAuto) {
         addCommands(
-                climber.extend(), new AlignToClimb(position, drive), isAuto ? climber.autoClimb() : climber.climb());
+                climber.extend(),
+                new AlignToClimb(position, drive, vision),
+                isAuto ? climber.autoClimb() : climber.climb());
     }
 
     /**
@@ -35,7 +38,7 @@ public class AutoClimb extends SequentialCommandGroup {
      * @param climber climber subsystem
      * @return a deferred {@link AutoClimb} command group to climb to the nearest position (at time of scheduling)
      */
-    public static Command getAutoClimbCommand(Drive drive, Climber climber) {
+    public static Command getAutoClimbCommand(Drive drive, Vision vision, Climber climber) {
         return Commands.defer(
                 () -> {
                     // determine closest climb position
@@ -58,13 +61,13 @@ public class AutoClimb extends SequentialCommandGroup {
 
                     // based on closeset climb position, create new AutoClimb command group
                     if (front && left) {
-                        return new AutoClimb(ClimbPosition.FRONT_LEFT, drive, climber, isAuto);
+                        return new AutoClimb(ClimbPosition.FRONT_LEFT, drive, vision, climber, isAuto);
                     } else if (front) {
-                        return new AutoClimb(ClimbPosition.FRONT_RIGHT, drive, climber, isAuto);
+                        return new AutoClimb(ClimbPosition.FRONT_RIGHT, drive, vision, climber, isAuto);
                     } else if (left) {
-                        return new AutoClimb(ClimbPosition.BACK_LEFT, drive, climber, isAuto);
+                        return new AutoClimb(ClimbPosition.BACK_LEFT, drive, vision, climber, isAuto);
                     } else {
-                        return new AutoClimb(ClimbPosition.BACK_RIGHT, drive, climber, isAuto);
+                        return new AutoClimb(ClimbPosition.BACK_RIGHT, drive, vision, climber, isAuto);
                     }
                 },
                 Set.of(drive, climber));

@@ -36,6 +36,7 @@ public class Vision extends SubsystemBase {
     private final Alert[] disconnectedAlerts;
 
     private boolean disabled = false;
+    private boolean climbing = false;
 
     public Vision(VisionConsumer consumer, VisionIO... io) {
         this.consumer = consumer;
@@ -77,8 +78,9 @@ public class Vision extends SubsystemBase {
         List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
         List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
-        Set<Integer> hubTags =
-                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? BLUE_HUB_TAG_IDS : RED_HUB_TAG_IDS;
+        boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+        Set<Integer> hubTags = isBlue ? BLUE_HUB_TAG_IDS : RED_HUB_TAG_IDS;
+        Set<Integer> climbTags = isBlue ? BLUE_CLIMB_TAG_IDS : RED_CLIMB_TAG_IDS;
 
         // Loop over cameras
         for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
@@ -126,7 +128,9 @@ public class Vision extends SubsystemBase {
                     if (tagPose.isPresent()) {
                         tagPoses.add(tagPose.get());
                     }
-                    if (!hubTags.contains(tagId)) {
+                    if (climbing && !climbTags.contains(tagId)) {
+                        stdDevFactor += CLIMB_TAG_STD_DEV_BIAS; // Non-climb tags are less accurate
+                    } else if (!climbing && !hubTags.contains(tagId)) {
                         stdDevFactor += HUB_TAG_STD_DEV_BIAS; // Non-hub tags are less accurate
                     }
                 }
@@ -166,7 +170,14 @@ public class Vision extends SubsystemBase {
     }
 
     public Command disable() {
-        return this.runOnce(() -> disabled = true).andThen(Commands.idle()).finallyDo(() -> disabled = false).withName("Disable Vision");
+        return this.runOnce(() -> disabled = true)
+                .andThen(Commands.idle())
+                .finallyDo(() -> disabled = false)
+                .withName("Disable Vision");
+    }
+
+    public void setClimbing(boolean climbing) {
+        this.climbing = climbing;
     }
 
     @FunctionalInterface

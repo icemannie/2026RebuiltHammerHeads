@@ -685,7 +685,7 @@ public final class Constants {
         };
 
         public static final double MAX_AMBIGUITY = 0.3;
-        public static final Distance MAX_Z_HEIGHT = Meters.of(0.5);
+        public static final Distance MAX_Z_HEIGHT = Meters.of(0.2);
 
         public static final AprilTagFieldLayout APRIL_TAGS;
 
@@ -704,8 +704,11 @@ public final class Constants {
 
         public static final Set<Integer> BLUE_HUB_TAG_IDS = Set.of(18, 19, 20, 21, 24, 25, 26, 27);
         public static final Set<Integer> RED_HUB_TAG_IDS = Set.of(2, 3, 4, 5, 8, 9, 10, 1);
+        public static final Set<Integer> BLUE_CLIMB_TAG_IDS = Set.of(31, 32);
+        public static final Set<Integer> RED_CLIMB_TAG_IDS = Set.of(15, 16);
 
-        public static final double HUB_TAG_STD_DEV_BIAS = 0.05; // added to non-hub tags
+        public static final double HUB_TAG_STD_DEV_BIAS = 0.08; // added to non-hub tags in hub mode
+        public static final double CLIMB_TAG_STD_DEV_BIAS = 0.08; // added to non-climb tags in climb mode
 
         // Transforms from robot to cameras, (x forward, y left, z up), (roll, pitch,
         // yaw)

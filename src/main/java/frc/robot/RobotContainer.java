@@ -259,13 +259,20 @@ public class RobotContainer {
 
         Zones.logAllZones();
 
-        SmartDashboard.putData("Align/ClimbFL", new AlignToClimb(ClimbPosition.FRONT_LEFT, drive));
-        SmartDashboard.putData("Align/ClimbFR", new AlignToClimb(ClimbPosition.FRONT_RIGHT, drive));
-        SmartDashboard.putData("Align/ClimbBL", new AlignToClimb(ClimbPosition.BACK_LEFT, drive));
-        SmartDashboard.putData("Align/ClimbBR", new AlignToClimb(ClimbPosition.BACK_RIGHT, drive));
+        SmartDashboard.putData("Align/ClimbFL", new AlignToClimb(ClimbPosition.FRONT_LEFT, drive, vision));
+        SmartDashboard.putData("Align/ClimbFR", new AlignToClimb(ClimbPosition.FRONT_RIGHT, drive, vision));
+        SmartDashboard.putData("Align/ClimbBL", new AlignToClimb(ClimbPosition.BACK_LEFT, drive, vision));
+        SmartDashboard.putData("Align/ClimbBR", new AlignToClimb(ClimbPosition.BACK_RIGHT, drive, vision));
         SmartDashboard.putData(
                 "Auto Climb",
-                AutoClimb.getAutoClimbCommand(drive, climber).beforeStarting(superstructure.setGoal(Goal.IDLE)));
+                AutoClimb.getAutoClimbCommand(drive, vision, climber)
+                        .beforeStarting(superstructure.setGoal(Goal.IDLE)));
+        SmartDashboard.putData(
+                "Overrides/Manual Pass",
+                turret.manualPass().beforeStarting(indexer.activate()).finallyDo(indexer::stop));
+        SmartDashboard.putData(
+                "Overrides/Manual Score",
+                turret.manualScore().beforeStarting(indexer.activate()).finallyDo(indexer::stop));
 
         systemChecks = new SystemChecks(turret, intakes, indexer, climber);
 
@@ -318,7 +325,7 @@ public class RobotContainer {
         //         () -> superstructure.getGoal() == Goal.SCORING));
 
         climbTrigger.toggleOnTrue(
-                intakes.setGoal(IntakesGoal.STOW).andThen(AutoClimb.getAutoClimbCommand(drive, climber)));
+                intakes.setGoal(IntakesGoal.STOW).andThen(AutoClimb.getAutoClimbCommand(drive, vision, climber)));
         extendTrigger.toggleOnTrue(intakes.setGoal(IntakesGoal.STOW).andThen(climber.extend()));
         stowTrigger.toggleOnTrue(climber.stow());
     }
@@ -367,6 +374,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoCreator.buildAuto(drive, intakes, indexer, turret, climber, superstructure);
+        return autoCreator.buildAuto(drive, vision, intakes, indexer, turret, climber, superstructure);
     }
 }

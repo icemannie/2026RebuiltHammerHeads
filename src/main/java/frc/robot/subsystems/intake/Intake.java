@@ -209,7 +209,10 @@ public class Intake extends SubsystemBase {
     }
 
     public Command disable() {
-        return this.runOnce(() -> goal = IntakeGoal.DISABLED).andThen(Commands.idle()).finallyDo(() -> goal = IntakeGoal.IDLE).withName("Disable Intake "+side.name());
+        return this.runOnce(() -> goal = IntakeGoal.DISABLED)
+                .andThen(Commands.idle())
+                .finallyDo(() -> goal = IntakeGoal.IDLE)
+                .withName("Disable Intake " + side.name());
     }
 
     public IntakeGoal getGoal() {

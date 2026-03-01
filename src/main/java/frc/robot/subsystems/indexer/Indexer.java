@@ -51,22 +51,26 @@ public class Indexer extends SubsystemBase {
 
     public Command setGoal(IndexerGoal goal) {
         return Commands.defer(
-                () -> {
-                    Command toSchedule = Commands.none();
+                        () -> {
+                            Command toSchedule = Commands.none();
 
-                    if (goal == IndexerGoal.ACTIVE && this.goal != IndexerGoal.ACTIVE) {
-                        toSchedule = activate();
-                    } else if (goal == IndexerGoal.IDLE) {
-                        toSchedule = stop();
-                    }
-                    this.goal = goal;
-                    return toSchedule;
-                },
-                Set.of(this)).onlyIf(() -> this.goal != IndexerGoal.DISABLED);
+                            if (goal == IndexerGoal.ACTIVE && this.goal != IndexerGoal.ACTIVE) {
+                                toSchedule = activate();
+                            } else if (goal == IndexerGoal.IDLE) {
+                                toSchedule = this.run(this::stop);
+                            }
+                            this.goal = goal;
+                            return toSchedule;
+                        },
+                        Set.of(this))
+                .onlyIf(() -> this.goal != IndexerGoal.DISABLED);
     }
 
     public Command disable() {
-        return this.runOnce(() -> goal = IndexerGoal.DISABLED).andThen(Commands.idle()).finallyDo(() -> goal = IndexerGoal.IDLE).withName("Disable Indexer");
+        return this.runOnce(() -> goal = IndexerGoal.DISABLED)
+                .andThen(Commands.idle())
+                .finallyDo(() -> goal = IndexerGoal.IDLE)
+                .withName("Disable Indexer");
     }
 
     public IndexerGoal getGoal() {
@@ -88,12 +92,9 @@ public class Indexer extends SubsystemBase {
                 .withName("IndexerActivate");
     }
 
-    public Command stop() {
-        return this.runOnce(() -> {
-                    io.stopSpin();
-                    io.stopFeed();
-                })
-                .withName("IndexerStop");
+    public void stop() {
+        io.stopSpin();
+        io.stopFeed();
     }
 
     public enum IndexerGoal {

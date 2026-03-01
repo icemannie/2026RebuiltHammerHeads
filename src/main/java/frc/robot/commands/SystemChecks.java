@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.Indexer.IndexerGoal;
 import frc.robot.subsystems.intake.Intakes;
 import frc.robot.subsystems.intake.Intakes.IntakesGoal;
 import frc.robot.subsystems.turret.Turret;
@@ -89,7 +90,8 @@ public class SystemChecks {
 
     /** Activate indexer for 3 seconds */
     public Command indexer() {
-        return Commands.sequence(indexer.activate(), Commands.waitSeconds(3), indexer.stop());
+        return Commands.sequence(
+                indexer.setGoal(IndexerGoal.ACTIVE), Commands.waitSeconds(3), indexer.setGoal(IndexerGoal.IDLE));
     }
 
     /** Zero climber, then extend, then stow */

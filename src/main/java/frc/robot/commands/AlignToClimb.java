@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ClimberConstants.ClimbPosition;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.TunableControls.TunablePIDController;
 import org.littletonrobotics.junction.Logger;
 
@@ -30,15 +31,18 @@ public class AlignToClimb extends Command {
     private final ClimbPosition position;
 
     private final Drive drive;
+    private final Vision vision;
 
     /**
      * Creates a new AlignToClimb command
      * @param position which climb position to align to
      * @param drive drive subsystem
      */
-    public AlignToClimb(ClimbPosition position, Drive drive) {
+    public AlignToClimb(ClimbPosition position, Drive drive, Vision vision) {
         this.position = position;
         this.drive = drive;
+        this.vision = vision;
+
         this.targetPose = position.getPose();
         if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
             this.targetPose = FlippingUtil.flipFieldPose(targetPose);
@@ -61,6 +65,8 @@ public class AlignToClimb extends Command {
 
         rotationController.setSetpoint(targetPose.getRotation().getRadians());
         rotationController.reset();
+
+        vision.setClimbing(true);
 
         Logger.recordOutput("Align/Target", targetPose);
     }
@@ -86,7 +92,9 @@ public class AlignToClimb extends Command {
 
     // Called once the command ends or is interrupted.
     @Override
-    public void end(boolean interrupted) {}
+    public void end(boolean interrupted) {
+        vision.setClimbing(false);
+    }
 
     // Returns true when the command should end.
     @Override
