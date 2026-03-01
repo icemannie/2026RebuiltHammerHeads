@@ -145,7 +145,7 @@ public class TurretCalculator {
         // Perform initial estimation (assuming unmoving robot) to get time of flight estimate
         ShotData shot = calculateShotFromFunnelClearance(robot, target, target);
         Distance distance = getDistanceToTarget(robot, target);
-        Time timeOfFlight = calculateTimeOfFlight(shot.getExitVelocity(), shot.getHoodAngle(), distance);
+        Time timeOfFlight = calculateTimeOfFlight(shot.getLinearExitVelocity(), shot.getHoodAngle(), distance);
         Translation3d predictedTarget = target;
 
         // Iterate the process, getting better time of flight estimations and updating the predicted target accordingly
@@ -153,7 +153,7 @@ public class TurretCalculator {
             predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
             shot = calculateShotFromFunnelClearance(robot, target, predictedTarget);
             timeOfFlight = calculateTimeOfFlight(
-                    shot.getExitVelocity(), shot.getHoodAngle(), getDistanceToTarget(robot, predictedTarget));
+                    shot.getLinearExitVelocity(), shot.getHoodAngle(), getDistanceToTarget(robot, predictedTarget));
         }
 
         return shot;
@@ -192,8 +192,12 @@ public class TurretCalculator {
             this(exitVelocity, hoodAngle, FieldConstants.HUB_BLUE);
         }
 
-        public LinearVelocity getExitVelocity() {
+        public LinearVelocity getLinearExitVelocity() {
             return angularToLinearVelocity(RadiansPerSecond.of(this.exitVelocity), FLYWHEEL_RADIUS);
+        }
+
+        public AngularVelocity getAngularExitVelocity() {
+            return RadiansPerSecond.of(this.exitVelocity);
         }
 
         public Angle getHoodAngle() {
