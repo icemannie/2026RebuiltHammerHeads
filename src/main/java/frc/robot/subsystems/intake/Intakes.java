@@ -45,8 +45,8 @@ public class Intakes extends SubsystemBase {
 
     /** Creates a new Intake. */
     public Intakes(IntakeIO leftIO, IntakeIO rightIO, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
-        this.left = new Intake(leftIO, IntakeSide.LEFT);
-        this.right = new Intake(rightIO, IntakeSide.RIGHT);
+        this.left = new Intake(leftIO, IntakeSide.Left);
+        this.right = new Intake(rightIO, IntakeSide.Right);
 
         this.chassisSpeedsSupplier = chassisSpeedsSupplier;
 
@@ -120,7 +120,7 @@ public class Intakes extends SubsystemBase {
     }
 
     public enum IntakeSide {
-        LEFT,
-        RIGHT
+        Left,
+        Right
     }
 }

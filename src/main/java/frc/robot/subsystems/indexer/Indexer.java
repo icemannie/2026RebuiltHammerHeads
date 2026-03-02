@@ -6,10 +6,13 @@ import static frc.robot.Constants.IndexerConstants.FEED_THRESHOLD;
 import static frc.robot.Constants.IndexerConstants.FEED_VOLTAGE;
 import static frc.robot.Constants.IndexerConstants.SPIN_VOLTAGE;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.Set;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -25,6 +28,9 @@ public class Indexer extends SubsystemBase {
             new LoggedTunableNumber("Indexer/Feed Voltage", FEED_VOLTAGE.in(Volts));
 
     private final IndexerVisualizer visualizer;
+
+    private final Alert feedDisconnectedAlert = new Alert("Indexer Feed Motor Disconnected", AlertType.kError);
+    private final Alert hookDisconnectedAlert = new Alert("Indexer Hook Motor Disconnected", AlertType.kError);
 
     @AutoLogOutput
     private IndexerGoal goal = IndexerGoal.IDLE;
@@ -47,6 +53,9 @@ public class Indexer extends SubsystemBase {
         }
 
         visualizer.update(inputs.spinVelocity);
+
+        feedDisconnectedAlert.set(!inputs.feedMotorConnected && Constants.CURRENT_MODE != Constants.Mode.SIM);
+        hookDisconnectedAlert.set(!inputs.spinMotorConnected && Constants.CURRENT_MODE != Constants.Mode.SIM);
     }
 
     public Command setGoal(IndexerGoal goal) {

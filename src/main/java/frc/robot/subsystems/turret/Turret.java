@@ -21,6 +21,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,7 +31,9 @@ import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.Mode;
 import frc.robot.Robot;
 import frc.robot.subsystems.turret.TurretCalculator.ShotData;
 import frc.robot.util.LoggedTunableNumber;
@@ -84,6 +88,10 @@ public class Turret extends SubsystemBase {
 
     @AutoLogOutput
     private MutAngularVelocity flywheelFudgeFactor = RPM.of(0).mutableCopy();
+
+    private final Alert flywheelDisconnectedAlert = new Alert("Turret Flywheel Motor Disconnected!", AlertType.kError);
+    private final Alert hoodDisconnectedAlert = new Alert("Turret Hood Motor Disconnected!", AlertType.kError);
+    private final Alert turnDisconnectedAlert = new Alert("Turret Turn Motor Disconnected!", AlertType.kError);
 
     public Turret(TurretIO io, Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
         this.io = io;
@@ -310,6 +318,10 @@ public class Turret extends SubsystemBase {
 
         turretVisualizer.update3dPose(inputs.turnPosition, inputs.hoodPosition);
         updateTunables();
+
+        flywheelDisconnectedAlert.set(!inputs.flywheelMotorConnected && Constants.CURRENT_MODE != Mode.SIM);
+        hoodDisconnectedAlert.set(!inputs.hoodMotorConnected && Constants.CURRENT_MODE != Mode.SIM);
+        turnDisconnectedAlert.set(!inputs.turnMotorConnected && Constants.CURRENT_MODE != Mode.SIM);
     }
 
     private void calculateShot(Pose2d robotPose) {

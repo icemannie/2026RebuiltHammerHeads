@@ -18,10 +18,14 @@ import static frc.robot.Constants.ClimberConstants.STOW_VOLTAGE;
 import static frc.robot.Constants.ClimberConstants.ZERO_VOLTAGE;
 
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
@@ -32,6 +36,9 @@ public class Climber extends SubsystemBase {
     private final ClimberVisualizer visualizer = new ClimberVisualizer();
 
     private boolean disabled = false;
+
+    private final Alert frontDisconnectedAlert = new Alert("Climber Front Motor Disconnected", AlertType.kError);
+    private final Alert backDisconnectedAlert = new Alert("Climber Front Motor Disconnected", AlertType.kError);
 
     public Climber(ClimberIO io) {
         this.io = io;
@@ -50,6 +57,9 @@ public class Climber extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Climber", inputs);
         visualizer.update(inputs.frontPosition, inputs.backPosition);
+
+        frontDisconnectedAlert.set(!inputs.frontConnected && Constants.CURRENT_MODE != Mode.SIM);
+        backDisconnectedAlert.set(!inputs.backConnected && Constants.CURRENT_MODE != Mode.SIM);
     }
 
     private Command setVoltage(Voltage out) {

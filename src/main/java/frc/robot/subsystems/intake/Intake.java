@@ -23,11 +23,15 @@ import static frc.robot.Constants.IntakeConstants.ZEROING_VOLTAGE;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.intake.Intakes.IntakeSide;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.Map;
@@ -72,18 +76,24 @@ public class Intake extends SubsystemBase {
     private final LoggedTunableNumber deployPos =
             new LoggedTunableNumber("Intakes/DeployPosInches", DEPLOY_POS.in(Inches));
 
+    private final Alert rackDisconnectedAlert;
+    private final Alert spinDisconnectedAlert;
+
     public Intake(IntakeIO io, IntakeSide side) {
         this.io = io;
         this.side = side;
         this.name = side.toString();
 
-        Slot0Configs gains = side == IntakeSide.LEFT ? LEFT_RACK_GAINS : RIGHT_RACK_GAINS;
+        Slot0Configs gains = side == IntakeSide.Left ? LEFT_RACK_GAINS : RIGHT_RACK_GAINS;
 
         rackKP = new LoggedTunableNumber("Intakes/" + name + "/kP", gains.kP);
         rackKD = new LoggedTunableNumber("Intakes/" + name + "/kD", gains.kD);
         rackKV = new LoggedTunableNumber("Intakes/" + name + "/kV", gains.kV);
         rackKA = new LoggedTunableNumber("Intakes/" + name + "/kA", gains.kA);
         rackKS = new LoggedTunableNumber("Intakes/" + name + "/kS", gains.kS);
+
+        rackDisconnectedAlert = new Alert(name + " Intake Rack Motor Disconnected!", AlertType.kError);
+        spinDisconnectedAlert = new Alert(name + " Intake Spin Motor Disconnected!", AlertType.kError);
 
         spinStallTrigger = new Trigger(this::spinStalled).debounce(0.1);
         rackStallTrigger = new Trigger(this::rackStalled).debounce(0.1);
@@ -259,6 +269,9 @@ public class Intake extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Intakes/" + name, inputs);
         updateTunables();
+
+        rackDisconnectedAlert.set(!inputs.rackMotorConnected && Constants.CURRENT_MODE != Mode.SIM);
+        spinDisconnectedAlert.set(!inputs.spinMotorConnected && Constants.CURRENT_MODE != Mode.SIM);
     }
 
     public enum IntakeGoal {

@@ -13,14 +13,13 @@ import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.Constants.TurretConstants.FLYWHEEL_RADIUS;
 import static frc.robot.Constants.TurretConstants.ROBOT_TO_TURRET_TRANSFORM;
 
-import java.util.function.BooleanSupplier;
-
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.util.FuelSim;
+import java.util.function.BooleanSupplier;
 
 /** Add your docs here. */
 public class TurretIOSim implements TurretIO {
